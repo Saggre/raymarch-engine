@@ -2,12 +2,15 @@
 
 using System;
 using System.Diagnostics;
+using System.Windows.Forms;
 using EconSim.Geometry;
 using EconSim.Math;
 using EconSim.Terrain;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
+using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace EconSim
 {
@@ -31,7 +34,23 @@ namespace EconSim
                 GraphicsProfile = GraphicsProfile.HiDef
             };
 
+            GraphicOptions();
+
             Content.RootDirectory = "Content";
+        }
+
+        private void GraphicOptions()
+        {
+            int screenWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            int screenHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+
+            Form form = (Form)Control.FromHandle(Window.Handle);
+            form.WindowState = FormWindowState.Maximized;
+            Window.AllowUserResizing = true;
+
+            //graphics.IsFullScreen = true;
+            //graphics.PreferredBackBufferWidth = screenWidth;
+            //graphics.PreferredBackBufferHeight = screenHeight;
         }
 
         /// <summary>
@@ -70,7 +89,7 @@ namespace EconSim
         void Compute()
         {
             TerrainGenerator terrainGenerator = new TerrainGenerator();
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 10));
+            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 256));
             texture = c.CreateVertexMaps();
         }
 

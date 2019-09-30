@@ -57,7 +57,7 @@ namespace EconSim.Math
         /// Add a texture to the Compute Shader
         /// </summary>
         /// <param name="texture"></param>
-        /// <param name="name"></param>
+        /// <param name="shaderBufferIndex"></param>
         public void SetTexture(Texture2D texture, int shaderBufferIndex)
         {
             BufferData bufferData = new BufferData(shaderBufferIndex, texture, typeof(Texture2D));

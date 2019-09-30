@@ -17,9 +17,8 @@ namespace EconSim.Geometry
 
         public STile(Tile tile, SquareRect bounds)
         {
-            float scale = bounds.Size;
             terrainType = (int)tile.TerrainType;
-            position = new Vector2((tile.X - bounds.X) / scale, (tile.X - bounds.X) / scale);
+            position = new Vector2((tile.X - bounds.X) / bounds.Size, (tile.X - bounds.X) / bounds.Size);
         }
 
         public static int Bytes()
@@ -97,11 +96,11 @@ namespace EconSim.Geometry
         /// Returns a list of terrain types of tiles connected to this tile
         /// </summary>
         /// <returns></returns>
-        public List<Util.TerrainType> ConnectedTileTerrainTypes()
+        public HashSet<Util.TerrainType> ConnectedTileTerrainTypes()
         {
-            List<Util.TerrainType> terrainTypes = new List<Util.TerrainType>();
+            var terrainTypes = new HashSet<Util.TerrainType>();
 
-            foreach (Tile tile in neighbors)
+            foreach (var tile in neighbors)
             {
                 terrainTypes.Add(tile.TerrainType);
             }
