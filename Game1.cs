@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
+
+using System;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,7 +26,6 @@ namespace EconSim
             graphics.GraphicsProfile = GraphicsProfile.HiDef; // Required for computeshader
             Content.RootDirectory = "Content";
         }
-
 
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
@@ -59,25 +60,24 @@ namespace EconSim
             base.Initialize();
         }
 
-        public struct ResultData
-        {
-            public float functionResult;
-            public int x;
-            public float unused;
-            public float unused2;
-
-            public override string ToString()
-            {
-                return string.Format("X: {0} Y: {1}", x, functionResult);
-            }
-        }
-
         void Compute()
         {
-            int repetition = (32 * 32) * (32 * 32);
-            ComputeShader<ResultData> computer = new ComputeShader<ResultData>(graphics.GraphicsDevice, "Shader/test.hlsl", "CS", repetition);
+            ComputeShader computer = new ComputeShader(graphics.GraphicsDevice, "Shader/test.hlsl", "CS");
 
+            ComputeBuffer cb = new ComputeBuffer(1, 4);
+            cb.SetData(new[] { 0.3f });
+            _t = new Texture2D(graphics.GraphicsDevice, 1024, 1024);
 
+            computer.SetTexture(_t, 0);
+            computer.SetComputeBuffer(cb, 1);
+
+            computer.Begin();
+            computer.Dispatch(32, 32, 1);
+
+            _t = computer.GetTexture(0);
+
+            computer.End();
+            /*
             //Start Compute Shader Algorithm
             Debug.WriteLine("\nCompute Shader Algorithm");
 
@@ -101,6 +101,7 @@ namespace EconSim
             int csTime = (int)st.ElapsedMilliseconds;
 
             //Debug.WriteLine(string.Format("Time: {0} ms", csTime));
+            */
         }
 
         /// <summary>
