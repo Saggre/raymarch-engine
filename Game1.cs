@@ -2,6 +2,9 @@
 
 using System;
 using System.Diagnostics;
+using EconSim.Geometry;
+using EconSim.Math;
+using EconSim.Terrain;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,17 +16,21 @@ namespace EconSim
     /// </summary>
     public class Game1 : Game
     {
-        GraphicsDeviceManager graphics;
+        public static GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
         VertexPositionTexture[] floorVerts;
         BasicEffect effect;
-        private Texture2D _t;
+        private Texture2D texture;
 
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
-            graphics.GraphicsProfile = GraphicsProfile.HiDef; // Required for computeshader
+            graphics = new GraphicsDeviceManager(this)
+            {
+                // Required for compute shader
+                GraphicsProfile = GraphicsProfile.HiDef
+            };
+
             Content.RootDirectory = "Content";
         }
 
@@ -62,46 +69,9 @@ namespace EconSim
 
         void Compute()
         {
-            ComputeShader computer = new ComputeShader(graphics.GraphicsDevice, "Shader/test.hlsl", "CS");
-
-            ComputeBuffer cb = new ComputeBuffer(1, 4);
-            cb.SetData(new[] { 0.3f });
-            _t = new Texture2D(graphics.GraphicsDevice, 1024, 1024);
-
-            computer.SetTexture(_t, 0);
-            computer.SetComputeBuffer(cb, 1);
-
-            computer.Begin();
-            computer.Dispatch(32, 32, 1);
-
-            _t = computer.GetTexture(0);
-
-            computer.End();
-            /*
-            //Start Compute Shader Algorithm
-            Debug.WriteLine("\nCompute Shader Algorithm");
-
-            //start timer
-            Stopwatch st = new Stopwatch();
-            st.Start();
-
-            //execute compute shader
-            computer.Begin();
-            computer.Start(32, 32, 1);
-            _t = computer.GetTexture();
-            //computer.End();
-
-            //stop timer
-            st.Stop();
-
-            //get result
-            //ResultData[] data = computer.ReadData(repetition);
-
-
-            int csTime = (int)st.ElapsedMilliseconds;
-
-            //Debug.WriteLine(string.Format("Time: {0} ms", csTime));
-            */
+            TerrainGenerator terrainGenerator = new TerrainGenerator();
+            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 10));
+            texture = c.CreateVertexMaps();
         }
 
         /// <summary>
@@ -176,7 +146,7 @@ namespace EconSim
                 fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
 
             effect.TextureEnabled = true;
-            effect.Texture = _t;
+            effect.Texture = texture;
 
             foreach (var pass in effect.CurrentTechnique.Passes)
             {

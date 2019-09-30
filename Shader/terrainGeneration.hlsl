@@ -19,18 +19,16 @@ struct Site {
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
-RWTexture2D<float4> Result;
-RWStructuredBuffer<Vertex> Vertices;
-uint verticesLength[2];
-RWStructuredBuffer<Site> Sites;
-uint sitesLength[2];
+RWTexture2D<float4> Result : register(u0);
+RWStructuredBuffer<Vertex> Vertices : register(u1);
+RWStructuredBuffer<Site> Sites : register(u2);
 
-Site getClosestSiteOfType(in float2 startPoint, out float dist, in int terrainType)
+Site getClosestSiteOfType(in float2 startPoint, out float dist, in int terrainType, in uint sitesLength)
 {
 	Site closestSite;
 	dist = 0.0;
 
-	for (uint i = 0; i < sitesLength[0]; i++)
+	for (uint i = 0; i < sitesLength; i++)
 	{
 		if (Sites[i].terrainType != terrainType) {
 			continue;
@@ -49,15 +47,15 @@ Site getClosestSiteOfType(in float2 startPoint, out float dist, in int terrainTy
 
 static const float coastFreshWaterPercentage = 0.5f;
 static const float lakeFreshWaterPercentage = 1.0f;
-void getVertexElevationAndMoisture(in Vertex vertex, out float elevation, out float moisture) {
+void getVertexElevationAndMoisture(in Vertex vertex, in uint sitesLength, out float elevation, out float moisture) {
 
 	// Set vertex elevations as distance from coast
 	// Set moisture as distance from fresh water
 
 	float distanceFromCoastline;
 	float distanceFromLake;
-	getClosestSiteOfType(vertex.position, distanceFromCoastline, 203);
-	getClosestSiteOfType(vertex.position, distanceFromLake, 203);
+	getClosestSiteOfType(vertex.position, distanceFromCoastline, 203,sitesLength);
+	getClosestSiteOfType(vertex.position, distanceFromLake, 203,sitesLength);
 
 	// TODO clamp max distance to map size or something
 	float distanceFromFreshwater = min(distanceFromLake * lakeFreshWaterPercentage, distanceFromCoastline * coastFreshWaterPercentage);
@@ -66,9 +64,12 @@ void getVertexElevationAndMoisture(in Vertex vertex, out float elevation, out fl
 	elevation = pow(0.985, distanceFromCoastline);
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(32, 32, 1)]
 void ComputeTerrain(uint3 id : SV_DispatchThreadID)
 {
+	uint verticesLength[2];
+	uint sitesLength[2];
+
 	// Get data-array dimensions
 	Vertices.GetDimensions(verticesLength[0], verticesLength[1]);
 	Sites.GetDimensions(sitesLength[0], sitesLength[1]);

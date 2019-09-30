@@ -2,11 +2,8 @@
 
 using System;
 using SharpDX.Direct3D11;
-using Resource = SharpDX.DXGI.Resource;
-using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
-using DXTexture2D = SharpDX.Direct3D11.Texture2D;
 
-namespace EconSim
+namespace EconSim.Math
 {
 
     public class BufferData

@@ -1,6 +1,5 @@
-﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
-
-using Microsoft.Xna.Framework;
+﻿using System.Numerics;
+using JetBrains.Annotations;
 
 namespace EconSim.Terrain
 {
