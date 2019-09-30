@@ -16,7 +16,7 @@ using MapFlags = SharpDX.Direct3D11.MapFlags;
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 using DXTexture2D = SharpDX.Direct3D11.Texture2D;
 
-namespace EconSim
+namespace EconSim.Math
 {
 
     public class ComputeShader
@@ -41,9 +41,7 @@ namespace EconSim
             buffers = new Dictionary<int, BufferData>();
 
             this.graphicsDevice = graphicsDevice;
-            d3dDevice = (graphicsDevice.Handle as SharpDX.Direct3D11.Device);
-
-            //_accessView = CreateUnorderedAccessView(out _buffer);
+            d3dDevice = graphicsDevice.Handle as Device;
 
             var computeShaderByteCode = ShaderBytecode.CompileFromFile(filename, functionName, "cs_5_0");
             shader = new SharpDX.Direct3D11.ComputeShader(d3dDevice, computeShaderByteCode);
