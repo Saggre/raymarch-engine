@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
+
+using System;
 
 namespace EconSim.Terrain
 {

@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
+
+using Microsoft.Xna.Framework;
 
 namespace EconSim.Terrain
 {
