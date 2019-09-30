@@ -9,15 +9,19 @@ namespace EconSim.Terrain
 {
     public class TerrainPlane
     {
-        private Tile[,] tiles;
-        private Vertex[,] vertices;
+        private readonly Tile[,] tiles;
+        private readonly Vertex[,] vertices;
         //private Edge[] edges;
-        private int size;
+        private readonly int size;
 
-        public TerrainPlane(int size = 128)
+        /// <summary>
+        /// A plane of size x size tiles will be created
+        /// </summary>
+        /// <param name="size"></param>
+        public TerrainPlane(int size)
         {
             tiles = new Tile[size, size];
-            vertices = new Vertex[(size + 1), (size + 1)];
+            vertices = new Vertex[size + 1, size + 1];
             //edges = new Edge[(size + 1) * size * 2];
             this.size = size;
             Create();

@@ -41,7 +41,7 @@ namespace EconSim.Terrain
             });
 
             //Voronoi voronoi = CreateVoronoi(area);
-            terrainPlane = new TerrainPlane();
+            terrainPlane = new TerrainPlane(bounds.Size);
             ProfileTime("Voronoi creation");
 
             AssignTerrainTypes();
@@ -240,8 +240,8 @@ namespace EconSim.Terrain
         private void CreateLakes()
         {
             // TODO this is slow
-            int iters = GetTilesByTerrainType(Util.TerrainType.Land).Count / 4;
-            float lakeBaseChance = 0.2f;
+            const int iters = 10;
+            var lakeBaseChance = 0.2f;
 
             int index = 0;
             for (int i = 0; i < iters; i++)
@@ -249,8 +249,8 @@ namespace EconSim.Terrain
                 foreach (var landTile in GetTilesByTerrainType(Util.TerrainType.Land))
                 {
                     // Neighbors not aquatic except for other lakes
-                    List<Util.TerrainType> neightborTerrainTypes = landTile.ConnectedTileTerrainTypes();
-                    if (!neightborTerrainTypes.ContainsAnyTerrain(Util.TerrainType.Water, Util.TerrainType.Ocean, Util.TerrainType.Coast))
+                    HashSet<Util.TerrainType> neighborTerrainTypes = landTile.ConnectedTileTerrainTypes();
+                    if (!neighborTerrainTypes.ContainsAnyTerrain(Util.TerrainType.Water, Util.TerrainType.Ocean, Util.TerrainType.Coast))
                     {
                         float lakeChance = lakeBaseChance;
 
@@ -258,7 +258,7 @@ namespace EconSim.Terrain
                         lakeChance *= landTile.AquaticPercentage();
 
                         // Probability of having a lake next to another is increased
-                        if (neightborTerrainTypes.ContainsTerrain(Util.TerrainType.Lake))
+                        if (neighborTerrainTypes.ContainsTerrain(Util.TerrainType.Lake))
                         {
                             float distribution = 0.03f;
                             lakeChance = lakeChance * (1 - distribution) + 1.0f * distribution;

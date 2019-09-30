@@ -17,10 +17,9 @@ namespace EconSim.Geometry
 
         public SVertex(Vertex vertex, SquareRect bounds)
         {
-            float scale = bounds.Size;
             elevation = (vertex.Elevation + 1) / 2.0f; // Transform [-1,1] into [0,1]
             moisture = vertex.Moisture;
-            position = new Vector2((vertex.X - bounds.X) / scale, (vertex.Y - bounds.Y) / scale);
+            position = new Vector2((vertex.X - bounds.X) / bounds.Size, (vertex.Y - bounds.Y) / bounds.Size);
         }
 
         public static int Bytes()
