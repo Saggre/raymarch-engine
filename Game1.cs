@@ -23,7 +23,7 @@ namespace EconSim
         SpriteBatch spriteBatch;
 
         VertexPositionTexture[] floorVerts;
-        BasicEffect effect;
+        Effect effect;
         private Texture2D texture;
 
         public Game1()
@@ -78,7 +78,8 @@ namespace EconSim
             floorVerts[4].TextureCoordinate = new Vector2(1, 1);
             floorVerts[5].TextureCoordinate = floorVerts[2].TextureCoordinate;
 
-            effect = new BasicEffect(graphics.GraphicsDevice);
+            //effect = new BasicEffect(graphics.GraphicsDevice);
+            effect = Content.Load<Effect>("Shaders/Default");
 
             Debug.WriteLine("Debug");
             Compute();
@@ -152,21 +153,26 @@ namespace EconSim
             var cameraLookAtVector = Vector3.Zero;
             var cameraUpVector = Vector3.UnitZ;
 
-            effect.View = Matrix.CreateLookAt(
-                cameraPosition, cameraLookAtVector, cameraUpVector);
-
             float aspectRatio =
                 graphics.PreferredBackBufferWidth / (float)graphics.PreferredBackBufferHeight;
             float fieldOfView = Microsoft.Xna.Framework.MathHelper.PiOver4;
             float nearClipPlane = 1;
             float farClipPlane = 200;
 
-            effect.Projection = Matrix.CreatePerspectiveFieldOfView(
-                fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
+            Matrix world = Matrix.CreateTranslation(0, 0, 0);
 
-            effect.TextureEnabled = true;
-            effect.Texture = texture;
+            effect.Parameters["World"].SetValue(world);
+            //effect.Parameters["World"].SetValue(world * mesh.ParentBone.Transform);
+            effect.Parameters["View"].SetValue(Matrix.CreateLookAt(
+                cameraPosition, cameraLookAtVector, cameraUpVector));
 
+            effect.Parameters["Projection"].SetValue(Matrix.CreatePerspectiveFieldOfView(
+               fieldOfView, aspectRatio, nearClipPlane, farClipPlane));
+
+
+            //effect.TextureEnabled = true;
+            //effect.Texture = texture;*/
+            effect.CurrentTechnique = effect.Techniques["Ambient"];
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
