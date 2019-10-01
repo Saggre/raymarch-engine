@@ -14,14 +14,22 @@ float4x4 Projection;
 float4 AmbientColor = float4(1, 1, 1, 1);
 float AmbientIntensity = 0.1;
 
+float4x4 WorldInverseTranspose;
+
+float3 DiffuseLightDirection = float3(1, 1, 1);
+float4 DiffuseColor = float4(1, 1, 1, 1);
+float DiffuseIntensity = 1.0;
+
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
+	float4 Normal : NORMAL0;
 };
 
 struct VertexShaderOutput
 {
 	float4 Position : POSITION0;
+	float4 Color : COLOR0;
 };
 
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
@@ -32,12 +40,16 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	float4 viewPosition = mul(worldPosition, View);
 	output.Position = mul(viewPosition, Projection);
 
+	float4 normal = mul(input.Normal, WorldInverseTranspose);
+	float lightIntensity = dot(normal, DiffuseLightDirection);
+	output.Color = saturate(DiffuseColor * DiffuseIntensity * lightIntensity);
+
 	return output;
 }
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
-	return AmbientColor * AmbientIntensity;
+	return saturate(input.Color + AmbientColor * AmbientIntensity);
 }
 
 technique Ambient
