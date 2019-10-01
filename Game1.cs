@@ -22,7 +22,7 @@ namespace EconSim
         public static GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        VertexPositionTexture[] floorVerts;
+        TerrainRenderVertex[] floorVerts;
         Effect effect;
         private Texture2D texture;
 
@@ -63,7 +63,7 @@ namespace EconSim
         {
             // TODO: Add your initialization logic here
 
-            floorVerts = new VertexPositionTexture[6];
+            floorVerts = new TerrainRenderVertex[6];
             floorVerts[0].Position = new Vector3(-20, -20, 0);
             floorVerts[1].Position = new Vector3(-20, 20, 0);
             floorVerts[2].Position = new Vector3(20, -20, 0);
@@ -77,6 +77,20 @@ namespace EconSim
             floorVerts[3].TextureCoordinate = floorVerts[1].TextureCoordinate;
             floorVerts[4].TextureCoordinate = new Vector2(1, 1);
             floorVerts[5].TextureCoordinate = floorVerts[2].TextureCoordinate;
+
+            floorVerts[0].Color = Color.Red;
+            floorVerts[1].Color = Color.White;
+            floorVerts[2].Color = Color.White;
+            floorVerts[3].Color = Color.White;
+            floorVerts[4].Color = Color.White;
+            floorVerts[5].Color = Color.White;
+
+            floorVerts[0].Normal = Vector3.Up;
+            floorVerts[1].Normal = Vector3.Up;
+            floorVerts[2].Normal = Vector3.Up;
+            floorVerts[3].Normal = Vector3.Up;
+            floorVerts[4].Normal = Vector3.Up;
+            floorVerts[5].Normal = Vector3.Up;
 
             //effect = new BasicEffect(graphics.GraphicsDevice);
             effect = Content.Load<Effect>("Shaders/Default");
@@ -161,6 +175,7 @@ namespace EconSim
 
             Matrix world = Matrix.CreateTranslation(0, 0, 0);
 
+            Vector3 boneTransform = new Vector3(0, 0, 0);
             effect.Parameters["World"].SetValue(world);
             //effect.Parameters["World"].SetValue(world * mesh.ParentBone.Transform);
             effect.Parameters["View"].SetValue(Matrix.CreateLookAt(
@@ -169,6 +184,12 @@ namespace EconSim
             effect.Parameters["Projection"].SetValue(Matrix.CreatePerspectiveFieldOfView(
                fieldOfView, aspectRatio, nearClipPlane, farClipPlane));
 
+            //Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(mesh.ParentBone.Transform * world));
+            Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(world));
+            effect.Parameters["WorldInverseTranspose"].SetValue(worldInverseTransposeMatrix);
+
+            //effect.Parameters["AmbientColor"].SetValue(Color.Green.ToVector4());
+            //effect.Parameters["AmbientIntensity"].SetValue(0.5f);
 
             //effect.TextureEnabled = true;
             //effect.Texture = texture;*/
