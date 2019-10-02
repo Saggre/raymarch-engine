@@ -1,9 +1,12 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
+using EconSim.Core;
 using EconSim.Geometry;
+using EconSim.Input;
 using EconSim.Terrain;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,9 +22,8 @@ namespace EconSim
     /// </summary>
     public class Game1 : Game
     {
-
         public static GraphicsDeviceManager graphics;
-
+        private Input.Mouse mouse;
         TerrainRenderVertex[] floorVerts;
         Effect effect;
         private Texture2D texture;
@@ -43,6 +45,8 @@ namespace EconSim
 
         public Game1()
         {
+            mouse = new Input.Mouse();
+
             graphics = new GraphicsDeviceManager(this)
             {
                 // Required for compute shader
@@ -79,7 +83,6 @@ namespace EconSim
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
 
             floorVerts = new TerrainRenderVertex[6];
             floorVerts[0].Position = new Vector3(10, 0, -10);
@@ -117,6 +120,7 @@ namespace EconSim
 
             Compute();
 
+            StaticUpdater.ExecuteStartActions();
             base.Initialize();
         }
 
@@ -194,6 +198,7 @@ namespace EconSim
             viewVector.Normalize();
             view = Matrix.CreateLookAt(cameraLocation, cameraTarget, Vector3.UnitY);
 
+            StaticUpdater.ExecuteUpdateActions();
             base.Update(gameTime);
         }
 
@@ -207,7 +212,9 @@ namespace EconSim
 
             spriteBatch.Begin();
 
-            spriteBatch.DrawString(font, player.Position.ToString(), new Vector2(100, 100), Color.Black);
+            string str = "Player: " + player.Position;
+            str += "\nMouse Delta: " + mouse.DeltaPosition;
+            spriteBatch.DrawString(font, str, new Vector2(100, 100), Color.Black);
 
             spriteBatch.End();
 
@@ -247,5 +254,6 @@ namespace EconSim
                     2);
             }
         }
+
     }
 }
