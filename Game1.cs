@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using EconSim.Geometry;
-using EconSim.Math;
 using EconSim.Terrain;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,17 +13,33 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 
 namespace EconSim
 {
+
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
     public class Game1 : Game
     {
+
         public static GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
 
         TerrainRenderVertex[] floorVerts;
         Effect effect;
         private Texture2D texture;
+        private Player player;
+
+        // TODO create UI manager
+        private SpriteFont font;
+        private SpriteBatch spriteBatch;
+
+        // Rendering
+        private Matrix world = Matrix.CreateTranslation(0, 0, 0);
+        Matrix view;
+        Matrix projection;
+
+        Vector3 viewVector;
+
+        float angle = 0;
+        float distance = 20;
 
         public Game1()
         {
@@ -33,6 +48,9 @@ namespace EconSim
                 // Required for compute shader
                 GraphicsProfile = GraphicsProfile.HiDef
             };
+
+            player = new Player();
+            player.Position = new Vector3(0, 20, 20);
 
             GraphicOptions();
 
@@ -64,21 +82,21 @@ namespace EconSim
             // TODO: Add your initialization logic here
 
             floorVerts = new TerrainRenderVertex[6];
-            floorVerts[0].Position = new Vector3(-20, -20, 0);
-            floorVerts[1].Position = new Vector3(-20, 20, 0);
-            floorVerts[2].Position = new Vector3(20, -20, 0);
+            floorVerts[0].Position = new Vector3(10, 0, -10);
+            floorVerts[1].Position = new Vector3(-10, 0, 10);
+            floorVerts[2].Position = new Vector3(-10, 0, -10);
             floorVerts[3].Position = floorVerts[1].Position;
-            floorVerts[4].Position = new Vector3(20, 20, 0);
-            floorVerts[5].Position = floorVerts[2].Position;
+            floorVerts[4].Position = floorVerts[0].Position;
+            floorVerts[5].Position = new Vector3(10, 0, 10);
 
-            floorVerts[0].TextureCoordinate = new Vector2(0, 0);
+            floorVerts[0].TextureCoordinate = new Vector2(1, 0);
             floorVerts[1].TextureCoordinate = new Vector2(0, 1);
-            floorVerts[2].TextureCoordinate = new Vector2(1, 0);
+            floorVerts[2].TextureCoordinate = new Vector2(0, 0);
             floorVerts[3].TextureCoordinate = floorVerts[1].TextureCoordinate;
-            floorVerts[4].TextureCoordinate = new Vector2(1, 1);
-            floorVerts[5].TextureCoordinate = floorVerts[2].TextureCoordinate;
+            floorVerts[4].TextureCoordinate = floorVerts[0].TextureCoordinate;
+            floorVerts[5].TextureCoordinate = new Vector2(1, 1);
 
-            floorVerts[0].Color = Color.Red;
+            floorVerts[0].Color = Color.White;
             floorVerts[1].Color = Color.White;
             floorVerts[2].Color = Color.White;
             floorVerts[3].Color = Color.White;
@@ -92,10 +110,11 @@ namespace EconSim
             floorVerts[4].Normal = Vector3.Up;
             floorVerts[5].Normal = Vector3.Up;
 
-            //effect = new BasicEffect(graphics.GraphicsDevice);
             effect = Content.Load<Effect>("Shaders/Default");
 
-            Debug.WriteLine("Debug");
+            font = Content.Load<SpriteFont>("UI/Main");
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+
             Compute();
 
             base.Initialize();
@@ -104,7 +123,7 @@ namespace EconSim
         void Compute()
         {
             TerrainGenerator terrainGenerator = new TerrainGenerator();
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 256));
+            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 128));
             texture = c.CreateVertexMaps();
         }
 
@@ -139,7 +158,41 @@ namespace EconSim
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            KeyboardState state = Keyboard.GetState();
+
+            float playerSpeed = 1f;
+            if (state.IsKeyDown(Keys.LeftShift))
+                playerSpeed = 2f;
+
+            if (state.IsKeyDown(Keys.D))
+                player.Move(player.Right, playerSpeed);
+            if (state.IsKeyDown(Keys.A))
+                player.Move(-player.Right, playerSpeed);
+            if (state.IsKeyDown(Keys.W))
+                player.Move(player.Forward, playerSpeed);
+            if (state.IsKeyDown(Keys.S))
+                player.Move(-player.Forward, playerSpeed);
+            if (state.IsKeyDown(Keys.Space))
+                player.Move(player.Up, playerSpeed);
+            if (state.IsKeyDown(Keys.LeftControl))
+                player.Move(-player.Up, playerSpeed);
+
             // TODO: Add your update logic here
+
+            float aspectRatio =
+                graphics.PreferredBackBufferWidth / (float)graphics.PreferredBackBufferHeight;
+            float fieldOfView = MathHelper.PiOver4;
+            float nearClipPlane = 0.1f;
+            float farClipPlane = 200;
+
+            projection = Matrix.CreatePerspectiveFieldOfView(
+                fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
+
+            Vector3 cameraLocation = player.Position;
+            Vector3 cameraTarget = new Vector3(0, 0, 0);
+            viewVector = Vector3.Transform(cameraTarget - cameraLocation, Matrix.CreateRotationY(0));
+            viewVector.Normalize();
+            view = Matrix.CreateLookAt(cameraLocation, cameraTarget, Vector3.UnitY);
 
             base.Update(gameTime);
         }
@@ -152,48 +205,32 @@ namespace EconSim
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            spriteBatch.Begin();
 
-            DrawGround();
+            spriteBatch.DrawString(font, player.Position.ToString(), new Vector2(100, 100), Color.Black);
+
+            spriteBatch.End();
+
+            DrawModelWithEffect(world, view, projection);
 
             base.Draw(gameTime);
         }
 
-        void DrawGround()
+        void DrawModelWithEffect(Matrix world, Matrix view, Matrix projection)
         {
-            // The assignment of effect.View and effect.Projection
-            // are nearly identical to the code in the Model drawing code.
-            var cameraPosition = new Vector3(0, 40, 20);
-            var cameraLookAtVector = Vector3.Zero;
-            var cameraUpVector = Vector3.UnitZ;
+            Matrix transform = Matrix.Identity;
 
-            float aspectRatio =
-                graphics.PreferredBackBufferWidth / (float)graphics.PreferredBackBufferHeight;
-            float fieldOfView = Microsoft.Xna.Framework.MathHelper.PiOver4;
-            float nearClipPlane = 1;
-            float farClipPlane = 200;
+            effect.CurrentTechnique = effect.Techniques["Diffuse"];
 
-            Matrix world = Matrix.CreateTranslation(0, 0, 0);
+            effect.Parameters["World"].SetValue(world * transform);
+            effect.Parameters["View"].SetValue(view);
+            effect.Parameters["Projection"].SetValue(projection);
+            //effect.Parameters["ViewVector"].SetValue(viewVector);
+            effect.Parameters["ModelTexture"].SetValue(texture);
 
-            Vector3 boneTransform = new Vector3(0, 0, 0);
-            effect.Parameters["World"].SetValue(world);
-            //effect.Parameters["World"].SetValue(world * mesh.ParentBone.Transform);
-            effect.Parameters["View"].SetValue(Matrix.CreateLookAt(
-                cameraPosition, cameraLookAtVector, cameraUpVector));
-
-            effect.Parameters["Projection"].SetValue(Matrix.CreatePerspectiveFieldOfView(
-               fieldOfView, aspectRatio, nearClipPlane, farClipPlane));
-
-            //Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(mesh.ParentBone.Transform * world));
-            Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(world));
+            Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(transform * world));
             effect.Parameters["WorldInverseTranspose"].SetValue(worldInverseTransposeMatrix);
 
-            //effect.Parameters["AmbientColor"].SetValue(Color.Green.ToVector4());
-            //effect.Parameters["AmbientIntensity"].SetValue(0.5f);
-
-            //effect.TextureEnabled = true;
-            //effect.Texture = texture;*/
-            effect.CurrentTechnique = effect.Techniques["Ambient"];
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
