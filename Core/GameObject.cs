@@ -1,6 +1,7 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
 
 using Microsoft.Xna.Framework;
+using EconSim.Math;
 
 namespace EconSim.Core
 {
@@ -30,6 +31,14 @@ namespace EconSim.Core
         public void Move(Vector3 direction, float speed)
         {
             position += direction * speed;
+        }
+
+        public void Rotate(Vector3 eulerAngles)
+        {
+            Quaternion eulerRot = Math.Util.Euler(eulerAngles);
+            //localRotation = localRotation * eulerRot;
+
+            rotation *= (Quaternion.Inverse(rotation) * eulerRot * rotation);
         }
 
         public Vector3 Right => rotation.Multiply(Vector3.Right);
