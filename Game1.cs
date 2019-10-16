@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using EconSim.Core;
 using EconSim.Geometry;
 using EconSim.Input;
+using EconSim.Math;
 using EconSim.Terrain;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -55,6 +56,7 @@ namespace EconSim
 
             player = new Player();
             player.Position = new Vector3(0, 20, 20);
+            player.Rotation = (player.Position + player.Forward).EulerToQuaternion();
 
             GraphicOptions();
 
@@ -159,8 +161,15 @@ namespace EconSim
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            StaticUpdater.ExecuteUpdateActions();
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            // Rotate the player's view
+            player.Rotate(0, -mouse.DeltaPosition.X * deltaTime * 1, mouse.DeltaPosition.Y * deltaTime * 1);
 
             KeyboardState state = Keyboard.GetState();
 
@@ -193,12 +202,11 @@ namespace EconSim
                 fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
 
             Vector3 cameraLocation = player.Position;
-            Vector3 cameraTarget = new Vector3(0, 0, 0);
+            Vector3 cameraTarget = cameraLocation + player.Forward;
             viewVector = Vector3.Transform(cameraTarget - cameraLocation, Matrix.CreateRotationY(0));
             viewVector.Normalize();
             view = Matrix.CreateLookAt(cameraLocation, cameraTarget, Vector3.UnitY);
 
-            StaticUpdater.ExecuteUpdateActions();
             base.Update(gameTime);
         }
 
@@ -212,7 +220,8 @@ namespace EconSim
 
             spriteBatch.Begin();
 
-            string str = "Player: " + player.Position;
+            string str = "Player pos: " + player.Position;
+            str += "\nPlayer rot:" + player.Rotation.QuaternionToEuler();
             str += "\nMouse Delta: " + mouse.DeltaPosition;
             spriteBatch.DrawString(font, str, new Vector2(100, 100), Color.Black);
 

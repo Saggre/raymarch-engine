@@ -33,12 +33,30 @@ namespace EconSim.Core
             position += direction * speed;
         }
 
+        public Quaternion Rotation
+        {
+            get => rotation;
+            set => rotation = value;
+        }
+
+        /// <summary>
+        /// Add eulerAngles to the current rotation
+        /// </summary>
+        /// <param name="eulerAngles"></param>
         public void Rotate(Vector3 eulerAngles)
         {
-            Quaternion eulerRot = Math.Util.Euler(eulerAngles);
+            Quaternion eulerRot = eulerAngles.EulerToQuaternion();
             //localRotation = localRotation * eulerRot;
 
             rotation *= (Quaternion.Inverse(rotation) * eulerRot * rotation);
+        }
+
+        /// <summary>
+        /// Add eulerAngles to the current rotation
+        /// </summary>
+        public void Rotate(float x, float y, float z)
+        {
+            Rotate(new Vector3(x, y, x));
         }
 
         public Vector3 Right => rotation.Multiply(Vector3.Right);
