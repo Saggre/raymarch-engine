@@ -1,8 +1,10 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
 
+using System;
 using EconSim.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using IUpdateable = EconSim.Core.IUpdateable;
 
 namespace EconSim.Input
@@ -21,9 +23,11 @@ namespace EconSim.Input
         }
 
         private Vector2 position;
+        private Vector2 deltaPosition;
         public MouseMode mouseMode;
         private readonly int screenX;
         private readonly int screenY;
+        private MouseState initialMouseState;
 
         public Mouse()
         {
@@ -31,17 +35,12 @@ namespace EconSim.Input
             mouseMode = MouseMode.Infinite;
             screenX = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
             screenY = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+
+            SetCursorPosition(screenX / 2, screenY / 2);
+            initialMouseState = GameMouse.GetState();
         }
 
-        /// <summary>
-        /// Cursor delta position since last update
-        /// </summary>
-        public Vector2 DeltaPosition { get; private set; }
-
-        /// <summary>
-        /// Last cursor position
-        /// </summary>
-        public Vector2 LastPosition { get; private set; }
+        public Vector2 DeltaPosition => deltaPosition;
 
         /// <summary>
         /// Current cursor position
@@ -76,17 +75,21 @@ namespace EconSim.Input
         public void Update()
         {
             var mouseState = GameMouse.GetState();
-            position.X = mouseState.X;
-            position.Y = mouseState.Y;
-
-            DeltaPosition = position - LastPosition;
-
-            if (mouseMode == MouseMode.Infinite)
+            if (mouseState != initialMouseState)
             {
-                SetCursorPosition(screenX / 2, screenY / 2);
-            }
+                position.X = mouseState.X;
+                position.Y = mouseState.Y;
 
-            LastPosition = position;
+                deltaPosition.X = initialMouseState.X - mouseState.X;
+                deltaPosition.Y = initialMouseState.Y - mouseState.Y;
+
+                SetCursorPosition(initialMouseState.X, initialMouseState.Y);
+            }
+            else
+            {
+                deltaPosition.X = 0;
+                deltaPosition.Y = 0;
+            }
         }
 
         public void End()
