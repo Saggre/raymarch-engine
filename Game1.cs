@@ -40,6 +40,7 @@ namespace EconSim
         Matrix projection;
 
         Vector3 viewVector;
+        private Vector2 lookVector;
 
         float angle = 0;
         float distance = 20;
@@ -54,9 +55,12 @@ namespace EconSim
                 GraphicsProfile = GraphicsProfile.HiDef
             };
 
+            lookVector = new Vector2();
+
             player = new Player();
             player.Position = new Vector3(0, 20, 20);
-            player.Rotation = (player.Position + player.Forward).EulerToQuaternion();
+            // Look at the ground
+            player.Rotation = Math.Util.LookRotation(Vector3.Zero - player.Position);
 
             GraphicOptions();
 
@@ -169,7 +173,19 @@ namespace EconSim
                 Exit();
 
             // Rotate the player's view
-            player.Rotate(0, -mouse.DeltaPosition.X * deltaTime * 1, mouse.DeltaPosition.Y * deltaTime * 1);
+            lookVector.X -= mouse.DeltaPosition.Y * deltaTime * 1;
+            lookVector.Y += mouse.DeltaPosition.X * deltaTime * 1;
+
+            if (lookVector.X < 90)
+            {
+                lookVector.X = 90;
+            }
+            else if (lookVector.X > 270)
+            {
+                lookVector.X = 270;
+            }
+
+            player.Rotation = Math.Util.EulerToQuaternion(lookVector.X, lookVector.Y, 0);
 
             KeyboardState state = Keyboard.GetState();
 
@@ -178,17 +194,17 @@ namespace EconSim
                 playerSpeed = 2f;
 
             if (state.IsKeyDown(Keys.D))
-                player.Move(player.Right, playerSpeed);
-            if (state.IsKeyDown(Keys.A))
                 player.Move(-player.Right, playerSpeed);
+            if (state.IsKeyDown(Keys.A))
+                player.Move(player.Right, playerSpeed);
             if (state.IsKeyDown(Keys.W))
                 player.Move(player.Forward, playerSpeed);
             if (state.IsKeyDown(Keys.S))
                 player.Move(-player.Forward, playerSpeed);
             if (state.IsKeyDown(Keys.Space))
-                player.Move(player.Up, playerSpeed);
+                player.Move(Vector3.Up, playerSpeed);
             if (state.IsKeyDown(Keys.LeftControl))
-                player.Move(-player.Up, playerSpeed);
+                player.Move(-Vector3.Up, playerSpeed);
 
             // TODO: Add your update logic here
 
@@ -223,6 +239,8 @@ namespace EconSim
             string str = "Player pos: " + player.Position;
             str += "\nPlayer rot:" + player.Rotation.QuaternionToEuler();
             str += "\nMouse Delta: " + mouse.DeltaPosition;
+            str += "\nForward vector: " + player.Forward;
+            str += "\nCamera Angle: " + lookVector;
             spriteBatch.DrawString(font, str, new Vector2(100, 100), Color.Black);
 
             spriteBatch.End();

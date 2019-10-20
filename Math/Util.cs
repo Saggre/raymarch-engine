@@ -11,6 +11,11 @@ namespace EconSim.Math
 
         #region Quaternions
 
+        public static Vector3 Multiply(this Vector3 vector, Quaternion rotation)
+        {
+            return Multiply(rotation, vector);
+        }
+
         public static Vector3 Multiply(this Quaternion rotation, Vector3 point)
         {
             float num1 = rotation.X * 2f;
@@ -122,14 +127,25 @@ namespace EconSim.Math
         }
 
         /// <summary>
+        /// Returns the angle in degrees between two rotations a and b
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        public static float Angle(this Quaternion a, Quaternion b)
+        {
+            float f = Quaternion.Dot(a, b);
+            return (float)System.Math.Acos(System.Math.Min(System.Math.Abs(f), 1f)) * 2f * Rad2Deg;
+        }
+
+        /// <summary>
         /// Returns a quaternion rotated degrees around axis
         /// </summary>
         /// <param name="degrees"></param>
         /// <param name="axis"></param>
         /// <returns></returns>
-        private static Quaternion AngleAxis(float degrees, ref Vector3 axis)
+        public static Quaternion AngleAxis(float degrees, ref Vector3 axis)
         {
-            if (axis.SqrMagnitude() <= float.Epsilon)
+            if (AlmostZero(axis.SqrMagnitude()))
                 return Quaternion.Identity;
 
             Quaternion result = Quaternion.Identity;
@@ -144,6 +160,199 @@ namespace EconSim.Math
 
             result.Normalize();
             return result;
+        }
+
+        /// <summary>
+        /// Creates a rotation which rotates from fromDirection to toDirection
+        /// </summary>
+        /// <param name="fromDirection"></param>
+        /// <param name="toDirection"></param>
+        public static Quaternion FromToRotation(Vector3 fromDirection, Vector3 toDirection)
+        {
+            return RotateTowards(LookRotation(fromDirection), LookRotation(toDirection), float.MaxValue);
+        }
+
+        /// <summary>
+        /// Spherically interpolates between a and b by t. The parameter t is not clamped.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="t"></param>
+        private static Quaternion SlerpUnclamped(ref Quaternion a, ref Quaternion b, float t)
+        {
+            // if either input is zero, return the other.
+            if (AlmostZero(a.LengthSquared()))
+            {
+                if (AlmostZero(b.LengthSquared()))
+                {
+                    return Quaternion.Identity;
+                }
+                return b;
+            }
+            else if (AlmostZero(b.LengthSquared()))
+            {
+                return a;
+            }
+
+            float cosHalfAngle = a.W * b.W + Vector3.Dot(a.XYZ(), b.XYZ());
+
+            if (cosHalfAngle >= 1.0f || cosHalfAngle <= -1.0f)
+            {
+                // angle = 0.0f, so just return one input.
+                return a;
+            }
+            else if (cosHalfAngle < 0.0f)
+            {
+                b.XYZ(-b.XYZ());
+                b.W = -b.W;
+                cosHalfAngle = -cosHalfAngle;
+            }
+
+            float blendA;
+            float blendB;
+            if (cosHalfAngle < 0.99f)
+            {
+                // do proper slerp for big angles
+                float halfAngle = (float)System.Math.Acos(cosHalfAngle);
+                float sinHalfAngle = (float)System.Math.Sin(halfAngle);
+                float oneOverSinHalfAngle = 1.0f / sinHalfAngle;
+                blendA = (float)System.Math.Sin(halfAngle * (1.0f - t)) * oneOverSinHalfAngle;
+                blendB = (float)System.Math.Sin(halfAngle * t) * oneOverSinHalfAngle;
+            }
+            else
+            {
+                // do lerp if angle is really small.
+                blendA = 1.0f - t;
+                blendB = t;
+            }
+
+            Quaternion result = new Quaternion(blendA * a.XYZ() + blendB * b.XYZ(), blendA * a.W + blendB * b.W);
+            if (!AlmostZero(result.LengthSquared()))
+                return Quaternion.Normalize(result);
+            else
+                return Quaternion.Identity;
+        }
+
+        /// <summary>
+        /// Returns only the xyz component of quaternion
+        /// </summary>
+        /// <param name="quaternion"></param>
+        private static Vector3 XYZ(this Quaternion quaternion) => new Vector3(quaternion.X, quaternion.Y, quaternion.Z);
+
+        /// <summary>
+        /// Sets the xyz component of a quaternion
+        /// </summary>
+        /// <param name="quaternion"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        private static void XYZ(this Quaternion quaternion, float x, float y, float z)
+        {
+            quaternion.X = x;
+            quaternion.Y = y;
+            quaternion.Z = z;
+        }
+
+        /// <summary>
+        /// Sets the xyz component of a quaternion
+        /// </summary>
+        /// <param name="quaternion"></param>
+        /// <param name="vector"></param>
+        private static void XYZ(this Quaternion quaternion, Vector3 vector)
+        {
+            XYZ(quaternion, vector.X, vector.Y, vector.Z);
+        }
+
+        /// <summary>
+        /// Rotates a quaternion from towards to
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="maxDegreesDelta"></param>
+        public static Quaternion RotateTowards(Quaternion from, Quaternion to, float maxDegreesDelta)
+        {
+            float num = from.Angle(to);
+            if (AlmostZero(num))
+            {
+                return to;
+            }
+            float t = System.Math.Min(1f, maxDegreesDelta / num);
+            return SlerpUnclamped(ref from, ref to, t);
+        }
+
+        /// <summary>
+        /// reates a quaternion that looks at forward vector
+        /// </summary>
+        /// <param name="forward"></param>
+        /// <returns></returns>
+        public static Quaternion LookRotation(Vector3 forward)
+        {
+            Vector3 up = Vector3.Up;
+            return LookRotation(ref forward, ref up);
+        }
+
+        /// <summary>
+        /// Creates a quaternion that looks at forward vector rotated along up vector
+        /// </summary>
+        /// <param name="forward"></param>
+        /// <param name="up"></param>
+        /// <returns></returns>
+        private static Quaternion LookRotation(ref Vector3 forward, ref Vector3 up)
+        {
+
+            forward = Vector3.Normalize(forward);
+            Vector3 right = Vector3.Normalize(Vector3.Cross(up, forward));
+            up = Vector3.Cross(forward, right);
+            var m00 = right.X;
+            var m01 = right.Y;
+            var m02 = right.Z;
+            var m10 = up.X;
+            var m11 = up.Y;
+            var m12 = up.Z;
+            var m20 = forward.X;
+            var m21 = forward.Y;
+            var m22 = forward.Z;
+
+
+            float num8 = (m00 + m11) + m22;
+            var quaternion = new Quaternion();
+            if (num8 > 0f)
+            {
+                var num = (float)System.Math.Sqrt(num8 + 1f);
+                quaternion.W = num * 0.5f;
+                num = 0.5f / num;
+                quaternion.X = (m12 - m21) * num;
+                quaternion.Y = (m20 - m02) * num;
+                quaternion.Z = (m01 - m10) * num;
+                return quaternion;
+            }
+            if ((m00 >= m11) && (m00 >= m22))
+            {
+                var num7 = (float)System.Math.Sqrt(((1f + m00) - m11) - m22);
+                var num4 = 0.5f / num7;
+                quaternion.X = 0.5f * num7;
+                quaternion.Y = (m01 + m10) * num4;
+                quaternion.Z = (m02 + m20) * num4;
+                quaternion.W = (m12 - m21) * num4;
+                return quaternion;
+            }
+            if (m11 > m22)
+            {
+                var num6 = (float)System.Math.Sqrt(((1f + m11) - m00) - m22);
+                var num3 = 0.5f / num6;
+                quaternion.X = (m10 + m01) * num3;
+                quaternion.Y = 0.5f * num6;
+                quaternion.Z = (m21 + m12) * num3;
+                quaternion.W = (m20 - m02) * num3;
+                return quaternion;
+            }
+            var num5 = (float)System.Math.Sqrt(((1f + m22) - m00) - m11);
+            var num2 = 0.5f / num5;
+            quaternion.X = (m20 + m02) * num2;
+            quaternion.Y = (m21 + m12) * num2;
+            quaternion.Z = 0.5f * num5;
+            quaternion.W = (m01 - m10) * num2;
+            return quaternion;
         }
 
         private static void Internal_ToAxisAngleRad(Quaternion q, out Vector3 axis, out float angle)
@@ -192,6 +401,11 @@ namespace EconSim.Math
         #endregion
 
         #region Math and constants
+
+        public static bool AlmostZero(float f)
+        {
+            return System.Math.Abs(f) < float.Epsilon;
+        }
 
         public static float PI => (float)System.Math.PI;
 
