@@ -46,9 +46,7 @@ namespace EconSim.Core
         public void Rotate(Vector3 eulerAngles)
         {
             Quaternion eulerRot = eulerAngles.EulerToQuaternion();
-            //localRotation = localRotation * eulerRot;
-
-            rotation *= (Quaternion.Inverse(rotation) * eulerRot * rotation);
+            rotation *= eulerRot;
         }
 
         /// <summary>
@@ -58,7 +56,7 @@ namespace EconSim.Core
         {
             Rotate(new Vector3(x, y, x));
         }
-
+          
         public Vector3 Right => rotation.Multiply(Vector3.Right);
 
         public Vector3 Up => rotation.Multiply(Vector3.Up);
