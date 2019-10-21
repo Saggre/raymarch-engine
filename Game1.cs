@@ -12,8 +12,12 @@ using EconSim.Terrain;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D11;
+using Buffer = SharpDX.Direct3D11.Buffer;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
+using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 
 namespace EconSim
 {
@@ -42,8 +46,12 @@ namespace EconSim
         Vector3 viewVector;
         private Vector2 lookVector;
 
-        float angle = 0;
-        float distance = 20;
+        private Quaternion cameraRotation;
+
+        private HullShader hullShader;
+        private DomainShader domainShader;
+
+        private Device d3dDevice;
 
         public Game1()
         {
@@ -55,16 +63,20 @@ namespace EconSim
                 GraphicsProfile = GraphicsProfile.HiDef
             };
 
-            lookVector = new Vector2();
-
             player = new Player();
             player.Position = new Vector3(0, 20, 20);
             // Look at the ground
-            player.Rotation = Math.Util.LookRotation(Vector3.Zero - player.Position);
+            //player.Rotation = Math.Util.LookRotation(Vector3.Normalize(-player.Position));
+
+            // TODO
+            lookVector.X = 180;
+            lookVector.Y = 230;
 
             GraphicOptions();
 
             Content.RootDirectory = "Content";
+
+
         }
 
         private void GraphicOptions()
@@ -89,6 +101,15 @@ namespace EconSim
         /// </summary>
         protected override void Initialize()
         {
+            d3dDevice = Game1.graphics.GraphicsDevice.Handle as Device;
+
+            // Load hull shader
+            var compiledHullShader = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationHull.hlsl", "HS", "hs_5_0");
+            hullShader = new HullShader(d3dDevice, compiledHullShader.Bytecode);
+
+            // Load domain shader
+            var compiledDomainShader = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationDomain.hlsl", "DS", "ds_5_0");
+            domainShader = new DomainShader(d3dDevice, compiledDomainShader.Bytecode);
 
             floorVerts = new TerrainRenderVertex[6];
             floorVerts[0].Position = new Vector3(10, 0, -10);
@@ -173,19 +194,22 @@ namespace EconSim
                 Exit();
 
             // Rotate the player's view
-            lookVector.X -= mouse.DeltaPosition.Y * deltaTime * 1;
-            lookVector.Y += mouse.DeltaPosition.X * deltaTime * 1;
+            lookVector.X += mouse.DeltaPosition.X * deltaTime;
+            lookVector.Y -= mouse.DeltaPosition.Y * deltaTime;
 
-            if (lookVector.X < 90)
+            if (lookVector.Y < 100)
             {
-                lookVector.X = 90;
+                lookVector.Y = 100;
             }
-            else if (lookVector.X > 270)
+            else if (lookVector.Y > 260 - float.Epsilon)
             {
-                lookVector.X = 270;
+                lookVector.Y = 260;
             }
 
-            player.Rotation = Math.Util.EulerToQuaternion(lookVector.X, lookVector.Y, 0);
+            cameraRotation = Quaternion.CreateFromAxisAngle(Vector3.Up, lookVector.X * Math.Util.Deg2Rad) *
+                             Quaternion.CreateFromAxisAngle(Vector3.Right, lookVector.Y * Math.Util.Deg2Rad);
+
+            player.Rotation = cameraRotation;//Math.Util.EulerToQuaternion(lookVector.X, lookVector.Y, 0);
 
             KeyboardState state = Keyboard.GetState();
 
@@ -234,20 +258,34 @@ namespace EconSim
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+            DrawModelWithEffect(world, view, projection);
+
             spriteBatch.Begin();
 
             string str = "Player pos: " + player.Position;
-            str += "\nPlayer rot:" + player.Rotation.QuaternionToEuler();
-            str += "\nMouse Delta: " + mouse.DeltaPosition;
+            str += "\nLook vector:" + lookVector;
+            str += "\nMouse angle: " + mouse.DeltaPosition;
             str += "\nForward vector: " + player.Forward;
-            str += "\nCamera Angle: " + lookVector;
+            str += "\nCamera angle: " + cameraRotation.QuaternionToEuler();
             spriteBatch.DrawString(font, str, new Vector2(100, 100), Color.Black);
 
             spriteBatch.End();
 
-            DrawModelWithEffect(world, view, projection);
 
             base.Draw(gameTime);
+        }
+
+        void CopyCBuffers()
+        {
+            var buffers = d3dDevice.ImmediateContext.VertexShader.GetConstantBuffers(0, 8);
+            if (buffers != null)
+            {
+                for (int i = 0; i < buffers.Length; ++i)
+                {
+                    d3dDevice.ImmediateContext.HullShader.SetConstantBuffer(i, buffers[i]);
+                    d3dDevice.ImmediateContext.DomainShader.SetConstantBuffer(i, buffers[i]);
+                }
+            }
         }
 
         void DrawModelWithEffect(Matrix world, Matrix view, Matrix projection)
@@ -256,19 +294,26 @@ namespace EconSim
 
             effect.CurrentTechnique = effect.Techniques["Diffuse"];
 
-            effect.Parameters["World"].SetValue(world * transform);
-            effect.Parameters["View"].SetValue(view);
-            effect.Parameters["Projection"].SetValue(projection);
-            //effect.Parameters["ViewVector"].SetValue(viewVector);
-            effect.Parameters["ModelTexture"].SetValue(texture);
+            //((DeviceContext)GraphicsDevice.Handle).VertexShader.SetConstantBuffer(0,Buffer.);
+
+            effect.Parameters["worldMatrix"].SetValue(world * transform);
+            effect.Parameters["viewMatrix"].SetValue(view);
+            effect.Parameters["projectionMatrix"].SetValue(projection);
+
+            //effect.Parameters["modelTexture"].SetValue(texture);
+
+            effect.Parameters["tessellationAmount"].SetValue(12.0f);
+            effect.Parameters["tessellationPadding"].SetValue(Vector3.Zero);
 
             Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(transform * world));
-            effect.Parameters["WorldInverseTranspose"].SetValue(worldInverseTransposeMatrix);
+            effect.Parameters["worldInverseTranspose"].SetValue(worldInverseTransposeMatrix);
 
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-
+                d3dDevice.ImmediateContext.HullShader.Set(hullShader);
+                d3dDevice.ImmediateContext.DomainShader.Set(domainShader);
+                CopyCBuffers();
                 graphics.GraphicsDevice.DrawUserPrimitives(
                     // We’ll be rendering two trinalges
                     PrimitiveType.TriangleList,
@@ -280,6 +325,8 @@ namespace EconSim
                     // The number of triangles to draw
                     2);
             }
+            d3dDevice.ImmediateContext.HullShader.Set(null);
+            d3dDevice.ImmediateContext.DomainShader.Set(null);
         }
 
     }

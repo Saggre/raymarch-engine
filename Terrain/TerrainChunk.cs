@@ -486,7 +486,7 @@ namespace EconSim.Terrain
             texture = computer.GetTexture(0);
 
             computer.End();
-
+            
             return texture;
         }
     }

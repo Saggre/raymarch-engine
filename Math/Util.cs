@@ -123,7 +123,7 @@ namespace EconSim.Math
 
         public static void RotateAround(this ref Quaternion rotation, Vector3 axis, float angle)
         {
-            rotation = rotation * AngleAxis(angle, ref axis);
+            rotation *= AngleAxis(angle, ref axis);
         }
 
         /// <summary>
@@ -280,8 +280,22 @@ namespace EconSim.Math
             return SlerpUnclamped(ref from, ref to, t);
         }
 
+
         /// <summary>
-        /// reates a quaternion that looks at forward vector
+        /// Creates a quaternion that looks at forward vector
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <returns></returns>
+        public static Quaternion LookRotation(float x, float y, float z)
+        {
+            Vector3 forward = new Vector3(x, y, z);
+            return LookRotation(forward);
+        }
+
+        /// <summary>
+        /// Creates a quaternion that looks at forward vector
         /// </summary>
         /// <param name="forward"></param>
         /// <returns></returns>
@@ -299,7 +313,6 @@ namespace EconSim.Math
         /// <returns></returns>
         private static Quaternion LookRotation(ref Vector3 forward, ref Vector3 up)
         {
-
             forward = Vector3.Normalize(forward);
             Vector3 right = Vector3.Normalize(Vector3.Cross(up, forward));
             up = Vector3.Cross(forward, right);
@@ -312,7 +325,6 @@ namespace EconSim.Math
             var m20 = forward.X;
             var m21 = forward.Y;
             var m22 = forward.Z;
-
 
             float num8 = (m00 + m11) + m22;
             var quaternion = new Quaternion();
