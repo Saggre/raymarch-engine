@@ -18,7 +18,7 @@ namespace EconSim.Terrain
             new VertexElement(sizeof(float) * 5, VertexElementFormat.Color, VertexElementUsage.Color, 0),
             new VertexElement(sizeof(float) * 5 + 4, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0)
             );
-
+        
         VertexDeclaration IVertexType.VertexDeclaration
         {
             get { return TerrainRenderVertex.VertexDeclaration; }
