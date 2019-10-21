@@ -50,6 +50,8 @@ namespace EconSim
 
         private HullShader hullShader;
         private DomainShader domainShader;
+        private VertexShader vertexShader;
+        private PixelShader pixelShader;
 
         private Device d3dDevice;
 
@@ -103,13 +105,23 @@ namespace EconSim
         {
             d3dDevice = Game1.graphics.GraphicsDevice.Handle as Device;
 
-            // Load hull shader
+            /*// Load hull shader
             var compiledHullShader = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationHull.hlsl", "HS", "hs_5_0");
             hullShader = new HullShader(d3dDevice, compiledHullShader.Bytecode);
 
             // Load domain shader
             var compiledDomainShader = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationDomain.hlsl", "DS", "ds_5_0");
-            domainShader = new DomainShader(d3dDevice, compiledDomainShader.Bytecode);
+            domainShader = new DomainShader(d3dDevice, compiledDomainShader.Bytecode);*/
+
+            // Load pixel shader
+            var compiledPixelShader =
+                ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationPixel.hlsl", "PS", "ps_5_0");
+            pixelShader = new PixelShader(d3dDevice, compiledPixelShader.Bytecode);
+
+            // Load vertex shader
+            var compiledVertexShader =
+                ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationVertex.hlsl", "VS", "vs_5_0");
+            vertexShader = new VertexShader(d3dDevice, compiledVertexShader.Bytecode);
 
             floorVerts = new TerrainRenderVertex[6];
             floorVerts[0].Position = new Vector3(10, 0, -10);
@@ -140,7 +152,8 @@ namespace EconSim
             floorVerts[4].Normal = Vector3.Up;
             floorVerts[5].Normal = Vector3.Up;
 
-            effect = Content.Load<Effect>("Shaders/Default");
+            //effect = Content.Load<Effect>("Shaders/Default"));
+            //effect = new Effect(Game1.graphics.GraphicsDevice, compiledVertexShader.Bytecode.Data);
 
             font = Content.Load<SpriteFont>("UI/Main");
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -190,7 +203,8 @@ namespace EconSim
 
             StaticUpdater.ExecuteUpdateActions();
 
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+                Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             // Rotate the player's view
@@ -209,7 +223,7 @@ namespace EconSim
             cameraRotation = Quaternion.CreateFromAxisAngle(Vector3.Up, lookVector.X * Math.Util.Deg2Rad) *
                              Quaternion.CreateFromAxisAngle(Vector3.Right, lookVector.Y * Math.Util.Deg2Rad);
 
-            player.Rotation = cameraRotation;//Math.Util.EulerToQuaternion(lookVector.X, lookVector.Y, 0);
+            player.Rotation = cameraRotation; //Math.Util.EulerToQuaternion(lookVector.X, lookVector.Y, 0);
 
             KeyboardState state = Keyboard.GetState();
 
@@ -292,6 +306,7 @@ namespace EconSim
         {
             Matrix transform = Matrix.Identity;
 
+            /*
             effect.CurrentTechnique = effect.Techniques["Diffuse"];
 
             //((DeviceContext)GraphicsDevice.Handle).VertexShader.SetConstantBuffer(0,Buffer.);
@@ -307,27 +322,32 @@ namespace EconSim
 
             Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(transform * world));
             effect.Parameters["worldInverseTranspose"].SetValue(worldInverseTransposeMatrix);
+            */
+            //foreach (var pass in effect.CurrentTechnique.Passes)
+            //{
+            //  pass.Apply();
+            //d3dDevice.ImmediateContext.HullShader.Set(hullShader);
+            //d3dDevice.ImmediateContext.DomainShader.Set(domainShader);
+            d3dDevice.ImmediateContext.VertexShader.Set(vertexShader);
+            d3dDevice.ImmediateContext.PixelShader.Set(pixelShader);
 
-            foreach (var pass in effect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                d3dDevice.ImmediateContext.HullShader.Set(hullShader);
-                d3dDevice.ImmediateContext.DomainShader.Set(domainShader);
-                CopyCBuffers();
-                graphics.GraphicsDevice.DrawUserPrimitives(
-                    // We’ll be rendering two trinalges
-                    PrimitiveType.TriangleList,
-                    // The array of verts that we want to render
-                    floorVerts,
-                    // The offset, which is 0 since we want to start
-                    // at the beginning of the floorVerts array
-                    0,
-                    // The number of triangles to draw
-                    2);
-            }
-            d3dDevice.ImmediateContext.HullShader.Set(null);
-            d3dDevice.ImmediateContext.DomainShader.Set(null);
+            //d3dDevice.ImmediateContext.
+
+            //CopyCBuffers();
+            /*graphics.GraphicsDevice.DrawUserPrimitives(
+                // We’ll be rendering two trinalges
+                PrimitiveType.TriangleList,
+                // The array of verts that we want to render
+                floorVerts,
+                // The offset, which is 0 since we want to start
+                // at the beginning of the floorVerts array
+                0,
+                // The number of triangles to draw
+                2);*/
         }
 
+        //d3dDevice.ImmediateContext.HullShader.Set(null);
+        //d3dDevice.ImmediateContext.DomainShader.Set(null);
     }
+
 }

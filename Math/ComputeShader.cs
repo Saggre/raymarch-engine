@@ -118,8 +118,8 @@ namespace EconSim.Math
                 SampleDescription = { Count = 1, Quality = 0 }
             });
 
-            Color[] textureData = new Color[inputData.Width * inputData.Height];
-            inputData.GetData<Color>(textureData);
+            SharpDX.Color[] textureData = new SharpDX.Color[inputData.Width * inputData.Height];
+            inputData.GetData<SharpDX.Color>(textureData);
 
             // Add data pointer
             d3dDevice.ImmediateContext.UpdateSubresource(new DataBox(GetDataPtr(textureData)), computeResource);
@@ -243,11 +243,11 @@ namespace EconSim.Math
             Texture2D texture = new Texture2D(graphicsDevice, stagingResource.Description.Width, stagingResource.Description.Height);
 
             // Read stream bytes
-            Color[] cols = new Color[1024 * 1024];
+            Microsoft.Xna.Framework.Color[] cols = new Microsoft.Xna.Framework.Color[1024 * 1024];
             for (int i = 0; i < 1024 * 1024; i++)
             {
                 int r = dataStream.ReadByte(), g = dataStream.ReadByte(), b = dataStream.ReadByte(), a = dataStream.ReadByte();
-                cols[i] = new Color(r, g, b, a);
+                cols[i] = new Microsoft.Xna.Framework.Color(r, g, b, a);
             }
 
             texture.SetData(cols);
