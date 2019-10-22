@@ -3,18 +3,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using Color = System.Drawing.Color;
 using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
-using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
-using DXTexture2D = SharpDX.Direct3D11.Texture2D;
 
 namespace EconSim.Math
 {
@@ -22,7 +21,6 @@ namespace EconSim.Math
     public class ComputeShader
     {
         private readonly Device d3dDevice;
-        private readonly GraphicsDevice graphicsDevice;
         private readonly SharpDX.Direct3D11.ComputeShader shader;
 
         /// <summary>
@@ -30,7 +28,7 @@ namespace EconSim.Math
         /// </summary>
         private Dictionary<int, BufferData> buffers;
 
-        public ComputeShader(GraphicsDevice graphicsDevice, string filename, string functionName)
+        public ComputeShader(Device graphicsDevice, string filename, string functionName)
         {
             if (graphicsDevice == null)
             {
@@ -40,8 +38,7 @@ namespace EconSim.Math
 
             buffers = new Dictionary<int, BufferData>();
 
-            this.graphicsDevice = graphicsDevice;
-            d3dDevice = graphicsDevice.Handle as Device;
+            d3dDevice = graphicsDevice;
 
             var computeShaderByteCode = ShaderBytecode.CompileFromFile(filename, functionName, "cs_5_0");
             shader = new SharpDX.Direct3D11.ComputeShader(d3dDevice, computeShaderByteCode);
@@ -96,6 +93,32 @@ namespace EconSim.Math
             buffers.Add(shaderBufferIndex, bufferData);
         }
 
+        /*private void CreateReturnTextureBuffer(int width, int height)
+        {
+            Texture2D stagingTexture = new Texture2D(d3dDevice, new Texture2DDescription
+            {
+                CpuAccessFlags = CpuAccessFlags.Read,
+                BindFlags = BindFlags.None,
+                Format = Format.R8G8B8A8_UNorm,
+                Width = width,
+                Height = height,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = { Count = 1, Quality = 0 },
+                Usage = ResourceUsage.Staging
+            });
+
+            UnorderedAccessView stagingBuffer = new UnorderedAccessView(d3dDevice, stagingTexture, new UnorderedAccessViewDescription()
+            {
+                Format = Format.R8G8B8A8_UNorm,
+                Dimension = UnorderedAccessViewDimension.Texture2D,
+                Texture2D = { MipSlice = 0 }
+            });
+
+            SetBufferData(0, stagingBuffer);
+        }*/
+
         /// <summary>
         /// Create unordered access view for a texture
         /// </summary>
@@ -103,10 +126,10 @@ namespace EconSim.Math
         /// <param name="computeResource"></param>
         /// <param name="stagingResource"></param>
         /// <returns></returns>
-        private UnorderedAccessView CreateUnorderedTextureAccessView(in Texture2D inputData, out DXTexture2D computeResource, out DXTexture2D stagingResource)
+        private UnorderedAccessView CreateUnorderedTextureAccessView(in Texture2D inputData, out Texture2D computeResource, out Texture2D stagingResource)
         {
-            // Texture used by gpu
-            computeResource = new DXTexture2D(d3dDevice, new Texture2DDescription()
+            /*// Texture used by gpu
+            computeResource = new Texture2D(d3dDevice, new Texture2DDescription()
             {
                 BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
                 Format = Format.R8G8B8A8_UNorm,
@@ -118,20 +141,27 @@ namespace EconSim.Math
                 SampleDescription = { Count = 1, Quality = 0 }
             });
 
-            SharpDX.Color[] textureData = new SharpDX.Color[inputData.Width * inputData.Height];
-            inputData.GetData<SharpDX.Color>(textureData);
+            // Copy input texture
+            float[] textureData = new float[inputData.Width * inputData.Height];
+            //inputData.GetData<SharpDX.Color>(textureData);
+
+            IntPtr dataPtr = GetDataPtr(inputData);
+            Marshal.Copy(dataPtr, textureData, 0, textureData.Length * 4);
 
             // Add data pointer
             d3dDevice.ImmediateContext.UpdateSubresource(new DataBox(GetDataPtr(textureData)), computeResource);
+            */
+
+            computeResource = inputData;
 
             // Texture used to read pixels from
-            stagingResource = new DXTexture2D(d3dDevice, new Texture2DDescription
+            stagingResource = new Texture2D(d3dDevice, new Texture2DDescription
             {
                 CpuAccessFlags = CpuAccessFlags.Read,
                 BindFlags = BindFlags.None,
                 Format = Format.R8G8B8A8_UNorm,
-                Width = inputData.Width,
-                Height = inputData.Height,
+                Width = inputData.Description.Width,
+                Height = inputData.Description.Height,
                 OptionFlags = ResourceOptionFlags.None,
                 MipLevels = 1,
                 ArraySize = 1,
@@ -169,7 +199,7 @@ namespace EconSim.Math
             });
 
             // Add data pointer
-            d3dDevice.ImmediateContext.UpdateSubresource(new DataBox(GetDataPtr(inputData.GetData())), computeResource);
+            d3dDevice.ImmediateContext.UpdateSubresource(new DataBox(Core.Util.GetDataPtr(inputData.GetData())), computeResource);
 
             // Staging
             stagingResource = new Buffer(d3dDevice, new BufferDescription()
@@ -196,19 +226,6 @@ namespace EconSim.Math
 
         }
 
-        /// <summary>
-        /// Returns IntPtr to data
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        private IntPtr GetDataPtr(object data)
-        {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            IntPtr ptr = handle.AddrOfPinnedObject();
-            handle.Free();
-            return ptr;
-        }
-
         private BufferData GetBufferDataById(int bufferDataId)
         {
             foreach (var keyValuePair in buffers)
@@ -222,7 +239,7 @@ namespace EconSim.Math
             return null;
         }
 
-        public Texture2D GetTexture(int shaderBufferIndex)
+        public byte[] GetTexture(int shaderBufferIndex)
         {
             BufferData tbd = GetBufferDataById(shaderBufferIndex);
 
@@ -232,30 +249,25 @@ namespace EconSim.Math
                 return null;
             }
 
-            DXTexture2D stagingResource = (DXTexture2D)tbd.GetStagingResource();
+            Texture2D stagingResource = tbd.GetStagingResource();
 
             // Copy resource
-            d3dDevice.ImmediateContext.CopyResource((DXTexture2D)tbd.GetComputeResource(), stagingResource);
+            d3dDevice.ImmediateContext.CopyResource(tbd.GetComputeResource(), stagingResource);
 
             // Map to a data stream
             d3dDevice.ImmediateContext.MapSubresource(stagingResource, 0, MapMode.Read, MapFlags.None, out var dataStream);
 
-            Texture2D texture = new Texture2D(graphicsDevice, stagingResource.Description.Width, stagingResource.Description.Height);
-
             // Read stream bytes
-            Microsoft.Xna.Framework.Color[] cols = new Microsoft.Xna.Framework.Color[1024 * 1024];
-            for (int i = 0; i < 1024 * 1024; i++)
-            {
-                int r = dataStream.ReadByte(), g = dataStream.ReadByte(), b = dataStream.ReadByte(), a = dataStream.ReadByte();
-                cols[i] = new Microsoft.Xna.Framework.Color(r, g, b, a);
-            }
+            byte[] bytes = new byte[1024 * 1024*4];
 
-            texture.SetData(cols);
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                bytes[i] = (byte)dataStream.ReadByte();
+            }
 
             dataStream.Close();
 
-            return texture;
-
+            return bytes;
         }
 
         public void Begin()

@@ -1,6 +1,5 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using EconSim.Geometry.CardinalCollection;

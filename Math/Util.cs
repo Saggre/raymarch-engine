@@ -1,8 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
 using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System.Numerics;
+
 
 namespace EconSim.Math
 {
@@ -151,14 +151,14 @@ namespace EconSim.Math
             Quaternion result = Quaternion.Identity;
             var radians = degrees * Deg2Rad;
             radians *= 0.5f;
-            axis.Normalize();
+            axis = Vector3.Normalize(axis);
             axis = axis * (float)System.Math.Sin(radians);
             result.X = axis.X;
             result.Y = axis.Y;
             result.Z = axis.Z;
             result.W = (float)System.Math.Cos(radians);
 
-            result.Normalize();
+            result = Quaternion.Normalize(result);
             return result;
         }
 
@@ -301,7 +301,7 @@ namespace EconSim.Math
         /// <returns></returns>
         public static Quaternion LookRotation(Vector3 forward)
         {
-            Vector3 up = Vector3.Up;
+            Vector3 up = Vector3.UnitY;
             return LookRotation(ref forward, ref up);
         }
 
@@ -370,7 +370,7 @@ namespace EconSim.Math
         private static void Internal_ToAxisAngleRad(Quaternion q, out Vector3 axis, out float angle)
         {
             if (System.Math.Abs(q.W) > 1.0f)
-                q.Normalize();
+                q = Quaternion.Normalize(q);
 
             angle = 2.0f * (float)System.Math.Acos(q.W); // angle
             float den = (float)System.Math.Sqrt(1.0 - q.W * q.W);

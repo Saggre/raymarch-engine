@@ -1,16 +1,12 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms;
-using EconSim.Core;
+using System.Numerics;
 using EconSim.Geometry;
-using EconSim.Input;
-using EconSim.Math;
-using EconSim.Terrain;
 using System.Drawing;
+using System.Runtime.InteropServices;
+using EconSim.Terrain;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
@@ -19,7 +15,9 @@ using SharpDX.DXGI;
 using SharpDX.Windows;
 using Buffer = SharpDX.Direct3D11.Buffer;
 
-using Color = Microsoft.Xna.Framework.Color;
+using Color = System.Drawing.Color;
+using Vector3 = System.Numerics.Vector3;
+using Vector2 = System.Numerics.Vector2;
 using Device = SharpDX.Direct3D11.Device;
 
 using Viewport = SharpDX.Viewport;
@@ -27,11 +25,22 @@ using Viewport = SharpDX.Viewport;
 namespace EconSim
 {
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PerFrameBuffer
+    {
+        public Matrix modelMatrix; // 16 floats
+        public Matrix viewMatrix; // 16 floats
+        public Matrix projectionMatrix; // 16 floats
+    }
+
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
     public class EconSim : IDisposable
     {
+        // Temp variable
+        public byte[] texture;
+
         private RenderTargetView renderTargetView;
 
         private RenderForm renderForm;
@@ -43,22 +52,16 @@ namespace EconSim
         private VertexShader vertexShader;
         private PixelShader pixelShader;
 
-        private Device d3dDevice;
+        public static Device d3dDevice;
         private DeviceContext d3dDeviceContext;
         private SwapChain swapChain;
 
-        private Texture2D terrainTexture;
         private Viewport viewport;
 
         private Buffer triangleVertexBuffer;
+        private PerFrameBuffer frameBuffer;
 
-        private Vector3[] vertices = new Vector3[]
-            {new Vector3(-0.5f, 0.5f, 0.0f), new Vector3(0.5f, 0.5f, 0.0f), new Vector3(0.0f, -0.5f, 0.0f)};
-
-        private InputElement[] inputElements = new InputElement[]
-        {
-            new InputElement("POSITION", 0, Format.R32G32B32_Float, 0)
-        };
+        private RenderVertex[] vertices = Primitive.Plane();
 
         private ShaderSignature inputSignature;
         private InputLayout inputLayout;
@@ -72,6 +75,11 @@ namespace EconSim
             InitializeDeviceResources();
             InitializeShaders();
             InitializeTriangle();
+
+            // Temp
+            TerrainGenerator terrainGenerator = new TerrainGenerator();
+            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 128));
+            texture = c.CreateVertexMaps();
         }
 
         /// <summary>
@@ -105,59 +113,9 @@ namespace EconSim
             d3dDevice.ImmediateContext.Rasterizer.SetViewport(viewport);
         }
 
-
-
         private void InitializeTriangle()
         {
-            triangleVertexBuffer = Buffer.Create<Vector3>(d3dDevice, BindFlags.VertexBuffer, vertices);
-        }
-
-        /// <summary>
-        /// Allows the game to perform any initialization it needs to before starting to run.
-        /// This is where it can query for any required services and load any non-graphic
-        /// related content.  Calling base.Initialize will enumerate through any components
-        /// and initialize them as well.
-        /// </summary>
-        protected void Initialize()
-        {
-            renderForm = new RenderForm("My first SharpDX game");
-            renderForm.ClientSize = new Size(Width, Height);
-            renderForm.AllowUserResizing = false;
-
-            d3dDevice = Game1.graphics.GraphicsDevice.Handle as Device;
-
-
-            /*// Load hull shader
-            var compiledHullShader = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationHull.hlsl", "HS", "hs_5_0");
-            hullShader = new HullShader(d3dDevice, compiledHullShader.Bytecode);
-
-            // Load domain shader
-            var compiledDomainShader = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationDomain.hlsl", "DS", "ds_5_0");
-            domainShader = new DomainShader(d3dDevice, compiledDomainShader.Bytecode);*/
-
-            // Load pixel shader
-            var compiledPixelShader =
-                ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationPixel.hlsl", "PS", "ps_5_0");
-            pixelShader = new PixelShader(d3dDevice, compiledPixelShader.Bytecode);
-
-            // Load vertex shader
-            var compiledVertexShader =
-                ShaderBytecode.CompileFromFile(@"Shader\Tessellation\TessellationVertex.hlsl", "VS", "vs_5_0");
-            vertexShader = new VertexShader(d3dDevice, compiledVertexShader.Bytecode);
-            inputSignature = ShaderSignature.GetInputSignature(compiledVertexShader);
-
-            inputLayout = new InputLayout(d3dDevice, inputSignature, inputElements);
-            d3dDevice.ImmediateContext.InputAssembler.InputLayout = inputLayout;
-
-            //Compute();
-
-
-            //d3dDevice.ImmediateContext.HullShader.Set(hullShader);
-            //d3dDevice.ImmediateContext.DomainShader.Set(domainShader);
-            d3dDevice.ImmediateContext.VertexShader.Set(vertexShader);
-            d3dDevice.ImmediateContext.PixelShader.Set(pixelShader);
-            d3dDevice.ImmediateContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-
+            triangleVertexBuffer = Buffer.Create(d3dDevice, BindFlags.VertexBuffer, vertices);
         }
 
         public void Run()
@@ -170,22 +128,13 @@ namespace EconSim
             Draw();
         }
 
-        /*
-        void Compute()
-        {
-            TerrainGenerator terrainGenerator = new TerrainGenerator();
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 128));
-            terrainTexture = c.CreateVertexMaps();
-        }
-        */
-
         private void InitializeShaders()
         {
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\Vertex.hlsl", "VS", "vs_4_0", ShaderFlags.Debug))
+            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_4_0", ShaderFlags.Debug))
             {
                 vertexShader = new VertexShader(d3dDevice, vertexShaderByteCode);
             }
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\Pixel.hlsl", "PS", "ps_4_0", ShaderFlags.Debug))
+            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_4_0", ShaderFlags.Debug))
             {
                 pixelShader = new PixelShader(d3dDevice, pixelShaderByteCode);
             }
@@ -201,40 +150,52 @@ namespace EconSim
                 inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
             }
 
-            inputLayout = new InputLayout(d3dDevice, inputSignature, inputElements);
+            inputLayout = new InputLayout(d3dDevice, inputSignature, RenderVertex.InputElements);
             d3dDeviceContext.InputAssembler.InputLayout = inputLayout;
         }
 
         private void Draw()
         {
+            Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
+                BindFlags.ConstantBuffer,
+                ref frameBuffer,
+                192, // 3 * 4X4m
+                ResourceUsage.Default,
+                CpuAccessFlags.None,
+                ResourceOptionFlags.None,
+                0);
+
+            // Temp
+
+            Texture2D t = new Texture2D(d3dDevice, new Texture2DDescription()
+            {
+                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
+                Format = Format.R8G8B8A8_UNorm,
+                Width = 1024,
+                Height = 1024,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = { Count = 1, Quality = 0 }
+            }, new DataRectangle(Core.Util.GetDataPtr(texture), 4));
+
+            ShaderResourceView textureView = new ShaderResourceView(d3dDevice, t);
+
             d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
             d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 103, 178));
 
-            d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(triangleVertexBuffer, Utilities.SizeOf<Vector3>(), 0));
+            d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(triangleVertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
+            d3dDeviceContext.VertexShader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
+            d3dDeviceContext.PixelShader.SetShaderResource(1, textureView);
+
             d3dDeviceContext.Draw(vertices.Count(), 0);
 
             swapChain.Present(1, PresentFlags.None);
+
+            // TODO fix memory leak
+            textureView.Dispose();
+            t.Dispose();
         }
-
-        /*
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            d3dDevice.ImmediateContext.OutputMerger.SetRenderTargets(renderTargetView);
-            d3dDevice.ImmediateContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 103, 178));
-
-            d3dDevice.ImmediateContext.InputAssembler.SetVertexBuffers(0, VertexBufferBinding(triangleVertexBuffer, Utilities.SizeOf<Vector3>(), 0));
-            d3dDevice.ImmediateContext.Draw(vertices.Count(), 0);
-
-            //swapChain.Present(1, PresentFlags.None);
-
-            base.Draw(gameTime);
-        }*/
 
         public void Dispose()
         {

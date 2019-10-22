@@ -3,10 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using EconSim.Geometry;
 using EconSim.Math;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
+using SharpDX.Direct3D11;
+using SharpDX.DXGI;
+using Color = System.Drawing.Color;
+using ComputeShader = EconSim.Math.ComputeShader;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
 
 namespace EconSim.Terrain
 {
@@ -444,7 +450,7 @@ namespace EconSim.Terrain
         /// </summary>
         /// <param name="voronoi"></param>
         /// <param name="result"></param>
-        public Texture2D CreateVertexMaps()
+        public byte[] CreateVertexMaps()
         {
             SVertex[] vertexStructs = new SVertex[terrainPlane.Vertices.Length];
             STile[] tileStructs = new STile[terrainPlane.Tiles.Length];
@@ -470,12 +476,22 @@ namespace EconSim.Terrain
             tileBuffer.SetData(tileStructs);
 
             // Render
-            ComputeShader computer = new ComputeShader(Game1.graphics.GraphicsDevice, "Shader/terrainGeneration.hlsl", "ComputeTerrain");
+            ComputeShader computer = new ComputeShader(EconSim.d3dDevice, "Shader/terrainGeneration.hlsl", "ComputeTerrain");
 
             // Input texture
-            Texture2D texture = new Texture2D(Game1.graphics.GraphicsDevice, 1024, 1024);
+            Texture2D computeResource = new Texture2D(EconSim.d3dDevice, new Texture2DDescription()
+            {
+                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
+                Format = Format.R8G8B8A8_UNorm,
+                Width = 1024,
+                Height = 1024,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = { Count = 1, Quality = 0 }
+            });
 
-            computer.SetTexture(texture, 0);
+            computer.SetTexture(computeResource, 0);
             computer.SetComputeBuffer(vertexBuffer, 1);
             computer.SetComputeBuffer(tileBuffer, 2);
 
@@ -483,10 +499,10 @@ namespace EconSim.Terrain
             computer.Dispatch(32, 32, 1);
 
             // Get output
-            texture = computer.GetTexture(0);
+            byte[] texture = computer.GetTexture(0);
 
             computer.End();
-            
+
             return texture;
         }
     }

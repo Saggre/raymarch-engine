@@ -1,6 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
 
-using Microsoft.Xna.Framework;
+using System.Numerics;
 using EconSim.Math;
 
 namespace EconSim.Core
@@ -9,6 +9,7 @@ namespace EconSim.Core
     {
         private Vector3 position;
         private Quaternion rotation;
+        private Vector3 scale;
 
         public GameObject()
         {
@@ -20,6 +21,19 @@ namespace EconSim.Core
         {
             this.position = position;
             this.rotation = rotation;
+        }
+
+        /// <summary>
+        /// Creates this object's model matrix;
+        /// </summary>
+        /// <returns></returns>
+        public Matrix4x4 ModelMatrix()
+        {
+            Matrix4x4 modelMatrix = Matrix4x4.Identity;
+            modelMatrix *= Matrix4x4.CreateTranslation(position);
+            modelMatrix *= Matrix4x4.CreateFromQuaternion(rotation);
+            modelMatrix *= Matrix4x4.CreateScale(scale);
+            return modelMatrix;
         }
 
         public Vector3 Position
@@ -56,11 +70,11 @@ namespace EconSim.Core
         {
             Rotate(new Vector3(x, y, x));
         }
-          
-        public Vector3 Right => rotation.Multiply(Vector3.Right);
 
-        public Vector3 Up => rotation.Multiply(Vector3.Up);
+        public Vector3 Right => rotation.Multiply(Vector3.UnitX);
 
-        public Vector3 Forward => rotation.Multiply(Vector3.Forward);
+        public Vector3 Up => rotation.Multiply(Vector3.UnitY);
+
+        public Vector3 Forward => rotation.Multiply(Vector3.UnitZ);
     }
 }

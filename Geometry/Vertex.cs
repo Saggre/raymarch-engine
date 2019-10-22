@@ -1,8 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 30/09/2019
 
 using System.Collections.Generic;
+using System.Numerics;
 using EconSim.Terrain;
-using Microsoft.Xna.Framework;
 
 namespace EconSim.Geometry
 {
