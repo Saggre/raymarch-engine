@@ -1,6 +1,7 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -25,6 +26,8 @@ using Device = SharpDX.Direct3D11.Device;
 
 using Viewport = SharpDX.Viewport;
 using EconSim.Core;
+using Microsoft.Xna.Framework;
+using Matrix = SharpDX.Matrix;
 
 namespace EconSim
 {
@@ -62,16 +65,15 @@ namespace EconSim
 
         private Viewport viewport;
 
-        private Buffer triangleVertexBuffer;
+        private Dictionary<GameObject, Buffer> vertexBuffers;
         private PerFrameBuffer frameBuffer;
         private SamplerState sampler;
-
-        private RenderVertex[] vertices = Primitive.Cube();
 
         private ShaderSignature inputSignature;
         private InputLayout inputLayout;
 
         private Camera mainCamera;
+        private Scene mainScene;
 
         public EconSim()
         {
@@ -79,14 +81,18 @@ namespace EconSim
             renderForm.ClientSize = new Size(Width, Height);
             renderForm.AllowUserResizing = false;
 
-            InitializeDeviceResources();
-            InitializeShaders();
-            InitializeTriangle();
-
             // Set camera initial pos
             mainCamera = new Camera();
-            mainCamera.Position = new Vector3(0, 0, -5);
-            //mainCamera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90);
+            mainCamera.Position = new Vector3(0, 1, -5);
+            mainCamera.Rotation = Math.Util.EulerToQuaternion(new Vector3(11, 0, 0));
+
+            // Create main scene
+            mainScene = new Scene();
+            mainScene.AddGameObject(new GameObject(new Mesh(Primitive.Plane())));
+
+            InitializeDeviceResources();
+            InitializeShaders();
+            InitializeVertexBuffers();
 
             // Temp
             TerrainGenerator terrainGenerator = new TerrainGenerator();
@@ -114,7 +120,6 @@ namespace EconSim
             float fieldOfView = (float)System.Math.PI / 4.0f;
             float nearClipPlane = 0.1f;
             float farClipPlane = 200.0f;
-            Console.WriteLine((float)renderForm.Width / (float)renderForm.Height);
             //return Matrix.CreateOrthographic(5, 5 / aspectRatio, nearClipPlane, farClipPlane);
 
             return Matrix.PerspectiveFovLH(
@@ -152,9 +157,16 @@ namespace EconSim
             d3dDevice.ImmediateContext.Rasterizer.SetViewport(viewport);
         }
 
-        private void InitializeTriangle()
+        /// <summary>
+        /// Adds the vertices of each gameObject's mesh into a vertex buffer to be sent to the gpu
+        /// </summary>
+        private void InitializeVertexBuffers()
         {
-            triangleVertexBuffer = Buffer.Create(d3dDevice, BindFlags.VertexBuffer, vertices);
+            vertexBuffers = new Dictionary<GameObject, Buffer>();
+            foreach (GameObject gameObject in mainScene.GameObjects)
+            {
+                vertexBuffers.Add(gameObject, Buffer.Create(d3dDevice, BindFlags.VertexBuffer, gameObject.Mesh.Vertices));
+            }
         }
 
         public void Run()
@@ -180,9 +192,7 @@ namespace EconSim
 
             d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-
             inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-
 
             inputLayout = new InputLayout(d3dDevice, inputSignature, RenderVertex.InputElements);
             d3dDeviceContext.InputAssembler.InputLayout = inputLayout;
@@ -192,8 +202,8 @@ namespace EconSim
         private void Draw()
         {
             r += 0.01f;
-            frameBuffer.modelMatrix = Matrix.RotationX((float)System.Math.PI / 2);
-            frameBuffer.viewMatrix = Matrix.Translation(0, 0, 0f) * Matrix.RotationY(r) * mainCamera.ViewMatrix();//Matrix4x4.CreateRotationY(0.1f);
+            frameBuffer.modelMatrix = Matrix.Identity;// Matrix.RotationX((float)System.Math.PI / 2);
+            frameBuffer.viewMatrix = mainCamera.ViewMatrix();
             frameBuffer.projectionMatrix = ProjectionMatrix();
 
             frameBuffer.modelMatrix.Transpose();
@@ -231,12 +241,19 @@ namespace EconSim
             d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
             d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 103, 178));
 
-            d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(triangleVertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
-            d3dDeviceContext.VertexShader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
-            d3dDeviceContext.PixelShader.SetSampler(0, sampler);
-            d3dDeviceContext.PixelShader.SetShaderResource(0, textureView);
+            // Render all GameObjects in scene
+            foreach (KeyValuePair<GameObject, Buffer> keyValuePair in vertexBuffers)
+            {
+                Buffer vertexBuffer = keyValuePair.Value;
+                GameObject gameObject = keyValuePair.Key;
 
-            d3dDeviceContext.Draw(vertices.Count(), 0);
+                d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
+                d3dDeviceContext.VertexShader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
+                d3dDeviceContext.PixelShader.SetSampler(0, sampler);
+                d3dDeviceContext.PixelShader.SetShaderResource(0, textureView);
+
+                d3dDeviceContext.Draw(gameObject.Mesh.Vertices.Length, 0);
+            }
 
             swapChain.Present(1, PresentFlags.None);
 
@@ -256,11 +273,17 @@ namespace EconSim
             d3dDevice.Dispose();
             d3dDeviceContext.Dispose();
             renderForm.Dispose();
-            triangleVertexBuffer.Dispose();
             vertexShader.Dispose();
             pixelShader.Dispose();
             inputLayout.Dispose();
             inputSignature.Dispose();
+
+            // Release all Buffers in scene
+            foreach (KeyValuePair<GameObject, Buffer> keyValuePair in vertexBuffers)
+            {
+                Buffer vertexBuffer = keyValuePair.Value;
+                vertexBuffer.Dispose();
+            }
         }
 
     }

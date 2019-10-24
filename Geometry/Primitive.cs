@@ -27,61 +27,59 @@ namespace EconSim.Geometry
         public static RenderVertex[] Plane()
         {
             return new[]{
-                 new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(0f, 1f)),
-                 new RenderVertex(new Vector4(1.0f, 0.0f, 1.0f, 1.0f), new Vector2(1f, 1f)),
-                 new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1f, 0f)),
-
-                 new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(0f, 1f)),
-                 new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1f, 0f)),
-                 new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0f, 0f))
+                new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Top
+                new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4(1.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(1.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
             };
         }
 
         public static RenderVertex[] Cube()
         {
             return new[]{
-             new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Front
-             new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Front
+                new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
 
-             new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)), // BACK
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-             new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 1.0f)),
-             new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f, 0.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)), // Back
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f, 0.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
 
-             new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Top
-             new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Top
+                new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
 
-             new RenderVertex(new Vector4(0.0f,0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)), // Bottom
-             new RenderVertex(new Vector4( 1.0f,0.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-             new RenderVertex(new Vector4(0.0f,0.0f, 1.0f, 1.0f), new Vector2(1.0f, 1.0f)),
-             new RenderVertex(new Vector4(0.0f,0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f,0.0f, 0.0f, 1.0f), new Vector2(0.0f, 0.0f)),
-             new RenderVertex(new Vector4( 1.0f,0.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f,0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)), // Bottom
+                new RenderVertex(new Vector4( 1.0f,0.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f,0.0f, 1.0f, 1.0f), new Vector2(1.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f,0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f,0.0f, 0.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4( 1.0f,0.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
 
-             new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Left
-             new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
-             new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-             new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)), // Left
+                new RenderVertex(new Vector4(0.0f, 0.0f, 1.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(0.0f, 1.0f, 1.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), new Vector2(1.0f, 1.0f)),
 
-             new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)), // Right
-             new RenderVertex(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-             new RenderVertex(new Vector4(1.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 1.0f)),
-             new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
-             new RenderVertex(new Vector4(1.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 0.0f)),
-             new RenderVertex(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
-
+                new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)), // Right
+                new RenderVertex(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
+                new RenderVertex(new Vector4(1.0f, 0.0f, 1.0f, 1.0f), new Vector2(1.0f, 1.0f)),
+                new RenderVertex(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), new Vector2(1.0f, 0.0f)),
+                new RenderVertex(new Vector4(1.0f, 1.0f, 0.0f, 1.0f), new Vector2(0.0f, 0.0f)),
+                new RenderVertex(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), new Vector2(0.0f, 1.0f)),
              };
 
         }
