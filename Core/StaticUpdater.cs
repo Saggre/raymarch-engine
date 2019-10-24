@@ -2,53 +2,57 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace EconSim.Core
 {
-  public static class StaticUpdater
-  {
-    public static List<IUpdateable> updateables;
-
-    public static void CheckList()
+    /// <summary>
+    /// Updates scripts implementing IUpdateable
+    /// </summary>
+    public static class StaticUpdater
     {
-      if (updateables == null)
-      {
-        updateables = new List<IUpdateable>();
-      }
-    }
+        public static List<IUpdateable> updateables;
 
-    public static void ExecuteStartActions()
-    {
-      CheckList();
-      foreach (var updateable in updateables)
-      {
-        updateable.Start();
-      }
-    }
+        public static void CheckInit()
+        {
+            if (updateables == null)
+            {
+                updateables = new List<IUpdateable>();
+            }
+        }
 
-    public static void ExecuteUpdateActions()
-    {
-      CheckList();
-      foreach (var updateable in updateables)
-      {
-        updateable.Update();
-      }
-    }
+        public static void ExecuteStartActions(DateTime startTime)
+        {
+            CheckInit();
+            foreach (IUpdateable updateable in updateables)
+            {
+                updateable.Start(startTime);
+            }
+        }
 
-    public static void ExecuteEndActions()
-    {
-      CheckList();
-      foreach (var updateable in updateables)
-      {
-        updateable.End();
-      }
-    }
+        public static void ExecuteUpdateActions(float deltaTime)
+        {
+            CheckInit();
+            foreach (IUpdateable updateable in updateables)
+            {
+                updateable.Update(deltaTime);
+            }
+        }
 
-    public static void Add(IUpdateable updateable)
-    {
-      CheckList();
-      updateables.Add(updateable);
-    }
+        public static void ExecuteEndActions(DateTime endTime)
+        {
+            CheckInit();
+            foreach (IUpdateable updateable in updateables)
+            {
+                updateable.End(endTime);
+            }
+        }
 
-  }
+        public static void Add(IUpdateable updateable)
+        {
+            CheckInit();
+            updateables.Add(updateable);
+        }
+
+    }
 }

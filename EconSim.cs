@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -9,6 +10,7 @@ using EconSim.Geometry;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using WindowsInput.Native;
 using EconSim.Terrain;
 using SharpDX;
 using SharpDX.D3DCompiler;
@@ -26,7 +28,8 @@ using Device = SharpDX.Direct3D11.Device;
 
 using Viewport = SharpDX.Viewport;
 using EconSim.Core;
-using Microsoft.Xna.Framework;
+using EconSim.Core.Input;
+using EconSim.Math;
 using Matrix = SharpDX.Matrix;
 
 namespace EconSim
@@ -73,7 +76,14 @@ namespace EconSim
         private InputLayout inputLayout;
 
         private Camera mainCamera;
+        private Vector2 lookVector;
+
         private Scene mainScene;
+        private Mouse mainMouse;
+        private Keyboard mainKeyboard;
+        private PlayerMovement movementInput;
+
+        private Stopwatch stopwatch;
 
         public EconSim()
         {
@@ -83,12 +93,24 @@ namespace EconSim
 
             // Set camera initial pos
             mainCamera = new Camera();
-            mainCamera.Position = new Vector3(0, 1, -5);
-            mainCamera.Rotation = Math.Util.EulerToQuaternion(new Vector3(11, 0, 0));
+            mainCamera.Position = new Vector3(0, 2, 3);
+            lookVector = new Vector2(0, 140);
 
             // Create main scene
             mainScene = new Scene();
             mainScene.AddGameObject(new GameObject(new Mesh(Primitive.Plane())));
+
+            // Init inputs
+            mainMouse = new Mouse(renderForm);
+            mainMouse.HideCursor();
+            mainKeyboard = new Keyboard();
+
+            // Init movement manager
+            movementInput = new PlayerMovement();
+
+            // Init stopwatch for deltaTime
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             InitializeDeviceResources();
             InitializeShaders();
@@ -112,6 +134,9 @@ namespace EconSim
                 MinimumLod = -float.MaxValue,
                 MaximumLod = float.MaxValue
             });
+
+            // Execute all start methods
+            StaticUpdater.ExecuteStartActions(DateTime.Now);
         }
 
         public Matrix ProjectionMatrix()
@@ -174,9 +199,20 @@ namespace EconSim
             RenderLoop.Run(renderForm, RenderCallback);
         }
 
+        private float lastDeltaTime;
         private void RenderCallback()
         {
-            Draw();
+
+            stopwatch.Restart();
+
+            // Render
+            Draw(lastDeltaTime);
+
+            // Execute all update methods
+            StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
+
+            stopwatch.Stop();
+            lastDeltaTime = (float)stopwatch.Elapsed.TotalSeconds;
         }
 
         private void InitializeShaders()
@@ -199,8 +235,37 @@ namespace EconSim
         }
 
         private float r;
-        private void Draw()
+
+        private void Draw(float deltaTime)
         {
+            // Close program with esc
+            if (mainKeyboard.IsKeyDown(VirtualKeyCode.ESCAPE))
+            {
+                renderForm.Dispose();
+            }
+
+            // Move camera
+            mainCamera.Move(movementInput.MovementInput.Multiply(mainCamera.Rotation), deltaTime);
+
+            // Rotate camera
+            // 180, 171
+            lookVector.X += mainMouse.DeltaPosition.X * deltaTime;
+            lookVector.Y -= mainMouse.DeltaPosition.Y * deltaTime;
+            Console.WriteLine(lookVector);
+
+            if (lookVector.Y < 100)
+            {
+                lookVector.Y = 100;
+            }
+            else if (lookVector.Y > 260 - float.Epsilon)
+            {
+                lookVector.Y = 260;
+            }
+
+            mainCamera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * Math.Util.Deg2Rad) *
+                             Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * Math.Util.Deg2Rad);
+
+
             r += 0.01f;
             frameBuffer.modelMatrix = Matrix.Identity;// Matrix.RotationX((float)System.Math.PI / 2);
             frameBuffer.viewMatrix = mainCamera.ViewMatrix();
