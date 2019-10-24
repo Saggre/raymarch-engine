@@ -5,20 +5,20 @@ using System;
 namespace EconSim
 {
 #if WINDOWS || LINUX
-  /// <summary>
-  /// The main class.
-  /// </summary>
-  public static class Program
-  {
     /// <summary>
-    /// The main entry point for the application.
+    /// The main class.
     /// </summary>
-    [STAThread]
-    static void Main()
+    public static class Program
     {
-      using (var game = new EconSim())
-        game.Run();
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            using EconSim game = new EconSim();
+            game.Run();
+        }
     }
-  }
 #endif
 }
