@@ -1,10 +1,12 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using EconSim.Geometry;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using EconSim.Terrain;
 using SharpDX;
@@ -13,14 +15,16 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Windows;
-using Buffer = SharpDX.Direct3D11.Buffer;
 
+using Buffer = SharpDX.Direct3D11.Buffer;
 using Color = System.Drawing.Color;
 using Vector3 = System.Numerics.Vector3;
 using Vector2 = System.Numerics.Vector2;
+using Quaternion = System.Numerics.Quaternion;
 using Device = SharpDX.Direct3D11.Device;
 
 using Viewport = SharpDX.Viewport;
+using EconSim.Core;
 
 namespace EconSim
 {
@@ -28,9 +32,9 @@ namespace EconSim
     [StructLayout(LayoutKind.Sequential)]
     public struct PerFrameBuffer
     {
-        public Matrix modelMatrix; // 16 floats
-        public Matrix viewMatrix; // 16 floats
-        public Matrix projectionMatrix; // 16 floats
+        public Matrix modelMatrix;
+        public Matrix viewMatrix;
+        public Matrix projectionMatrix;
     }
 
     /// <summary>
@@ -60,11 +64,14 @@ namespace EconSim
 
         private Buffer triangleVertexBuffer;
         private PerFrameBuffer frameBuffer;
+        private SamplerState sampler;
 
-        private RenderVertex[] vertices = Primitive.Plane();
+        private RenderVertex[] vertices = Primitive.Cube();
 
         private ShaderSignature inputSignature;
         private InputLayout inputLayout;
+
+        private Camera mainCamera;
 
         public EconSim()
         {
@@ -76,10 +83,42 @@ namespace EconSim
             InitializeShaders();
             InitializeTriangle();
 
+            // Set camera initial pos
+            mainCamera = new Camera();
+            mainCamera.Position = new Vector3(0, 0, -5);
+            //mainCamera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, 90);
+
             // Temp
             TerrainGenerator terrainGenerator = new TerrainGenerator();
             TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 128));
             texture = c.CreateVertexMaps();
+
+            sampler = new SamplerState(d3dDevice, new SamplerStateDescription()
+            {
+                Filter = Filter.MinMagMipLinear,
+                AddressU = TextureAddressMode.Wrap,
+                AddressV = TextureAddressMode.Wrap,
+                AddressW = TextureAddressMode.Wrap,
+                BorderColor = new Color4(0, 0, 0, 1),
+                ComparisonFunction = Comparison.Never,
+                MaximumAnisotropy = 16,
+                MipLodBias = 0,
+                MinimumLod = -float.MaxValue,
+                MaximumLod = float.MaxValue
+            });
+        }
+
+        public Matrix ProjectionMatrix()
+        {
+            float aspectRatio = (float)renderForm.Width / (float)renderForm.Height;
+            float fieldOfView = (float)System.Math.PI / 4.0f;
+            float nearClipPlane = 0.1f;
+            float farClipPlane = 200.0f;
+            Console.WriteLine((float)renderForm.Width / (float)renderForm.Height);
+            //return Matrix.CreateOrthographic(5, 5 / aspectRatio, nearClipPlane, farClipPlane);
+
+            return Matrix.PerspectiveFovLH(
+              fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
         }
 
         /// <summary>
@@ -88,7 +127,7 @@ namespace EconSim
         private void InitializeDeviceResources()
         {
             ModeDescription backBufferDesc =
-                new ModeDescription(Width, Height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
+              new ModeDescription(Width, Height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
 
             SwapChainDescription swapChainDesc = new SwapChainDescription()
             {
@@ -101,7 +140,7 @@ namespace EconSim
             };
 
             Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, swapChainDesc, out d3dDevice,
-                out swapChain);
+              out swapChain);
             d3dDeviceContext = d3dDevice.ImmediateContext;
 
             using (Texture2D backBuffer = swapChain.GetBackBuffer<Texture2D>(0))
@@ -130,14 +169,10 @@ namespace EconSim
 
         private void InitializeShaders()
         {
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_4_0", ShaderFlags.Debug))
-            {
-                vertexShader = new VertexShader(d3dDevice, vertexShaderByteCode);
-            }
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_4_0", ShaderFlags.Debug))
-            {
-                pixelShader = new PixelShader(d3dDevice, pixelShaderByteCode);
-            }
+            var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_5_0", ShaderFlags.Debug);
+            vertexShader = new VertexShader(d3dDevice, vertexShaderByteCode);
+            var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_5_0", ShaderFlags.Debug);
+            pixelShader = new PixelShader(d3dDevice, pixelShaderByteCode);
 
             // Set as current vertex and pixel shaders
             d3dDeviceContext.VertexShader.Set(vertexShader);
@@ -145,25 +180,37 @@ namespace EconSim
 
             d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Tessellation\Vertex.hlsl", "VS", "vs_4_0", ShaderFlags.Debug))
-            {
-                inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-            }
+
+            inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
+
 
             inputLayout = new InputLayout(d3dDevice, inputSignature, RenderVertex.InputElements);
             d3dDeviceContext.InputAssembler.InputLayout = inputLayout;
         }
 
+        private float r;
         private void Draw()
         {
+            r += 0.01f;
+            frameBuffer.modelMatrix = Matrix.RotationX((float)System.Math.PI / 2);
+            frameBuffer.viewMatrix = Matrix.Translation(0, 0, 0f) * Matrix.RotationY(r) * mainCamera.ViewMatrix();//Matrix4x4.CreateRotationY(0.1f);
+            frameBuffer.projectionMatrix = ProjectionMatrix();
+
+            frameBuffer.modelMatrix.Transpose();
+            frameBuffer.viewMatrix.Transpose();
+            frameBuffer.projectionMatrix.Transpose();
+
+            //Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(transform * world));
+            //Console.WriteLine(frameBuffer.projectionMatrix);
+
             Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
-                BindFlags.ConstantBuffer,
-                ref frameBuffer,
-                192, // 3 * 4X4m
-                ResourceUsage.Default,
-                CpuAccessFlags.None,
-                ResourceOptionFlags.None,
-                0);
+              BindFlags.ConstantBuffer,
+              ref frameBuffer,
+              Utilities.SizeOf<PerFrameBuffer>(),
+              ResourceUsage.Default,
+              CpuAccessFlags.None,
+              ResourceOptionFlags.None,
+              0);
 
             // Temp
 
@@ -177,7 +224,7 @@ namespace EconSim
                 MipLevels = 1,
                 ArraySize = 1,
                 SampleDescription = { Count = 1, Quality = 0 }
-            }, new DataRectangle(Core.Util.GetDataPtr(texture), 4));
+            }, new DataRectangle(Core.Util.GetDataPtr(texture), 1024 * 4));
 
             ShaderResourceView textureView = new ShaderResourceView(d3dDevice, t);
 
@@ -186,7 +233,8 @@ namespace EconSim
 
             d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(triangleVertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
             d3dDeviceContext.VertexShader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
-            d3dDeviceContext.PixelShader.SetShaderResource(1, textureView);
+            d3dDeviceContext.PixelShader.SetSampler(0, sampler);
+            d3dDeviceContext.PixelShader.SetShaderResource(0, textureView);
 
             d3dDeviceContext.Draw(vertices.Count(), 0);
 
@@ -195,6 +243,10 @@ namespace EconSim
             // TODO fix memory leak
             textureView.Dispose();
             t.Dispose();
+
+            // UI
+
+
         }
 
         public void Dispose()

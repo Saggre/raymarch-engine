@@ -6,65 +6,65 @@ using SharpDX.Direct3D11;
 namespace EconSim.Math
 {
 
-    public class BufferData
+  public class BufferData
+  {
+    private int shaderBufferIndex;
+    private dynamic inputData;
+    private dynamic computeResource;
+    private dynamic stagingResource;
+    private UnorderedAccessView uav;
+    private Type inputDataType;
+
+    public BufferData(int shaderBufferIndex, dynamic inputData, Type inputDataType)
     {
-        private int shaderBufferIndex;
-        private dynamic inputData;
-        private dynamic computeResource;
-        private dynamic stagingResource;
-        private UnorderedAccessView uav;
-        private Type inputDataType;
-
-        public BufferData(int shaderBufferIndex, dynamic inputData, Type inputDataType)
-        {
-            this.shaderBufferIndex = shaderBufferIndex;
-            this.inputData = inputData;
-            this.inputDataType = inputDataType;
-        }
-
-        public int GetShaderBufferIndex()
-        {
-            return shaderBufferIndex;
-        }
-
-        public dynamic GetComputeResource()
-        {
-            return computeResource;
-        }
-
-        public dynamic GetStagingResource()
-        {
-            return stagingResource;
-        }
-
-        public dynamic GetInputData()
-        {
-            return inputData;
-        }
-
-        public UnorderedAccessView GetUnorderedAccessView()
-        {
-            return uav;
-        }
-
-        public void SetUnorderedAccessView(UnorderedAccessView unorderedAccessView)
-        {
-            uav = unorderedAccessView;
-        }
-
-        public Type GetInputDataType()
-        {
-            return inputDataType;
-        }
-
-        public void SetComputeResource(dynamic resource)
-        {
-            computeResource = resource;
-        }
-
-        public void SetStagingResource(dynamic resource)
-        {
-            stagingResource = resource;
-        }
+      this.shaderBufferIndex = shaderBufferIndex;
+      this.inputData = inputData;
+      this.inputDataType = inputDataType;
     }
+
+    public int GetShaderBufferIndex()
+    {
+      return shaderBufferIndex;
+    }
+
+    public dynamic GetComputeResource()
+    {
+      return computeResource;
+    }
+
+    public dynamic GetStagingResource()
+    {
+      return stagingResource;
+    }
+
+    public dynamic GetInputData()
+    {
+      return inputData;
+    }
+
+    public UnorderedAccessView GetUnorderedAccessView()
+    {
+      return uav;
+    }
+
+    public void SetUnorderedAccessView(UnorderedAccessView unorderedAccessView)
+    {
+      uav = unorderedAccessView;
+    }
+
+    public Type GetInputDataType()
+    {
+      return inputDataType;
+    }
+
+    public void SetComputeResource(dynamic resource)
+    {
+      computeResource = resource;
+    }
+
+    public void SetStagingResource(dynamic resource)
+    {
+      stagingResource = resource;
+    }
+  }
 }

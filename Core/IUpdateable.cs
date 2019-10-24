@@ -2,10 +2,10 @@
 
 namespace EconSim.Core
 {
-    public interface IUpdateable
-    {
-        void Start();
-        void Update();
-        void End();
-    }
+  public interface IUpdateable
+  {
+    void Start();
+    void Update();
+    void End();
+  }
 }

@@ -1,24 +1,18 @@
 ﻿cbuffer ShaderBuffer : register(b0)
 {
-	matrix worldMatrix;
-	matrix viewMatrix;
-	matrix projectionMatrix;
-	float4x4 worldInverseTranspose;
+	float4x4 worldMatrix;
+	float4x4 viewMatrix;
+	float4x4 projectionMatrix;
+	//float4x4 worldInverseTranspose;
 };
 
-Texture2D<float4> tex : register(t1);
+Texture2D<float4> tex : register(t0);
+SamplerState g_samLinear : register(s0);
 
-SamplerState g_samLinear
-{
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
-};
 struct PixelInputType
 {
 	float4 Position : SV_POSITION;
-	float4 Color : COLOR0;
-	float4 TexCoord : TEXCOORD0;
+	float2 TexCoord : TEXCOORD0;
 };
 
 float4 PS(PixelInputType input) : SV_Target
@@ -33,7 +27,8 @@ float4 PS(PixelInputType input) : SV_Target
 	//if (screenPos.x > 0.5) {
 		//return float4(1,0,0,1);
 	//}'
-	return float4(input.TexCoord.x, input.TexCoord.y,0,1);
+	//return float4(1,0,0,1);
+	textureColor.a = 1;
 	return textureColor;
 
 	//return saturate(textureColor + AmbientColor * AmbientIntensity);

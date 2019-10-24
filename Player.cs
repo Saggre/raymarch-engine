@@ -4,8 +4,8 @@ using EconSim.Core;
 
 namespace EconSim
 {
-    public class Player : GameObject
-    {
+  public class Player : GameObject
+  {
 
-    }
+  }
 }

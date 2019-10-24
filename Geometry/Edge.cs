@@ -2,8 +2,8 @@
 
 namespace EconSim.Geometry
 {
-    public class Edge
-    {
-        
-    }
+  public class Edge
+  {
+    
+  }
 }
