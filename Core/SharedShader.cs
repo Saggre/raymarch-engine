@@ -10,8 +10,9 @@ namespace EconSim.Core
 {
     /// <summary>
     /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.
+    /// SharedShader saves different buffers per-object and switches between them. This enables two objects to use the same shader, but with different textures for example. (TODO)
     /// </summary>
-    public struct Shader
+    public struct SharedShader
     {
         private InputLayout inputLayout;
         private VertexShader vertexShader;
@@ -20,10 +21,15 @@ namespace EconSim.Core
         private GeometryShader geometryShader;
         private PixelShader pixelShader;
 
+        // TODO struct for shader buffers
+
+        // TODO create shader base class or interface
+
         // Example
         private Dictionary<int, ShaderResourceView> shaderResources;
 
-        public Shader(VertexShader vertexShader, HullShader hullShader, DomainShader domainShader, GeometryShader geometryShader, PixelShader pixelShader)
+        public SharedShader(VertexShader vertexShader, HullShader hullShader, DomainShader domainShader,
+            GeometryShader geometryShader, PixelShader pixelShader)
         {
             inputLayout = null;
 
@@ -36,23 +42,6 @@ namespace EconSim.Core
             shaderResources = new Dictionary<int, ShaderResourceView>();
         }
 
-        public static Shader CompileFromFiles(string folderPath)
-        {
-            // TODO paths
-
-            var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_5_0", ShaderFlags.Debug);
-            VertexShader vs = new VertexShader(EconSim.d3dDevice, vertexShaderByteCode);
-
-            var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_5_0", ShaderFlags.Debug);
-            PixelShader ps = new PixelShader(EconSim.d3dDevice, pixelShaderByteCode);
-
-            Shader shader = new Shader(vs, null, null, null, ps);
-
-            ShaderSignature inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-            shader.inputLayout = new InputLayout(EconSim.d3dDevice, inputSignature, RenderVertex.InputElements);
-
-            return shader;
-        }
 
         public Dictionary<int, ShaderResourceView> ShaderResources => shaderResources;
 
@@ -111,38 +100,7 @@ namespace EconSim.Core
         public GeometryShader GeometryShader => geometryShader;
 
         public PixelShader PixelShader => pixelShader;
+
     }
 
-    public static class ShaderUtils
-    {
-        private static SamplerState defaultSamplerState;
-
-        // TODO default shader
-
-        /// <summary>
-        /// Returns a default sampler
-        /// </summary>
-        /// <returns></returns>
-        public static SamplerState DefaultSamplerState()
-        {
-            if (defaultSamplerState == null)
-            {
-                defaultSamplerState = new SamplerState(EconSim.d3dDevice, new SamplerStateDescription()
-                {
-                    Filter = Filter.MinMagMipLinear,
-                    AddressU = TextureAddressMode.Wrap,
-                    AddressV = TextureAddressMode.Wrap,
-                    AddressW = TextureAddressMode.Wrap,
-                    BorderColor = new Color4(0, 0, 0, 1),
-                    ComparisonFunction = Comparison.Never,
-                    MaximumAnisotropy = 16,
-                    MipLodBias = 0,
-                    MinimumLod = -float.MaxValue,
-                    MaximumLod = float.MaxValue
-                });
-            }
-
-            return defaultSamplerState;
-        }
-    }
 }
