@@ -241,9 +241,8 @@ namespace EconSim
             // Render all GameObjects in scene
             foreach (GameObject gameObject in mainScene.GameObjects)
             {
-                // TODO add object matrix
-                // This matrix are per-object
-                frameBuffer.modelMatrix = Matrix.Identity;
+                // This matrix is per-object
+                frameBuffer.modelMatrix = gameObject.ModelMatrix();
                 frameBuffer.modelMatrix.Transpose();
 
                 Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
