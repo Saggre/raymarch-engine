@@ -3,6 +3,9 @@
 using System.Collections.Generic;
 using System.Numerics;
 using EconSim.Math;
+using SharpDX;
+using Quaternion = System.Numerics.Quaternion;
+using Vector3 = System.Numerics.Vector3;
 
 namespace EconSim.Core
 {
@@ -44,6 +47,9 @@ namespace EconSim.Core
         public GameObject(Mesh mesh)
         {
             this.mesh = mesh;
+            position = Vector3.Zero;
+            rotation = Quaternion.Identity;
+            scale = Vector3.One;
             updateables = new List<IUpdateable>();
         }
         public Shader Shader
@@ -67,16 +73,12 @@ namespace EconSim.Core
         }
 
         /// <summary>
-        /// Creates this object's model matrix;
+        /// Creates this object's model matrix
         /// </summary>
         /// <returns></returns>
-        public Matrix4x4 ModelMatrix()
+        public Matrix ModelMatrix()
         {
-            Matrix4x4 modelMatrix = Matrix4x4.Identity;
-            modelMatrix *= Matrix4x4.CreateTranslation(position);
-            modelMatrix *= Matrix4x4.CreateFromQuaternion(rotation);
-            modelMatrix *= Matrix4x4.CreateScale(scale);
-            return modelMatrix;
+            return Math.Util.AffineTransformation(scale, rotation, position);
         }
 
         public Mesh Mesh
