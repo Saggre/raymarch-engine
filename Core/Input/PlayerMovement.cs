@@ -23,7 +23,7 @@ namespace EconSim.Core.Input
         /// </summary>
         public Vector3 MovementInput => movementInput;
 
-        public void Start(DateTime startTime)
+        public void Start(int startTime)
         {
         }
 
@@ -50,7 +50,7 @@ namespace EconSim.Core.Input
 
         }
 
-        public void End(DateTime endTime)
+        public void End(int endTime)
         {
         }
     }

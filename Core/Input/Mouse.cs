@@ -93,7 +93,7 @@ namespace EconSim.Core.Input
             SetCursorPosition(renderForm.Left + screenHalfX, renderForm.Top + screenHalfY);
         }
 
-        public void Start(DateTime startTime)
+        public void Start(int startTime)
         {
 
         }
@@ -120,7 +120,7 @@ namespace EconSim.Core.Input
             lastCursorPosition = Cursor.Position;
         }
 
-        public void End(DateTime endTime)
+        public void End(int endTime)
         {
 
         }
