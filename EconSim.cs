@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using EconSim.Geometry;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using WindowsInput.Native;
 using SharpDX;
@@ -214,7 +215,6 @@ namespace EconSim
             // 180, 171
             lookVector.X += mainMouse.DeltaPosition.X * deltaTime;
             lookVector.Y -= mainMouse.DeltaPosition.Y * deltaTime;
-            Console.WriteLine(lookVector);
 
             if (lookVector.Y < 100)
             {
@@ -264,10 +264,16 @@ namespace EconSim
                 d3dDeviceContext.VertexShader.Set(gameObject.Shader.VertexShader);
                 d3dDeviceContext.PixelShader.Set(gameObject.Shader.PixelShader);
 
+                d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
+
+                // TODO set gameObject buffers even if using the same shader
+                foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResources)
+                {
+                    d3dDeviceContext.PixelShader.SetShaderResource(shaderResource.Key, shaderResource.Value);
+                }
+
                 // Call Updates
                 updateCallbackAction(gameObject);
-
-                d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
 
                 d3dDeviceContext.Draw(gameObject.Mesh.Vertices.Length, 0);
 

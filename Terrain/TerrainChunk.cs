@@ -65,42 +65,7 @@ namespace EconSim.Terrain
             //Dictionary<Util.TerrainType, Texture2D> terrainMaps = GetTerrainMaps();
             ProfileTime("Rendering terrain textures");
 
-            //terrainMaps[Util.TerrainType.Coast].SaveRenderTextureToFile("Coast");
-
-            /*_vertexComputeShaderIo = new ComputeShaderIO(vertexComputeShader, 1024);
-            RenderTexture vertexMaps = CreateVertexMaps(voronoi);
-            ProfileTime("Creating vertex maps");
-
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.localScale = new Vector3(10, 0.01f, 10);
-            cube.transform.position = new Vector3(0, -0.5f, 0);
-            cube.GetComponent<Renderer>().material.mainTexture = vertexMaps;
-            cube.SetActive(false);
-
-            DisplayTerrain(voronoi, terrainMaps, vertexMaps);*/
-
         }
-
-        /*void DisplayTerrain(Dictionary<Util.TerrainType, Texture2D> terrainMaps, Texture2D vertexMaps)
-        {
-          Material terrainMaterial = Resources.Load<Material>("Materials/Terrain");
-
-          if (terrainMaterial == null)
-          {
-            Debug.LogError("Could not find material");
-          }
-
-          // Build quad
-          GameObject terrainObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
-          terrainObject.transform.LookAt(Vector3.up * -1);
-          terrainObject.transform.position = new Vector3(voronoi.Bounds.x, 0, voronoi.Bounds.y);
-          terrainObject.transform.localScale = new Vector3(voronoi.Bounds.width, voronoi.Bounds.width, voronoi.Bounds.width);
-
-          terrainObject.GetComponent<Renderer>().sharedMaterial = terrainMaterial;
-
-          //terrainMaterial.SetTexture("_Land", terrainMaps[Util.TerrainType.Land]);
-          terrainObject.GetComponent<Renderer>().material.SetTexture("_VertexMaps", vertexMaps);
-        }*/
 
         void ProfileTime(string text)
         {
@@ -287,21 +252,19 @@ namespace EconSim.Terrain
         /// <summary>
         /// Assign terrain types to Tiles and Vertices
         /// </summary>
-        /// <param name="voronoi"></param>
         private void AssignTerrainTypes()
         {
             float dispersion = 0.5f; // 0.0 - 1.0
-
 
             // Internal var
             float noiseMultipler = 1.0f / (1.0f - dispersion);
 
             // Set edge terrain from noise
-            foreach (var vertex in terrainPlane.Vertices)
+            foreach (Vertex vertex in terrainPlane.Vertices)
             {
-                Vector2 normalizedCoord = vertex.Position / bounds.Size;
-                //Debug.Log(normalizedCoord.ToString("F5"));
+                Vector2 normalizedCoord = (vertex.Position + new Vector2(bounds.X, bounds.Y)) / bounds.Size;
                 Vector2 pos = normalizedCoord * noiseMultipler * 128;
+                //noise.SetSeed(DateTime.Now.Millisecond);
                 float random = noise.GetSimplex(pos.X, pos.Y);
                 if (random > 0.1f)
                 {
@@ -384,86 +347,22 @@ namespace EconSim.Terrain
         }
 
         /// <summary>
-        /// Builds a mesh from the supplied tiles, scaled down by _bounds.width and scaled up by scale
-        /// </summary>
-        /// <param name="tiles"></param>
-        /// <param name="scale"></param>
-        /// <returns></returns>
-        /*Mesh BuildMeshFromTiles(Voronoi voronoi, IEnumerable<Tile> tiles, float scale = 10f)
-        {
-          if (voronoi.Bounds.width < Mathf.Epsilon)
-          {
-            Debug.Log("Invalid bounds size");
-          }
-
-          float voronoiScaleMultipler = scale / voronoi.Bounds.width;
-
-          Mesh mesh = new Mesh();
-
-          List<Vector3> vertices = new List<Vector3>();
-          List<int> indices = new List<int>();
-          List<Color> colors = new List<Color>();
-          List<Vector3> normals = new List<Vector3>();
-
-          foreach (var tile in tiles)
-          {
-            Color tileColor = tile.Terrain.GetTerrainColor();
-
-            int tileBase = vertices.Count;
-            vertices.Add(new Vector3(tile.x * voronoiScaleMultipler - scale * 0.5f, 0, tile.y * voronoiScaleMultipler - scale * 0.5f));
-            int regionBase = tileBase + 1;
-
-            List<Vertex> region = tile.Region(voronoi.Bounds);
-
-            for (int i = 0; i < region.Count; i++)
-            {
-              vertices.Add(new Vector3(region[i].x * voronoiScaleMultipler - scale * 0.5f, 0, region[i].y * voronoiScaleMultipler - scale * 0.5f));
-
-              int[] triangleIndices = new int[]
-              {
-                tileBase,
-                regionBase + ((i + 1) % region.Count),
-                regionBase + i
-              };
-
-              indices.AddRange(triangleIndices);
-            }
-
-            for (int i = 0; i < region.Count + 1; i++)
-            {
-              colors.Add(tileColor);
-              normals.Add(Vector3.up);
-            }
-          }
-
-          mesh.vertices = vertices.ToArray();
-          mesh.triangles = indices.ToArray();
-          mesh.colors = colors.ToArray();
-          mesh.normals = normals.ToArray();
-          mesh.name = "Voronoi";
-
-          return mesh;
-        }*/
-
-        /// <summary>
         /// Create a texture with vertex moisture and elevation data
         /// </summary>
-        /// <param name="voronoi"></param>
-        /// <param name="result"></param>
         public Texture2D CreateVertexMaps()
         {
             SVertex[] vertexStructs = new SVertex[terrainPlane.Vertices.Length];
             STile[] tileStructs = new STile[terrainPlane.Tiles.Length];
 
-            var i = 0;
-            foreach (var vertex in terrainPlane.Vertices)
+            int i = 0;
+            foreach (Vertex vertex in terrainPlane.Vertices)
             {
                 vertexStructs[i] = vertex.AsStruct(bounds);
                 i++;
             }
 
             i = 0;
-            foreach (var tile in terrainPlane.Tiles)
+            foreach (Tile tile in terrainPlane.Tiles)
             {
                 tileStructs[i] = tile.AsStruct(bounds);
                 i++;

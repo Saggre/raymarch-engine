@@ -26,13 +26,16 @@ namespace EconSim.Game
 
         private GameObject CreateTile(Vector3 position, Shader shader, TerrainGenerator terrainGenerator)
         {
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 128));
+            const int size = 128;
+
+            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect((int)(size * position.X), (int)(size * position.Y), size));
             Texture2D texture = c.CreateVertexMaps();
             ShaderResourceView textureView = new ShaderResourceView(EconSim.d3dDevice, texture);
 
             GameObject plane = new GameObject(new Mesh(Primitive.Plane()));
             plane.Position = position;
             plane.Shader = shader;
+            // TODO both planes render the same texture
             plane.Shader.SetShaderResource(0, textureView);
             plane.Shader.SetSampler(0, ShaderUtils.DefaultSamplerState());
 
