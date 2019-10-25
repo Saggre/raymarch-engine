@@ -1,5 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
 
+using System.Collections.Generic;
 using System.Numerics;
 using EconSim.Math;
 
@@ -12,12 +13,15 @@ namespace EconSim.Core
         private Vector3 scale;
 
         private Mesh mesh;
+        private Shader shader;
+        private List<IUpdateable> updateables;
 
         public GameObject()
         {
             position = Vector3.Zero;
             rotation = Quaternion.Identity;
             scale = Vector3.One;
+            updateables = new List<IUpdateable>();
         }
 
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale)
@@ -25,6 +29,7 @@ namespace EconSim.Core
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
+            updateables = new List<IUpdateable>();
         }
 
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale, Mesh mesh)
@@ -33,11 +38,32 @@ namespace EconSim.Core
             this.rotation = rotation;
             this.scale = scale;
             this.mesh = mesh;
+            updateables = new List<IUpdateable>();
         }
 
         public GameObject(Mesh mesh)
         {
             this.mesh = mesh;
+            updateables = new List<IUpdateable>();
+        }
+        public Shader Shader
+        {
+            get => shader;
+            set => shader = value;
+        }
+
+        /// <summary>
+        /// Get the Updateables of this GameObject
+        /// </summary>
+        public List<IUpdateable> Updateables => updateables;
+
+        /// <summary>
+        /// Add a Updateable to this GameObject
+        /// </summary>
+        /// <param name="updateable"></param>
+        public void AddUpdateable(IUpdateable updateable)
+        {
+            updateables.Add(updateable);
         }
 
         /// <summary>

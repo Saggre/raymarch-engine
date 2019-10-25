@@ -21,7 +21,7 @@ namespace EconSim.Core
             }
         }
 
-        public static void ExecuteStartActions(DateTime startTime)
+        public static void ExecuteStartActions(int startTime)
         {
             CheckInit();
             foreach (IUpdateable updateable in updateables)
@@ -39,7 +39,7 @@ namespace EconSim.Core
             }
         }
 
-        public static void ExecuteEndActions(DateTime endTime)
+        public static void ExecuteEndActions(int endTime)
         {
             CheckInit();
             foreach (IUpdateable updateable in updateables)

@@ -3,15 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Numerics;
 using EconSim.Geometry;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using WindowsInput.Native;
-using EconSim.Terrain;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
@@ -29,27 +24,29 @@ using Device = SharpDX.Direct3D11.Device;
 using Viewport = SharpDX.Viewport;
 using EconSim.Core;
 using EconSim.Core.Input;
+using EconSim.Game;
 using EconSim.Math;
 using Matrix = SharpDX.Matrix;
 
 namespace EconSim
 {
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct PerFrameBuffer
-    {
-        public Matrix modelMatrix;
-        public Matrix viewMatrix;
-        public Matrix projectionMatrix;
-    }
+
 
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
     public class EconSim : IDisposable
     {
-        // Temp variable
-        public byte[] texture;
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PerFrameBuffer
+        {
+            public Matrix modelMatrix;
+            public Matrix viewMatrix;
+            public Matrix projectionMatrix;
+        }
+
+        public PerFrameBuffer frameBuffer;
 
         private RenderTargetView renderTargetView;
 
@@ -57,33 +54,22 @@ namespace EconSim
         private const int Width = 1280;
         private const int Height = 720;
 
-        private HullShader hullShader;
-        private DomainShader domainShader;
-        private VertexShader vertexShader;
-        private PixelShader pixelShader;
-
         public static Device d3dDevice;
-        private DeviceContext d3dDeviceContext;
+        public static DeviceContext d3dDeviceContext;
         private SwapChain swapChain;
 
         private Viewport viewport;
 
-        private Dictionary<GameObject, Buffer> vertexBuffers;
-        private PerFrameBuffer frameBuffer;
-        private SamplerState sampler;
-
-        private ShaderSignature inputSignature;
-        private InputLayout inputLayout;
-
-        private Camera mainCamera;
+        public static Camera mainCamera;
         private Vector2 lookVector;
 
-        private Scene mainScene;
+        public static Scene mainScene;
         private Mouse mainMouse;
         private Keyboard mainKeyboard;
         private PlayerMovement movementInput;
 
         private Stopwatch stopwatch;
+        private GameLogic gameLogic;
 
         public EconSim()
         {
@@ -98,12 +84,14 @@ namespace EconSim
 
             // Create main scene
             mainScene = new Scene();
-            mainScene.AddGameObject(new GameObject(new Mesh(Primitive.Plane())));
 
             // Init inputs
             mainMouse = new Mouse(renderForm);
             mainMouse.HideCursor();
             mainKeyboard = new Keyboard();
+
+            // Init main game logic script
+            gameLogic = new GameLogic();
 
             // Init movement manager
             movementInput = new PlayerMovement();
@@ -114,29 +102,20 @@ namespace EconSim
 
             InitializeDeviceResources();
             InitializeShaders();
-            InitializeVertexBuffers();
 
-            // Temp
-            TerrainGenerator terrainGenerator = new TerrainGenerator();
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect(0, 0, 128));
-            texture = c.CreateVertexMaps();
-
-            sampler = new SamplerState(d3dDevice, new SamplerStateDescription()
-            {
-                Filter = Filter.MinMagMipLinear,
-                AddressU = TextureAddressMode.Wrap,
-                AddressV = TextureAddressMode.Wrap,
-                AddressW = TextureAddressMode.Wrap,
-                BorderColor = new Color4(0, 0, 0, 1),
-                ComparisonFunction = Comparison.Never,
-                MaximumAnisotropy = 16,
-                MipLodBias = 0,
-                MinimumLod = -float.MaxValue,
-                MaximumLod = float.MaxValue
-            });
+            int unixTime = Core.Util.ConvertToUnixTimestamp(DateTime.Now);
 
             // Execute all start methods
-            StaticUpdater.ExecuteStartActions(DateTime.Now);
+            StaticUpdater.ExecuteStartActions(unixTime);
+
+            // Execute each scene GameObject's updateables
+            foreach (GameObject mainSceneGameObject in mainScene.GameObjects)
+            {
+                foreach (IUpdateable updateable in mainSceneGameObject.Updateables)
+                {
+                    updateable.Start(unixTime);
+                }
+            }
         }
 
         public Matrix ProjectionMatrix()
@@ -145,7 +124,6 @@ namespace EconSim
             float fieldOfView = (float)System.Math.PI / 4.0f;
             float nearClipPlane = 0.1f;
             float farClipPlane = 200.0f;
-            //return Matrix.CreateOrthographic(5, 5 / aspectRatio, nearClipPlane, farClipPlane);
 
             return Matrix.PerspectiveFovLH(
               fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
@@ -182,18 +160,6 @@ namespace EconSim
             d3dDevice.ImmediateContext.Rasterizer.SetViewport(viewport);
         }
 
-        /// <summary>
-        /// Adds the vertices of each gameObject's mesh into a vertex buffer to be sent to the gpu
-        /// </summary>
-        private void InitializeVertexBuffers()
-        {
-            vertexBuffers = new Dictionary<GameObject, Buffer>();
-            foreach (GameObject gameObject in mainScene.GameObjects)
-            {
-                vertexBuffers.Add(gameObject, Buffer.Create(d3dDevice, BindFlags.VertexBuffer, gameObject.Mesh.Vertices));
-            }
-        }
-
         public void Run()
         {
             RenderLoop.Run(renderForm, RenderCallback);
@@ -205,11 +171,18 @@ namespace EconSim
 
             stopwatch.Restart();
 
-            // Render
-            Draw(lastDeltaTime);
-
             // Execute all update methods
             StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
+
+            // Render
+            Draw(lastDeltaTime, gameObject =>
+            {
+                // Execute updates per-object
+                foreach (IUpdateable updateable in gameObject.Updateables)
+                {
+                    updateable.Update(lastDeltaTime);
+                }
+            });
 
             stopwatch.Stop();
             lastDeltaTime = (float)stopwatch.Elapsed.TotalSeconds;
@@ -217,26 +190,16 @@ namespace EconSim
 
         private void InitializeShaders()
         {
-            var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_5_0", ShaderFlags.Debug);
-            vertexShader = new VertexShader(d3dDevice, vertexShaderByteCode);
-            var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_5_0", ShaderFlags.Debug);
-            pixelShader = new PixelShader(d3dDevice, pixelShaderByteCode);
-
-            // Set as current vertex and pixel shaders
-            d3dDeviceContext.VertexShader.Set(vertexShader);
-            d3dDeviceContext.PixelShader.Set(pixelShader);
 
             d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-
-            inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-
-            inputLayout = new InputLayout(d3dDevice, inputSignature, RenderVertex.InputElements);
-            d3dDeviceContext.InputAssembler.InputLayout = inputLayout;
         }
 
-        private float r;
-
-        private void Draw(float deltaTime)
+        /// <summary>
+        /// Draw vertices and call the callback between setting object-specific shaders and object-specific buffers.
+        /// </summary>
+        /// <param name="deltaTime"></param>
+        /// <param name="updateCallbackAction"></param>
+        private void Draw(float deltaTime, Action<GameObject> updateCallbackAction)
         {
             // Close program with esc
             if (mainKeyboard.IsKeyDown(VirtualKeyCode.ESCAPE))
@@ -266,69 +229,53 @@ namespace EconSim
                              Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * Math.Util.Deg2Rad);
 
 
-            r += 0.01f;
-            frameBuffer.modelMatrix = Matrix.Identity;// Matrix.RotationX((float)System.Math.PI / 2);
-            frameBuffer.viewMatrix = mainCamera.ViewMatrix();
-            frameBuffer.projectionMatrix = ProjectionMatrix();
-
-            frameBuffer.modelMatrix.Transpose();
-            frameBuffer.viewMatrix.Transpose();
-            frameBuffer.projectionMatrix.Transpose();
-
-            //Matrix worldInverseTransposeMatrix = Matrix.Transpose(Matrix.Invert(transform * world));
-            //Console.WriteLine(frameBuffer.projectionMatrix);
-
-            Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
-              BindFlags.ConstantBuffer,
-              ref frameBuffer,
-              Utilities.SizeOf<PerFrameBuffer>(),
-              ResourceUsage.Default,
-              CpuAccessFlags.None,
-              ResourceOptionFlags.None,
-              0);
-
-            // Temp
-
-            Texture2D t = new Texture2D(d3dDevice, new Texture2DDescription()
-            {
-                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                Format = Format.R8G8B8A8_UNorm,
-                Width = 1024,
-                Height = 1024,
-                OptionFlags = ResourceOptionFlags.None,
-                MipLevels = 1,
-                ArraySize = 1,
-                SampleDescription = { Count = 1, Quality = 0 }
-            }, new DataRectangle(Core.Util.GetDataPtr(texture), 1024 * 4));
-
-            ShaderResourceView textureView = new ShaderResourceView(d3dDevice, t);
-
             d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
             d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 103, 178));
 
+            // These matrices are not per-object
+            frameBuffer.viewMatrix = mainCamera.ViewMatrix();
+            frameBuffer.projectionMatrix = ProjectionMatrix();
+            frameBuffer.viewMatrix.Transpose();
+            frameBuffer.projectionMatrix.Transpose();
+
             // Render all GameObjects in scene
-            foreach (KeyValuePair<GameObject, Buffer> keyValuePair in vertexBuffers)
+            foreach (GameObject gameObject in mainScene.GameObjects)
             {
-                Buffer vertexBuffer = keyValuePair.Value;
-                GameObject gameObject = keyValuePair.Key;
+                // TODO add object matrix
+                // This matrix are per-object
+                frameBuffer.modelMatrix = Matrix.Identity;
+                frameBuffer.modelMatrix.Transpose();
+
+                Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
+                    BindFlags.ConstantBuffer,
+                    ref frameBuffer,
+                    Utilities.SizeOf<PerFrameBuffer>(),
+                    ResourceUsage.Default,
+                    CpuAccessFlags.None,
+                    ResourceOptionFlags.None,
+                    0);
+
+                gameObject.Shader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
+
+                Buffer vertexBuffer = gameObject.Mesh.GetVertexBuffer();
+
+                // TODO also set other shaders
+                // Set as current vertex and pixel shaders
+                d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.GetInputLayout();
+                d3dDeviceContext.VertexShader.Set(gameObject.Shader.VertexShader);
+                d3dDeviceContext.PixelShader.Set(gameObject.Shader.PixelShader);
+
+                // Call Updates
+                updateCallbackAction(gameObject);
 
                 d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
-                d3dDeviceContext.VertexShader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
-                d3dDeviceContext.PixelShader.SetSampler(0, sampler);
-                d3dDeviceContext.PixelShader.SetShaderResource(0, textureView);
 
                 d3dDeviceContext.Draw(gameObject.Mesh.Vertices.Length, 0);
+
+                sharpDxPerFrameBuffer.Dispose();
             }
 
             swapChain.Present(1, PresentFlags.None);
-
-            // TODO fix memory leak
-            textureView.Dispose();
-            t.Dispose();
-
-            // UI
-
-
         }
 
         public void Dispose()
@@ -338,17 +285,21 @@ namespace EconSim
             d3dDevice.Dispose();
             d3dDeviceContext.Dispose();
             renderForm.Dispose();
-            vertexShader.Dispose();
-            pixelShader.Dispose();
-            inputLayout.Dispose();
-            inputSignature.Dispose();
 
-            // Release all Buffers in scene
-            foreach (KeyValuePair<GameObject, Buffer> keyValuePair in vertexBuffers)
+            int unixTime = Core.Util.ConvertToUnixTimestamp(DateTime.Now);
+
+            // Execute all end methods
+            StaticUpdater.ExecuteEndActions(unixTime);
+
+            // Execute each scene GameObject's end methods
+            foreach (GameObject mainSceneGameObject in mainScene.GameObjects)
             {
-                Buffer vertexBuffer = keyValuePair.Value;
-                vertexBuffer.Dispose();
+                foreach (IUpdateable updateable in mainSceneGameObject.Updateables)
+                {
+                    updateable.End(unixTime);
+                }
             }
+
         }
 
     }

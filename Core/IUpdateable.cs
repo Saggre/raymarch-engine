@@ -10,8 +10,8 @@ namespace EconSim.Core
     /// </summary>
     public interface IUpdateable
     {
-        void Start(DateTime startTime);
+        void Start(int startTime);
         void Update(float deltaTime);
-        void End(DateTime endTime);
+        void End(int endTime);
     }
 }
