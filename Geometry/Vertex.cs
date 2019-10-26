@@ -21,7 +21,7 @@ namespace EconSim.Geometry
             moisture = vertex.Moisture;
             // TODO vertex and tile position is always between (0, 0) and (size, size) even if bounds are offset
             position = new Vector2(vertex.X / bounds.Size, vertex.Y / bounds.Size);
-            //  position = new Vector2((vertex.X - bounds.X) / bounds.Size, (vertex.Y - bounds.Y) / bounds.Size);
+            //position = new Vector2((vertex.X - bounds.X) / bounds.Size, (vertex.Y - bounds.Y) / bounds.Size);
         }
 
         public static int Bytes()
