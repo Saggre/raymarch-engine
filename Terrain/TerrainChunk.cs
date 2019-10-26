@@ -25,6 +25,8 @@ namespace EconSim.Terrain
         private SquareRect bounds;
         private Stopwatch stopwatch;
 
+        private CardinalCollection<TerrainChunk> neighborChunks; // TODO
+
         // tiles indexed by terrain type
         private Dictionary<Util.TerrainType, List<Tile>> tilesIndexedByTerrain;
 
@@ -37,6 +39,8 @@ namespace EconSim.Terrain
 
         private void Create()
         {
+            Console.WriteLine("Creating a terrain chunk at (" + bounds.X + ", " + bounds.Y + ")");
+
             stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -48,7 +52,7 @@ namespace EconSim.Terrain
 
             //Voronoi voronoi = CreateVoronoi(area);
             terrainPlane = new TerrainPlane(bounds.Size);
-            ProfileTime("Voronoi creation");
+            ProfileTime("Vertices creation");
 
             AssignTerrainTypes();
             ProfileTime("Assigning terrain types");
@@ -128,17 +132,17 @@ namespace EconSim.Terrain
 
             // Set vertex elevations as distance from coast
             // Set moisture as distance from fresh water
-            foreach (var vertex in terrainPlane.Vertices)
+            foreach (Vertex vertex in terrainPlane.Vertices)
             {
                 List<Util.TerrainType> connectedTypes = vertex.ConnectedTileTerrainTypes();
 
-                if (GetClosestTileOfType(vertex.Position, out var distanceFromCoastline, Util.TerrainType.Coast) == null)
+                if (GetClosestTileOfType(vertex.Position, out float distanceFromCoastline, Util.TerrainType.Coast) == null)
                 {
                     // Default value
                     distanceFromCoastline = bounds.Size;
                 }
 
-                if (GetClosestTileOfType(vertex.Position, out var distanceFromLake, Util.TerrainType.Lake) == null)
+                if (GetClosestTileOfType(vertex.Position, out float distanceFromLake, Util.TerrainType.Lake) == null)
                 {
                     // Default value
                     distanceFromLake = bounds.Size;
@@ -149,7 +153,7 @@ namespace EconSim.Terrain
                 distanceFromLake *= 512.0f / bounds.Size;
                 distanceFromCoastline *= 512.0f / bounds.Size;
 
-                var distanceFromFreshwater = Math.Min(distanceFromLake * (1 - lakeFreshWaterPercentage), distanceFromCoastline * (1 - coastFreshWaterPercentage));
+                float distanceFromFreshwater = Math.Min(distanceFromLake * (1 - lakeFreshWaterPercentage), distanceFromCoastline * (1 - coastFreshWaterPercentage));
 
                 vertex.Moisture = (float)Math.Pow(0.92f, distanceFromFreshwater);
 
@@ -171,7 +175,7 @@ namespace EconSim.Terrain
         /// </summary>
         private void AssignBiomes()
         {
-            foreach (var tile in terrainPlane.Tiles)
+            foreach (Tile tile in terrainPlane.Tiles)
             {
                 if (tile.TerrainType.IsAquatic())
                 {
@@ -195,7 +199,7 @@ namespace EconSim.Terrain
                 return null;
             }
 
-            for (var i = 0; i < tiles.Count; i++)
+            for (int i = 0; i < tiles.Count; i++)
             {
                 float d = Vector2.Distance(tiles[i].Centroid, startPoint);
                 if (i == 0 || d < distance)
@@ -212,12 +216,12 @@ namespace EconSim.Terrain
         {
             // TODO this is slow
             const int iters = 10;
-            var lakeBaseChance = 0.2f;
+            float lakeBaseChance = 0.2f;
 
             int index = 0;
             for (int i = 0; i < iters; i++)
             {
-                foreach (var landTile in GetTilesByTerrainType(Util.TerrainType.Land))
+                foreach (Tile landTile in GetTilesByTerrainType(Util.TerrainType.Land))
                 {
                     // Neighbors not aquatic except for other lakes
                     HashSet<Util.TerrainType> neighborTerrainTypes = landTile.ConnectedTileTerrainTypes();
@@ -262,7 +266,10 @@ namespace EconSim.Terrain
             // Set edge terrain from noise
             foreach (Vertex vertex in terrainPlane.Vertices)
             {
-                Vector2 normalizedCoord = (vertex.Position + new Vector2(bounds.X, bounds.Y)) / bounds.Size;
+                // TODO why does it need to be flipped?
+                Vector2 vertexFlippedY = new Vector2(vertex.Position.X, bounds.Size - vertex.Position.Y);
+                Vector2 normalizedCoord = (vertexFlippedY + new Vector2(bounds.X, bounds.Y)) / bounds.Size;
+                Console.WriteLine(vertex.Position);
                 Vector2 pos = normalizedCoord * noiseMultipler * 128;
                 //noise.SetSeed(DateTime.Now.Millisecond);
                 float random = noise.GetSimplex(pos.X, pos.Y);
@@ -277,7 +284,7 @@ namespace EconSim.Terrain
             }
 
             // First pass, set tile terrain type from edge types
-            foreach (var tile in terrainPlane.Tiles)
+            foreach (Tile tile in terrainPlane.Tiles)
             {
                 SetTileTerrain(tile, tile.AquaticPercentage() > 0.5f ? Util.TerrainType.Water : Util.TerrainType.Land);
             }
@@ -292,7 +299,7 @@ namespace EconSim.Terrain
 
                 int aquaticNeighbors = 0;
 
-                foreach (var neighbor in tile.Neighbors)
+                foreach (Tile neighbor in tile.Neighbors)
                 {
                     if (neighbor.TerrainType.IsAquatic())
                     {
@@ -339,7 +346,7 @@ namespace EconSim.Terrain
         List<Tile> GetTilesByTerrainType(params Util.TerrainType[] terrainType)
         {
             List<Tile> tiles = new List<Tile>();
-            foreach (var type in terrainType)
+            foreach (Util.TerrainType type in terrainType)
             {
                 tiles.AddRange(tilesIndexedByTerrain[type]);
             }

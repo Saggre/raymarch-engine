@@ -18,7 +18,8 @@ namespace EconSim.Geometry
         public STile(Tile tile, SquareRect bounds)
         {
             terrainType = (int)tile.TerrainType;
-            position = new Vector2((tile.X - bounds.X) / bounds.Size, (tile.Y - bounds.Y) / bounds.Size);
+            //position = new Vector2((tile.X - bounds.X) / bounds.Size, (tile.Y - bounds.Y) / bounds.Size);
+            position = new Vector2(tile.X / bounds.Size, tile.Y / bounds.Size);
         }
 
         public static int Bytes()

@@ -26,13 +26,15 @@ namespace EconSim.Game
 
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
+            EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, -1), shader, terrainGenerator));
+            EconSim.mainScene.AddGameObject(CreateTile(new Vector3(-1, 0, -1), shader, terrainGenerator));
         }
 
         private GameObject CreateTile(Vector3 position, SharedShader shader, TerrainGenerator terrainGenerator)
         {
             const int size = 128;
 
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect((int)(size * position.X), (int)(size * position.Y), size));
+            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect((int)(size * position.X), (int)(size * position.Z), size));
             Texture2D texture = c.CreateVertexMaps();
             ShaderResourceView textureView = new ShaderResourceView(EconSim.d3dDevice, texture);
 
