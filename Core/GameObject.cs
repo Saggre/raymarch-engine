@@ -16,7 +16,7 @@ namespace EconSim.Core
         private Vector3 scale;
 
         private Mesh mesh;
-        private Shader shader;
+        private SharedShader shader;
         private List<IUpdateable> updateables;
 
         public GameObject()
@@ -52,7 +52,7 @@ namespace EconSim.Core
             scale = Vector3.One;
             updateables = new List<IUpdateable>();
         }
-        public Shader Shader
+        public SharedShader Shader
         {
             get => shader;
             set => shader = value;
