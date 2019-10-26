@@ -18,13 +18,17 @@ namespace EconSim.Game
             // Temp
             TerrainGenerator terrainGenerator = new TerrainGenerator();
 
-            Shader shader = Shader.CompileFromFiles("");
+            InputLayout inputLayout;
+            VertexShader vertexShader;
+            PixelShader pixelShader;
+            Shader.CompileFromFiles("", out inputLayout, out vertexShader, out pixelShader);
+            SharedShader shader = new SharedShader(inputLayout, vertexShader, null, null, null, pixelShader);
 
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
         }
 
-        private GameObject CreateTile(Vector3 position, Shader shader, TerrainGenerator terrainGenerator)
+        private GameObject CreateTile(Vector3 position, SharedShader shader, TerrainGenerator terrainGenerator)
         {
             const int size = 128;
 
@@ -36,8 +40,8 @@ namespace EconSim.Game
             plane.Position = position;
             plane.Shader = shader;
             // TODO both planes render the same texture
-            plane.Shader.SetShaderResource(0, textureView);
-            plane.Shader.SetSampler(0, ShaderUtils.DefaultSamplerState());
+            plane.Shader.SetShaderResource(plane, 0, textureView);
+            plane.Shader.SetSampler(plane, 0, ShaderUtils.DefaultSamplerState());
 
             return plane;
         }

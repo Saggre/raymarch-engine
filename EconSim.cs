@@ -267,7 +267,7 @@ namespace EconSim
                 d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
 
                 // TODO set gameObject buffers even if using the same shader
-                foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResources)
+                foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResources(gameObject))
                 {
                     d3dDeviceContext.PixelShader.SetShaderResource(shaderResource.Key, shaderResource.Value);
                 }

@@ -12,94 +12,96 @@ namespace EconSim.Core
     /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.
     /// SharedShader saves different buffers per-object and switches between them. This enables two objects to use the same shader, but with different textures for example. (TODO)
     /// </summary>
-    public struct SharedShader
+    public class SharedShader : Shader
     {
-        private InputLayout inputLayout;
-        private VertexShader vertexShader;
-        private HullShader hullShader;
-        private DomainShader domainShader;
-        private GeometryShader geometryShader;
-        private PixelShader pixelShader;
-
-        // TODO struct for shader buffers
-
-        // TODO create shader base class or interface
-
-        // Example
-        private Dictionary<int, ShaderResourceView> shaderResources;
-
-        public SharedShader(VertexShader vertexShader, HullShader hullShader, DomainShader domainShader,
-            GeometryShader geometryShader, PixelShader pixelShader)
+        public class PerObjectShaderBuffers
         {
-            inputLayout = null;
+            // Dict keys are shader slots
+            public Dictionary<int, Buffer> ConstantBuffers;
+            public Dictionary<int, SamplerState> Samplers;
+            public Dictionary<int, ShaderResourceView> ResourceViews;
 
-            this.vertexShader = vertexShader;
-            this.hullShader = hullShader;
-            this.domainShader = domainShader;
-            this.geometryShader = geometryShader;
-            this.pixelShader = pixelShader;
-
-            shaderResources = new Dictionary<int, ShaderResourceView>();
+            public PerObjectShaderBuffers()
+            {
+                ConstantBuffers = new Dictionary<int, Buffer>();
+                Samplers = new Dictionary<int, SamplerState>();
+                ResourceViews = new Dictionary<int, ShaderResourceView>();
+            }
         }
 
-
-        public Dictionary<int, ShaderResourceView> ShaderResources => shaderResources;
-
-        public InputLayout GetInputLayout()
+        /*public static SharedShader FromShader(Shader sourceShader)
         {
-            return inputLayout;
+            SharedShader sharedShader = (SharedShader)sourceShader;
+            return
+        }*/
+
+        private Dictionary<GameObject, PerObjectShaderBuffers> perObjectShaderResources;
+
+        public SharedShader(InputLayout inputLayout, VertexShader vertexShader, HullShader hullShader, DomainShader domainShader,
+            GeometryShader geometryShader, PixelShader pixelShader) : base(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader)
+        {
+            perObjectShaderResources = new Dictionary<GameObject, PerObjectShaderBuffers>();
         }
+
+        public Dictionary<GameObject, PerObjectShaderBuffers> PerObjectShaderResources => perObjectShaderResources;
 
         #region Implements
 
-        public void SetVertexBuffers()
+        /// <summary>
+        /// Add a GameObject to Per-object shader resources list if it already isn't there
+        /// </summary>
+        /// <param name="gameObject"></param>
+        private void AddGameObjectIfNotExists(GameObject gameObject)
         {
+            if (!perObjectShaderResources.ContainsKey(gameObject))
+            {
+                perObjectShaderResources.Add(gameObject, new PerObjectShaderBuffers());
+            }
+        }
 
+        public Dictionary<int, ShaderResourceView> ShaderResources(GameObject gameObject)
+        {
+            // TODO check if gameObject is added
+            return perObjectShaderResources[gameObject].ResourceViews;
         }
 
         /// <summary>
         /// CBV
         /// </summary>
+        /// <param name="gameObject"></param>
         /// <param name="slot"></param>
         /// <param name="constantBuffer"></param>
-        public void SetConstantBuffer(int slot, Buffer constantBuffer)
+        public void SetConstantBuffer(GameObject gameObject, int slot, Buffer constantBuffer)
         {
-            EconSim.d3dDeviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
-            // TODO add also other shaders
+            AddGameObjectIfNotExists(gameObject);
+            perObjectShaderResources[gameObject].ConstantBuffers.Add(slot, constantBuffer);
         }
 
         /// <summary>
         /// Sampler
         /// </summary>
+        /// <param name="gameObject"></param>
         /// <param name="slot"></param>
         /// <param name="sampler"></param>
-        public void SetSampler(int slot, SamplerState sampler)
+        public void SetSampler(GameObject gameObject, int slot, SamplerState sampler)
         {
-            EconSim.d3dDeviceContext.PixelShader.SetSampler(slot, sampler);
+            AddGameObjectIfNotExists(gameObject);
+            perObjectShaderResources[gameObject].Samplers.Add(slot, sampler);
         }
 
         /// <summary>
         /// SRV
         /// </summary>
+        /// <param name="gameObject"></param>
         /// <param name="slot"></param>
         /// <param name="resourceView"></param>
-        public void SetShaderResource(int slot, ShaderResourceView resourceView)
+        public void SetShaderResource(GameObject gameObject, int slot, ShaderResourceView resourceView)
         {
-            shaderResources.Add(slot, resourceView);
-            //EconSim.d3dDeviceContext.PixelShader.SetShaderResource(0, resourceView);
+            AddGameObjectIfNotExists(gameObject);
+            perObjectShaderResources[gameObject].ResourceViews.Add(slot, resourceView);
         }
 
         #endregion
-
-        public VertexShader VertexShader => vertexShader;
-
-        public HullShader HullShader => hullShader;
-
-        public DomainShader DomainShader => domainShader;
-
-        public GeometryShader GeometryShader => geometryShader;
-
-        public PixelShader PixelShader => pixelShader;
 
     }
 

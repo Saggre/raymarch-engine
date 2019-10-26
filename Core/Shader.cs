@@ -11,7 +11,7 @@ namespace EconSim.Core
     /// <summary>
     /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.
     /// </summary>
-    public struct Shader
+    public class Shader
     {
         private InputLayout inputLayout;
         private VertexShader vertexShader;
@@ -23,10 +23,9 @@ namespace EconSim.Core
         // Example
         private Dictionary<int, ShaderResourceView> shaderResources;
 
-        public Shader(VertexShader vertexShader, HullShader hullShader, DomainShader domainShader, GeometryShader geometryShader, PixelShader pixelShader)
+        public Shader(InputLayout inputLayout, VertexShader vertexShader, HullShader hullShader, DomainShader domainShader, GeometryShader geometryShader, PixelShader pixelShader)
         {
-            inputLayout = null;
-
+            this.inputLayout = inputLayout;
             this.vertexShader = vertexShader;
             this.hullShader = hullShader;
             this.domainShader = domainShader;
@@ -36,22 +35,26 @@ namespace EconSim.Core
             shaderResources = new Dictionary<int, ShaderResourceView>();
         }
 
-        public static Shader CompileFromFiles(string folderPath)
+        /// <summary>
+        /// Compiles files into shader bytecode and returns individual shaders
+        /// </summary>
+        /// <param name="folderPath"></param>
+        /// <param name="inputLayout"></param>
+        /// <param name="vertexShader"></param>
+        /// <param name="pixelShader"></param>
+        public static void CompileFromFiles(string folderPath, out InputLayout inputLayout, out VertexShader vertexShader, out PixelShader pixelShader)
         {
             // TODO paths
+            // TODO return all shaders
 
             var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_5_0", ShaderFlags.Debug);
-            VertexShader vs = new VertexShader(EconSim.d3dDevice, vertexShaderByteCode);
+            vertexShader = new VertexShader(EconSim.d3dDevice, vertexShaderByteCode);
 
             var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_5_0", ShaderFlags.Debug);
-            PixelShader ps = new PixelShader(EconSim.d3dDevice, pixelShaderByteCode);
-
-            Shader shader = new Shader(vs, null, null, null, ps);
+            pixelShader = new PixelShader(EconSim.d3dDevice, pixelShaderByteCode);
 
             ShaderSignature inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-            shader.inputLayout = new InputLayout(EconSim.d3dDevice, inputSignature, RenderVertex.InputElements);
-
-            return shader;
+            inputLayout = new InputLayout(EconSim.d3dDevice, inputSignature, RenderVertex.InputElements);
         }
 
         public Dictionary<int, ShaderResourceView> ShaderResources => shaderResources;
