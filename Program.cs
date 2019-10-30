@@ -4,7 +4,7 @@ using System;
 
 namespace EconSim
 {
-#if WINDOWS || LINUX
+    //#if WINDOWS || LINUX
     /// <summary>
     /// The main class.
     /// </summary>
@@ -20,5 +20,5 @@ namespace EconSim
             game.Run();
         }
     }
-#endif
+//#endif
 }

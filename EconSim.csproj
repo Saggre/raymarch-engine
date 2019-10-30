@@ -1,0 +1,194 @@
+﻿<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{243B2BE3-FDE7-4C4D-BF4D-63E70D2856F2}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>WindowsApplication</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>EconSim</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.4.2.0\lib\net40\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.D3DCompiler, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.D3DCompiler.4.2.0\lib\net40\SharpDX.D3DCompiler.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Desktop, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.Desktop.4.2.0\lib\net40\SharpDX.Desktop.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.Direct3D11.4.2.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.DXGI.4.2.0\lib\net40\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.Mathematics.4.2.0\lib\net40\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsInput, Version=1.0.4.0, Culture=neutral, PublicKeyToken=9b287f7dc5073cad, processorArchitecture=MSIL">
+      <HintPath>packages\InputSimulator.1.0.4.0\lib\net20\WindowsInput.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="Icon.ico" />
+    <Content Include="Shader\Diffuse\Pixel.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shader\Diffuse\Vertex.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shader\terrainGeneration.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shader\Tessellation.hlsl" />
+    <Content Include="Shader\Tessellation\Domain.hlsl" />
+    <Content Include="Shader\Tessellation\Hull.hlsl" />
+    <Content Include="Shader\Tessellation\Pixel.hlsl" />
+    <Content Include="Shader\Tessellation\Vertex.hlsl" />
+    <Content Include="Shader\test.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AddressHelper.cs" />
+    <Compile Include="Core\AutoUpdateable.cs" />
+    <Compile Include="Core\Camera.cs" />
+    <Compile Include="Core\GameObject.cs" />
+    <Compile Include="Core\Input\Keyboard.cs" />
+    <Compile Include="Core\Input\Mouse.cs" />
+    <Compile Include="Core\Input\PlayerMovement.cs" />
+    <Compile Include="Core\IUpdateable.cs" />
+    <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\Scene.cs" />
+    <Compile Include="Core\Shader.cs" />
+    <Compile Include="Core\SharedShader.cs" />
+    <Compile Include="Core\StaticUpdater.cs" />
+    <Compile Include="Core\Util.cs" />
+    <Compile Include="EconSim.cs" />
+    <Compile Include="Game\GameLogic.cs" />
+    <Compile Include="Geometry\CardinalCollection.cs" />
+    <Compile Include="Geometry\Edge.cs" />
+    <Compile Include="Geometry\Primitive.cs" />
+    <Compile Include="Geometry\RenderVertex.cs" />
+    <Compile Include="Geometry\SquareRect.cs" />
+    <Compile Include="Geometry\Tile.cs" />
+    <Compile Include="Geometry\Vertex.cs" />
+    <Compile Include="Math\BufferData.cs" />
+    <Compile Include="Math\ComputeBuffer.cs" />
+    <Compile Include="Math\ComputeShader.cs" />
+    <Compile Include="Math\FastNoise.cs" />
+    <Compile Include="Math\Util.cs" />
+    <Compile Include="Player.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Terrain\TerrainChunk.cs" />
+    <Compile Include="Terrain\TerrainColor.cs" />
+    <Compile Include="Terrain\TerrainGenerator.cs" />
+    <Compile Include="Terrain\TerrainPlane.cs" />
+    <Compile Include="Terrain\Util.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".git\config" />
+    <None Include=".git\description" />
+    <None Include=".git\HEAD" />
+    <None Include=".git\hooks\applypatch-msg.sample" />
+    <None Include=".git\hooks\commit-msg.sample" />
+    <None Include=".git\hooks\fsmonitor-watchman.sample" />
+    <None Include=".git\hooks\post-update.sample" />
+    <None Include=".git\hooks\pre-applypatch.sample" />
+    <None Include=".git\hooks\pre-commit.sample" />
+    <None Include=".git\hooks\pre-push.sample" />
+    <None Include=".git\hooks\pre-rebase.sample" />
+    <None Include=".git\hooks\pre-receive.sample" />
+    <None Include=".git\hooks\prepare-commit-msg.sample" />
+    <None Include=".git\hooks\update.sample" />
+    <None Include=".git\index" />
+    <None Include=".git\info\exclude" />
+    <None Include=".git\logs\HEAD" />
+    <None Include=".git\logs\refs\heads\master" />
+    <None Include=".git\logs\refs\remotes\origin\HEAD" />
+    <None Include=".git\objects\pack\pack-faa73f12f4e3a2f164f52383547bfe6727939389.idx" />
+    <None Include=".git\objects\pack\pack-faa73f12f4e3a2f164f52383547bfe6727939389.pack" />
+    <None Include=".git\packed-refs" />
+    <None Include=".git\refs\heads\master" />
+    <None Include=".git\refs\remotes\origin\HEAD" />
+    <None Include="app.config" />
+    <None Include="app.manifest" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include=".git\objects\info\" />
+    <Folder Include=".git\refs\tags\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
