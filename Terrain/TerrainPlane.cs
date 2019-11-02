@@ -45,6 +45,78 @@ namespace EconSim.Terrain
         }
 
         /// <summary>
+        /// Iterate each tile starting from (startX, startY) and continuing outwards in a spiral.
+        /// Makes finding the closest tile of a certain type a lot faster.
+        /// </summary>
+        public void ForEachTileSpiralic(int startX, int startY, Action<int, int> action)
+        {
+            /*
+             *     ... 11 10
+                7 7 7 7 6 10
+                8 3 3 2 6 10
+                8 4 . 1 6 10
+                8 4 5 5 5 10
+                8 9 9 9 9 9
+             */
+
+            // TODO create test
+
+            int turns = 1;
+            while (true)
+            {
+                int awind = turns * 2 - 1;
+                int xCoord, yCoord;
+
+                // Check whether the coord is inside the plane and execute the action if it is
+                void CheckAndExecute(int xCoord, int yCoord)
+                {
+                    if (xCoord <= size && yCoord <= size)
+                    {
+                        action(xCoord, yCoord);
+                    }
+                }
+
+                // Bottom - iterate through the row horizontally
+                for (int x = 0; x < awind; x++)
+                {
+                    xCoord = startX - turns + 2 + x;
+                    yCoord = startY - turns + 1;
+
+                    CheckAndExecute(xCoord, yCoord);
+                }
+
+                // Right - iterate through the column vertically
+                for (int y = 0; y < awind; y++)
+                {
+                    xCoord = startX + turns;
+                    yCoord = startY + turns - y;
+
+                    CheckAndExecute(xCoord, yCoord);
+                }
+
+                // Top
+                for (int x = 0; x < awind + 1; x++)
+                {
+                    xCoord = startX - turns + x;
+                    yCoord = startY - turns;
+
+                    CheckAndExecute(xCoord, yCoord);
+                }
+
+                // Left
+                for (int y = 0; y < awind + 1; y++)
+                {
+                    xCoord = startX - turns;
+                    yCoord = tartY + turns - y;
+
+                    CheckAndExecute(xCoord, yCoord);
+                }
+
+                turns++;
+            }
+        }
+
+        /// <summary>
         /// Execute an action for each tile
         /// </summary>
         /// <param name="action">First param is X index / coordinate, second is Y index / coordinate and third is cumulative index of both</param>
@@ -116,22 +188,14 @@ namespace EconSim.Terrain
 
             #endregion
 
-            #region Edges
-
-            ForEachVertex(delegate (int x, int y, int i)
-            {
-
-            });
-
-            #endregion
-
-            foreach (var tile in tiles)
+            // For debugging
+            /*foreach (var tile in tiles)
             {
                 if (tile.Vertices.Count() != 4)
                 {
                     Debug.WriteLine("Error");
                 }
-            }
+            }*/
 
         }
 

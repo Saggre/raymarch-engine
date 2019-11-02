@@ -25,9 +25,12 @@ namespace EconSim.Game
             SharedShader shader = new SharedShader(inputLayout, vertexShader, null, null, null, pixelShader);
 
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
+
+            // Neighbours
+            EconSim.mainScene.AddGameObject(CreateTile(new Vector3(1, 0, 0), shader, terrainGenerator));
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
+            EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 1), shader, terrainGenerator));
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, -1), shader, terrainGenerator));
-            EconSim.mainScene.AddGameObject(CreateTile(new Vector3(-1, 0, -1), shader, terrainGenerator));
         }
 
         private GameObject CreateTile(Vector3 position, SharedShader shader, TerrainGenerator terrainGenerator)

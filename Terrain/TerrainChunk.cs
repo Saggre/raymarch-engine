@@ -201,7 +201,7 @@ namespace EconSim.Terrain
 
             for (int i = 0; i < tiles.Count; i++)
             {
-                float d = Vector2.Distance(tiles[i].Centroid, startPoint);
+                float d = TaxicabDistance(tiles[i].Centroid, startPoint);
                 if (i == 0 || d < distance)
                 {
                     distance = d;
@@ -210,6 +210,27 @@ namespace EconSim.Terrain
             }
 
             return closestTile;
+        }
+
+        /// <summary>
+        /// Calculate the taxicab distance between two vectors
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        private float TaxicabDistance(Vector2 a, Vector2 b)
+        {
+            float da = (a.X - b.X);
+            float db = (a.Y - b.Y);
+            if (da < 0)
+            {
+                da = -da;
+            }
+            if (db < 0)
+            {
+                db = -db;
+            }
+            return da + db;
         }
 
         private void CreateLakes()
@@ -269,7 +290,6 @@ namespace EconSim.Terrain
                 // TODO why does it need to be flipped?
                 Vector2 vertexFlippedY = new Vector2(vertex.Position.X, bounds.Size - vertex.Position.Y);
                 Vector2 normalizedCoord = (vertexFlippedY + new Vector2(bounds.X, bounds.Y)) / bounds.Size;
-                Console.WriteLine(vertex.Position);
                 Vector2 pos = normalizedCoord * noiseMultipler * 128;
                 //noise.SetSeed(DateTime.Now.Millisecond);
                 float random = noise.GetSimplex(pos.X, pos.Y);
