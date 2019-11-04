@@ -2,7 +2,7 @@
 
 using Matrix = SharpDX.Matrix;
 using System.Numerics;
-using EconSim.Math;
+using EconSim.EMath;
 using System;
 
 namespace EconSim.Core
@@ -17,14 +17,14 @@ namespace EconSim.Core
         {
             return LookAtLH(Position, Position + Forward, Vector3.UnitY);
 
-            Console.WriteLine(Math.Util.QuaternionToEuler(Rotation));
+            Console.WriteLine(EMath.Util.QuaternionToEuler(Rotation));
             //return RotationQuaternion(Rotation);
 
             Matrix lookAt = LookAtLH(Position, Vector3.Zero, Vector3.UnitY);
             SharpDX.Quaternion rot = new SharpDX.Quaternion();
             SharpDX.Vector3 v3 = new SharpDX.Vector3();
             lookAt.Decompose(out v3, out rot, out v3);
-            Console.WriteLine(Math.Util.QuaternionToEuler(new Quaternion(rot.X, rot.Y, rot.Z, rot.W)));
+            Console.WriteLine(EMath.Util.QuaternionToEuler(new Quaternion(rot.X, rot.Y, rot.Z, rot.W)));
 
             return lookAt;
         }

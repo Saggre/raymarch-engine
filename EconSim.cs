@@ -26,7 +26,7 @@ using Viewport = SharpDX.Viewport;
 using EconSim.Core;
 using EconSim.Core.Input;
 using EconSim.Game;
-using EconSim.Math;
+using EconSim.EMath;
 using Matrix = SharpDX.Matrix;
 
 namespace EconSim
@@ -225,8 +225,8 @@ namespace EconSim
                 lookVector.Y = 260;
             }
 
-            mainCamera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * Math.Util.Deg2Rad) *
-                             Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * Math.Util.Deg2Rad);
+            mainCamera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * EMath.Util.Deg2Rad) *
+                             Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
 
 
             d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);

@@ -14,8 +14,7 @@ namespace EconSim
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
-        {
+        static void Main() {
             using EconSim game = new EconSim();
             game.Run();
         }
