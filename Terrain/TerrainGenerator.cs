@@ -2,7 +2,7 @@
 
 using System;
 using EconSim.Geometry;
-using EconSim.Math;
+using EconSim.EMath;
 
 namespace EconSim.Terrain
 {

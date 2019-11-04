@@ -8,7 +8,7 @@ using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
 
-namespace EconSim.Math
+namespace EconSim.EMath
 {
     public static class Util
     {
@@ -463,6 +463,26 @@ namespace EconSim.Math
         #endregion
 
         #region Math and constants
+
+        public static int Clamp(this int i, int min, int max)
+        {
+            if (i >= min && i <= max)
+            {
+                return i;
+            }
+
+            return i < min ? min : max;
+        }
+
+        public static float Clamp(this float i, float min, float max)
+        {
+            if (i >= min && i <= max)
+            {
+                return i;
+            }
+
+            return i < min ? min : max;
+        }
 
         public static bool AlmostZero(float f)
         {

@@ -100,24 +100,36 @@
   <ItemGroup>
     <Content Include=".gitignore" />
     <Content Include="Icon.ico" />
-    <Content Include="Shader\Diffuse\Pixel.hlsl">
+    <Content Include="Shaders\Diffuse\Common.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shader\Diffuse\Vertex.hlsl">
+    <Content Include="Shaders\Diffuse\Pixel.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shader\terrainGeneration.hlsl">
+    <Content Include="Shaders\Diffuse\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shader\Tessellation.hlsl" />
-    <Content Include="Shader\Tessellation\Domain.hlsl" />
-    <Content Include="Shader\Tessellation\Hull.hlsl" />
-    <Content Include="Shader\Tessellation\Pixel.hlsl" />
-    <Content Include="Shader\Tessellation\Vertex.hlsl" />
-    <Content Include="Shader\test.hlsl" />
+    <Content Include="Shaders\terrainGeneration.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Tessellation.hlsl" />
+    <Content Include="Shaders\Tessellation\Domain.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Tessellation\Hull.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Tessellation\Pixel.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Tessellation\Vertex.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\test.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddressHelper.cs" />
+    <Compile Include="Collections\Util.cs" />
     <Compile Include="Core\AutoUpdateable.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\GameObject.cs" />
@@ -140,14 +152,15 @@
     <Compile Include="Geometry\SquareRect.cs" />
     <Compile Include="Geometry\Tile.cs" />
     <Compile Include="Geometry\Vertex.cs" />
-    <Compile Include="Math\BufferData.cs" />
-    <Compile Include="Math\ComputeBuffer.cs" />
-    <Compile Include="Math\ComputeShader.cs" />
-    <Compile Include="Math\FastNoise.cs" />
-    <Compile Include="Math\Util.cs" />
+    <Compile Include="EMath\BufferData.cs" />
+    <Compile Include="EMath\ComputeBuffer.cs" />
+    <Compile Include="EMath\ComputeShader.cs" />
+    <Compile Include="EMath\FastNoise.cs" />
+    <Compile Include="EMath\Util.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Core\HLSLFileIncludeHandler.cs" />
     <Compile Include="Terrain\TerrainChunk.cs" />
     <Compile Include="Terrain\TerrainColor.cs" />
     <Compile Include="Terrain\TerrainGenerator.cs" />

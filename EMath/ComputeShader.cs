@@ -15,7 +15,7 @@ using Color = System.Drawing.Color;
 using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 
-namespace EconSim.Math
+namespace EconSim.EMath
 {
 
     public class ComputeShader

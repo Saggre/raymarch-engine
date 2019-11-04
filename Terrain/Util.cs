@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using EconSim.Math;
+using EconSim.EMath;
 
 namespace EconSim.Terrain
 {

@@ -18,11 +18,8 @@ namespace EconSim.Game
             // Temp
             TerrainGenerator terrainGenerator = new TerrainGenerator();
 
-            InputLayout inputLayout;
-            VertexShader vertexShader;
-            PixelShader pixelShader;
-            Shader.CompileFromFiles("", out inputLayout, out vertexShader, out pixelShader);
-            SharedShader shader = new SharedShader(inputLayout, vertexShader, null, null, null, pixelShader);
+            SharedShader shader = (SharedShader)Shader.CompileFromFiles(@"Shaders\Diffuse");
+
 
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
 

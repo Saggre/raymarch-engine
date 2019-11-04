@@ -31,7 +31,7 @@ namespace EconSim.Terrain
         /// Execute an action for each tile
         /// </summary>
         /// <param name="action">First param is X index / coordinate, second is Y index / coordinate and third is cumulative index of both</param>
-        internal void ForEachTile(Action<int, int, int> action)
+        public void ForEachTile(Action<int, int, int> action)
         {
             int i = 0;
             for (int y = 0; y < size; y++)
@@ -47,32 +47,29 @@ namespace EconSim.Terrain
         /// <summary>
         /// Iterate each tile starting from (startX, startY) and continuing outwards in a spiral.
         /// Makes finding the closest tile of a certain type a lot faster.
+        /// Winds counterclockwise.
         /// </summary>
-        public void ForEachTileSpiralic(int startX, int startY, Action<int, int> action)
+        /*public void ForEachTileSpiralic(int startX, int startY, Action<int, int> action)
         {
-            /*
-             *     ... 11 10
-                7 7 7 7 6 10
-                8 3 3 2 6 10
-                8 4 . 1 6 10
-                8 4 5 5 5 10
-                8 9 9 9 9 9
-             */
 
-            // TODO create test
+            // First element
+            action(startX, startY);
+
+            int maxTurns = System.Math.Max(System.Math.Max(startX, startX),
+                System.Math.Max(size - startX, size - startX));
 
             int turns = 1;
-            while (true)
+            for (int t = 0; t < maxTurns; t++)
             {
                 int awind = turns * 2 - 1;
                 int xCoord, yCoord;
 
                 // Check whether the coord is inside the plane and execute the action if it is
-                void CheckAndExecute(int xCoord, int yCoord)
+                void CheckAndExecute(int x, int y)
                 {
-                    if (xCoord <= size && yCoord <= size)
+                    if (x < size && y < size && x >= 0 && y >= 0)
                     {
-                        action(xCoord, yCoord);
+                        action(x, y);
                     }
                 }
 
@@ -80,7 +77,7 @@ namespace EconSim.Terrain
                 for (int x = 0; x < awind; x++)
                 {
                     xCoord = startX - turns + 2 + x;
-                    yCoord = startY - turns + 1;
+                    yCoord = startY + turns - 1;
 
                     CheckAndExecute(xCoord, yCoord);
                 }
@@ -89,7 +86,7 @@ namespace EconSim.Terrain
                 for (int y = 0; y < awind; y++)
                 {
                     xCoord = startX + turns;
-                    yCoord = startY + turns - y;
+                    yCoord = startY + turns - 2 - y;
 
                     CheckAndExecute(xCoord, yCoord);
                 }
@@ -97,7 +94,7 @@ namespace EconSim.Terrain
                 // Top
                 for (int x = 0; x < awind + 1; x++)
                 {
-                    xCoord = startX - turns + x;
+                    xCoord = startX + turns - 1 - x;
                     yCoord = startY - turns;
 
                     CheckAndExecute(xCoord, yCoord);
@@ -107,20 +104,20 @@ namespace EconSim.Terrain
                 for (int y = 0; y < awind + 1; y++)
                 {
                     xCoord = startX - turns;
-                    yCoord = tartY + turns - y;
+                    yCoord = startY - turns + 1 + y;
 
                     CheckAndExecute(xCoord, yCoord);
                 }
 
                 turns++;
             }
-        }
+        }*/
 
         /// <summary>
         /// Execute an action for each tile
         /// </summary>
         /// <param name="action">First param is X index / coordinate, second is Y index / coordinate and third is cumulative index of both</param>
-        internal void ForEachVertex(Action<int, int, int> action)
+        public void ForEachVertex(Action<int, int, int> action)
         {
             int i = 0;
             for (int y = 0; y < size + 1; y++)

@@ -2,7 +2,7 @@
 
 using System;
 
-namespace EconSim.Math
+namespace EconSim.EMath
 {
 
   public class ComputeBuffer

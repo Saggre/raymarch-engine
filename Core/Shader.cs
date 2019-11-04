@@ -1,10 +1,14 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using EconSim.Geometry;
 using SharpDX;
 using SharpDX.D3DCompiler;
+using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace EconSim.Core
 {
@@ -36,25 +40,91 @@ namespace EconSim.Core
         }
 
         /// <summary>
-        /// Compiles files into shader bytecode and returns individual shaders
+        /// Compiles files into shader byte-code and creates a shader from the shader files that exist
         /// </summary>
         /// <param name="folderPath"></param>
-        /// <param name="inputLayout"></param>
-        /// <param name="vertexShader"></param>
-        /// <param name="pixelShader"></param>
-        public static void CompileFromFiles(string folderPath, out InputLayout inputLayout, out VertexShader vertexShader, out PixelShader pixelShader)
+        public static Shader CompileFromFiles(string folderPath)
         {
-            // TODO paths
-            // TODO return all shaders
+            ShaderFlags shaderFlags = ShaderFlags.Debug;
 
-            var vertexShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Vertex.hlsl", "VS", "vs_5_0", ShaderFlags.Debug);
-            vertexShader = new VertexShader(EconSim.d3dDevice, vertexShaderByteCode);
+            InputLayout inputLayout = null;
+            VertexShader vertexShader = null;
+            HullShader hullShader = null;
+            DomainShader domainShader = null;
+            GeometryShader geometryShader = null;
+            PixelShader pixelShader = null;
 
-            var pixelShaderByteCode = ShaderBytecode.CompileFromFile(@"Shader\Diffuse\Pixel.hlsl", "PS", "ps_5_0", ShaderFlags.Debug);
-            pixelShader = new PixelShader(EconSim.d3dDevice, pixelShaderByteCode);
+            // Handler for #include directive
+            HLSLFileIncludeHandler includeHandler = new HLSLFileIncludeHandler(folderPath);
 
-            ShaderSignature inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-            inputLayout = new InputLayout(EconSim.d3dDevice, inputSignature, RenderVertex.InputElements);
+            // Vertex shader + Shader signature
+            {
+                string path = Path.Combine(folderPath, "Vertex.hlsl");
+
+                if (File.Exists(path))
+                {
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", shaderFlags,
+                        EffectFlags.None, null, includeHandler);
+                    vertexShader = new VertexShader(EconSim.d3dDevice, byteCode);
+
+                    ShaderSignature inputSignature = ShaderSignature.GetInputSignature(byteCode);
+                    inputLayout = new InputLayout(EconSim.d3dDevice, inputSignature, RenderVertex.InputElements);
+                }
+                else
+                {
+                    // TODO fail
+                }
+            }
+
+            // Hull shader
+            {
+                string path = Path.Combine(folderPath, "Hull.hlsl");
+
+                if (File.Exists(path))
+                {
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "HS", "hs_5_0", shaderFlags,
+                        EffectFlags.None, null, includeHandler);
+                    hullShader = new HullShader(EconSim.d3dDevice, byteCode);
+                }
+            }
+
+            // Domain shader
+            {
+                string path = Path.Combine(folderPath, "Domain.hlsl");
+
+                if (File.Exists(path))
+                {
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "DS", "ds_5_0", shaderFlags,
+                        EffectFlags.None, null, includeHandler);
+                    domainShader = new DomainShader(EconSim.d3dDevice, byteCode);
+                }
+            }
+
+            // Geometry shader
+            {
+                string path = Path.Combine(folderPath, "Geometry.hlsl");
+
+                if (File.Exists(path))
+                {
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "GS", "gs_5_0", shaderFlags,
+                        EffectFlags.None, null, includeHandler);
+                    geometryShader = new GeometryShader(EconSim.d3dDevice, byteCode);
+                }
+            }
+
+            // Pixel shader
+            {
+                string path = Path.Combine(folderPath, "Pixel.hlsl");
+
+                if (File.Exists(path))
+                {
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", shaderFlags,
+                        EffectFlags.None, null, includeHandler);
+                    pixelShader = new PixelShader(EconSim.d3dDevice, byteCode);
+                }
+            }
+
+            return new SharedShader(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader);
         }
 
         public Dictionary<int, ShaderResourceView> ShaderResources => shaderResources;

@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 using System.Numerics;
-using EconSim.Math;
+using EconSim.EMath;
 using SharpDX;
 using Quaternion = System.Numerics.Quaternion;
 using Vector3 = System.Numerics.Vector3;
@@ -78,7 +78,7 @@ namespace EconSim.Core
         /// <returns></returns>
         public Matrix ModelMatrix()
         {
-            return Math.Util.AffineTransformation(scale, rotation, position);
+            return EMath.Util.AffineTransformation(scale, rotation, position);
         }
 
         public Mesh Mesh

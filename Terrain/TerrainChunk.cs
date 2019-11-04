@@ -4,13 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using EconSim.Collections;
 using EconSim.Geometry;
-using EconSim.Math;
+using EconSim.EMath;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Color = System.Drawing.Color;
-using ComputeShader = EconSim.Math.ComputeShader;
+using ComputeShader = EconSim.EMath.ComputeShader;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
 
@@ -54,13 +55,13 @@ namespace EconSim.Terrain
             terrainPlane = new TerrainPlane(bounds.Size);
             ProfileTime("Vertices creation");
 
-            AssignTerrainTypes();
-            ProfileTime("Assigning terrain types");
+            //AssignTerrainTypes();
+            //ProfileTime("Assigning terrain types");
 
-            CreateLakes();
-            ProfileTime("Creating lakes");
+            //CreateLakes();
+            //ProfileTime("Creating lakes");
 
-            AssignElevationsAndMoisture();
+            AssignElevations();
             ProfileTime("Assigning elevations");
 
             //AssignBiomes(voronoi);
@@ -123,51 +124,14 @@ namespace EconSim.Terrain
         }*/
 
         /// <summary>
-        /// Assign elevations and moisture to Tiles and Vertices
+        /// Assign elevation to vertices
         /// </summary>
-        private void AssignElevationsAndMoisture()
+        private void AssignElevations()
         {
-            float coastFreshWaterPercentage = 0.35f;
-            float lakeFreshWaterPercentage = 0.9f;
-
-            // Set vertex elevations as distance from coast
-            // Set moisture as distance from fresh water
-            foreach (Vertex vertex in terrainPlane.Vertices)
+            terrainPlane.ForEachVertex((int x, int y, int i) =>
             {
-                List<Util.TerrainType> connectedTypes = vertex.ConnectedTileTerrainTypes();
-
-                if (GetClosestTileOfType(vertex.Position, out float distanceFromCoastline, Util.TerrainType.Coast) == null)
-                {
-                    // Default value
-                    distanceFromCoastline = bounds.Size;
-                }
-
-                if (GetClosestTileOfType(vertex.Position, out float distanceFromLake, Util.TerrainType.Lake) == null)
-                {
-                    // Default value
-                    distanceFromLake = bounds.Size;
-                }
-
-                // TODO is this necessary?
-                // Normalize values
-                distanceFromLake *= 512.0f / bounds.Size;
-                distanceFromCoastline *= 512.0f / bounds.Size;
-
-                float distanceFromFreshwater = Math.Min(distanceFromLake * (1 - lakeFreshWaterPercentage), distanceFromCoastline * (1 - coastFreshWaterPercentage));
-
-                vertex.Moisture = (float)Math.Pow(0.92f, distanceFromFreshwater);
-
-                // 0 is at sea level
-                if (connectedTypes.Contains(Util.TerrainType.Ocean))
-                {
-                    vertex.Elevation = -1 + (float)Math.Pow(0.99f, distanceFromCoastline);
-                }
-                else
-                {
-                    vertex.Elevation = 1 - (float)Math.Pow(0.99f, distanceFromCoastline);
-                }
-            }
-
+                terrainPlane.Vertices[x, y].Elevation = noise.GetNoise(bounds.X + x, bounds.Y - y);
+            });
         }
 
         /// <summary>
@@ -186,6 +150,36 @@ namespace EconSim.Terrain
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startPoint"></param>
+        /// <param name="distance"></param>
+        /// <param name="terrainTypes"></param>
+        /// <returns></returns>
+        private Tile GetClosestTileOfType(in Vector2 startPoint, out float distance,
+            params Util.TerrainType[] terrainTypes)
+        {
+            // Contain the start point inside bounds
+
+            int startX = ((int)startPoint.X).Clamp(0, bounds.Size - 1);
+            int startY = ((int)startPoint.Y).Clamp(0, bounds.Size - 1);
+
+            Tile closestTile = null;
+
+            terrainPlane.Tiles.ForEachHelical(startX, startY, (Tile tile) =>
+            {
+                if (closestTile == null && terrainTypes.ContainsTerrain(tile.TerrainType))
+                {
+                    closestTile = tile;
+                }
+            });
+
+            distance = closestTile == null ? 0f : startPoint.ManhattanDistance(closestTile.Centroid);
+            return closestTile;
+        }
+
+        /*
         private Tile GetClosestTileOfType(in Vector2 startPoint, out float distance, params Util.TerrainType[] terrainTypes)
         {
             List<Tile> tiles = GetTilesByTerrainType(terrainTypes);
@@ -210,7 +204,7 @@ namespace EconSim.Terrain
             }
 
             return closestTile;
-        }
+        }*/
 
         /// <summary>
         /// Calculate the taxicab distance between two vectors
@@ -402,7 +396,7 @@ namespace EconSim.Terrain
             tileBuffer.SetData(tileStructs);
 
             // Render
-            ComputeShader computer = new ComputeShader(EconSim.d3dDevice, "Shader/terrainGeneration.hlsl", "ComputeTerrain");
+            ComputeShader computer = new ComputeShader(EconSim.d3dDevice, "Shaders/terrainGeneration.hlsl", "ComputeTerrain");
 
             // Input texture
             Texture2D computeResource = new Texture2D(EconSim.d3dDevice, new Texture2DDescription()
