@@ -51,10 +51,10 @@ namespace EconSim.Core
         /// </summary>
         public void Draw()
         {
-            EconSim.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            EconSim.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            EconSim.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
-            EconSim.d3dDeviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
         }
 
 
@@ -64,7 +64,7 @@ namespace EconSim.Core
         /// <param name="subset">Subsets</param>
         public void Draw(int subset)
         {
-            EconSim.d3dDeviceContext.DrawIndexed(SubSets[subset].IndexCount, SubSets[subset].StartIndex, 0);
+            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(SubSets[subset].IndexCount, SubSets[subset].StartIndex, 0);
         }
 
         /// <summary>
@@ -78,8 +78,8 @@ namespace EconSim.Core
         public static Mesh Create(RenderVertex[] vertices, int[] indices)
         {
             Mesh mesh = new Mesh();
-            mesh.VertexBuffer = Buffer11.Create(EconSim.d3dDevice, BindFlags.VertexBuffer, vertices);
-            mesh.IndexBuffer = Buffer11.Create(EconSim.d3dDevice, BindFlags.IndexBuffer, indices);
+            mesh.VertexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.VertexBuffer, vertices);
+            mesh.IndexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.IndexBuffer, indices);
             mesh.VertexSize = SharpDX.Utilities.SizeOf<RenderVertex>();
             mesh.SubSets.Add(new Material()
             {
@@ -218,8 +218,8 @@ namespace EconSim.Core
             int[] indices = new int[] { 0, 2, 1, 2, 3, 1 };
 
             Mesh mesh = new Mesh();
-            mesh.VertexBuffer = Buffer11.Create(EconSim.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
-            mesh.IndexBuffer = Buffer11.Create(EconSim.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
+            mesh.VertexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
+            mesh.IndexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
             mesh.VertexSize = Utilities.SizeOf<RenderVertex>();
 
             mesh.SubSets.Add(new Material()
@@ -236,9 +236,9 @@ namespace EconSim.Core
         /// </summary>
         public void Begin()
         {
-            EconSim.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            EconSim.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            EconSim.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
         }
 
         /// <summary>
@@ -247,10 +247,10 @@ namespace EconSim.Core
         /// <param name="count"></param>
         public void DrawPoints(int count = int.MaxValue)
         {
-            EconSim.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
-            EconSim.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            EconSim.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
-            EconSim.d3dDeviceContext.DrawIndexed(Math.Min(count, SubSets[0].IndexCount), 0, 0);
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(Math.Min(count, SubSets[0].IndexCount), 0, 0);
         }
 
         /// <summary>
@@ -259,10 +259,10 @@ namespace EconSim.Core
         /// <param name="topology">Patch Topology type</param>
         public void DrawPatch(PrimitiveTopology topology)
         {
-            EconSim.d3dDeviceContext.InputAssembler.PrimitiveTopology = topology;
-            EconSim.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            EconSim.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
-            EconSim.d3dDeviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = topology;
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
         }
 
         /// <summary>

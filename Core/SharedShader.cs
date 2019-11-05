@@ -59,7 +59,7 @@ namespace EconSim.Core
             }
         }
 
-        public Dictionary<int, ShaderResourceView> ShaderResources(GameObject gameObject)
+        public new Dictionary<int, ShaderResourceView> ShaderResources(GameObject gameObject)
         {
             // TODO check if gameObject is added
             return perObjectShaderResources[gameObject].ResourceViews;

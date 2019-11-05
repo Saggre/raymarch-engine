@@ -4,9 +4,8 @@ HS_CONSTANT_DATA SampleHSFunction(InputPatch<HS_INPUT, 3> ip,
                                           uint PatchID : SV_PrimitiveID)
 {
     HS_CONSTANT_DATA Output;
-    float tessFactor = 10; //factor.x;
-
-    float TessAmount = 10; //factor.y;
+    float tessFactor = 20; //factor.x;
+    float TessAmount = 20; //factor.y;
 
     Output.Edges[0] = Output.Edges[1] = Output.Edges[2] = tessFactor;
     Output.Inside[0] = TessAmount;
