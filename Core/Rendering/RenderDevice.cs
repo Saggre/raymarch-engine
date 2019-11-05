@@ -1,14 +1,17 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 05/11/2019
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using WindowsInput.Native;
+using EconSim.Core.Input;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Windows;
 using Device11 = SharpDX.Direct3D11.Device;
-using Buffer11 = SharpDX.Direct3D11.Buffer;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace EconSim.Core.Rendering
 {
@@ -17,12 +20,6 @@ namespace EconSim.Core.Rendering
     /// </summary>
     public class RenderDevice : IDisposable
     {
-
-        //private 
-        private Device11 _device;
-        private DeviceContext _deviceContext;
-        private SwapChain _swapchain;
-
         private RenderTargetView _backbufferView;
         private DepthStencilView _zbufferView;
 
@@ -31,179 +28,167 @@ namespace EconSim.Core.Rendering
         private DepthStencilState _depthState;
         private SamplerState _samplerState;
 
-        /// <summary>
-        /// Device
-        /// </summary>
-        public Device11 Device { get { return _device; } }
 
-        /// <summary>
-        /// Device Context
-        /// </summary>
-        public DeviceContext DeviceContext { get { return _deviceContext; } }
+        private RenderForm renderForm;
 
-        /// <summary>
-        /// Swapchain
-        /// </summary>
-        public SwapChain SwapChain { get { return _swapchain; } }
-
-        /// <summary>
-        /// Rendering Form
-        /// </summary>
-        public RenderForm View { get; private set; }
+        public Device11 d3dDevice;
+        public DeviceContext d3dDeviceContext;
+        private SwapChain swapChain;
 
         /// <summary>
         /// Indicate that device must be resized
         /// </summary>
         public bool MustResize { get; private set; }
 
-        /// <summary>
-        /// View to BackBuffer
-        /// </summary>
-        public RenderTargetView BackBufferView { get { return _backbufferView; } }
-
-        /// <summary>
-        /// View to Depth Buffer
-        /// </summary>
-        public DepthStencilView ZBufferView { get { return _zbufferView; } }
-
-        /// <summary>
-        /// Font Batch
-        /// </summary>
-        public Sharp2D Font { get; private set; }
-
-        /// <summary>
-        /// Init all object to start rendering
-        /// </summary>
-        /// <param name="form">Rendering form</param>
-        /// <param name="debug">Active the debug mode</param>
-        public RenderDevice(RenderForm form, bool debug = false)
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PerFrameBuffer
         {
-            View = form;
-            // SwapChain description
-            var desc = new SwapChainDescription()
+            public Matrix modelMatrix;
+            public Matrix viewMatrix;
+            public Matrix projectionMatrix;
+        }
+
+        public PerFrameBuffer frameBuffer;
+
+        private Viewport viewport;
+
+        public RenderDevice(RenderForm renderForm)
+        {
+            this.renderForm = renderForm;
+            InitializeDeviceResources();
+        }
+
+        /// <summary>
+        /// Initialize DirectX
+        /// </summary>
+        private void InitializeDeviceResources()
+        {
+            int width = renderForm.ClientSize.Width;
+            int height = renderForm.ClientSize.Height;
+
+            ModeDescription backBufferDesc =
+                new ModeDescription(width, height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
+
+            SwapChainDescription swapChainDesc = new SwapChainDescription()
             {
-                BufferCount = 1,//buffer count
-                ModeDescription = new ModeDescription(View.ClientSize.Width, View.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),//sview
-                IsWindowed = true,
-                OutputHandle = View.Handle,
+                ModeDescription = backBufferDesc,
                 SampleDescription = new SampleDescription(1, 0),
-                SwapEffect = SwapEffect.Discard,
-                Usage = Usage.RenderTargetOutput
+                Usage = Usage.RenderTargetOutput,
+                BufferCount = 1,
+                OutputHandle = renderForm.Handle,
+                IsWindowed = true
             };
 
-            FeatureLevel[] levels = new FeatureLevel[] { FeatureLevel.Level_11_1 };
+            FeatureLevel[] levels = { FeatureLevel.Level_11_1 };
+            Device11.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, levels, swapChainDesc, out d3dDevice,
+                out swapChain);
+            d3dDeviceContext = d3dDevice.ImmediateContext;
 
-            //create device and swapchain
-            DeviceCreationFlags flag = DeviceCreationFlags.None | DeviceCreationFlags.BgraSupport;
-            if (debug)
-                flag = DeviceCreationFlags.Debug;
+            /*using (Texture2D backBuffer = swapChain.GetBackBuffer<Texture2D>(0))
+            {
+                renderTargetView = new RenderTargetView(d3dDevice, backBuffer);
+            }*/
 
-            Device11.CreateWithSwapChain(SharpDX.Direct3D.DriverType.Hardware, flag, levels, desc, out _device, out _swapchain);
-
-            //get context to device
-            _deviceContext = Device.ImmediateContext;
-
+            viewport = new Viewport(0, 0, width, height);
+            d3dDevice.ImmediateContext.Rasterizer.SetViewport(viewport);
 
             //Ignore all windows events
-            var factory = SwapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(View.Handle, WindowAssociationFlags.IgnoreAll);
+            var factory = swapChain.GetParent<Factory>();
+            factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
 
+            // TODO what is this
             //Setup handler on resize form
-            View.UserResized += (sender, args) => MustResize = true;
+            renderForm.UserResized += (sender, args) => MustResize = true;
 
             //Set Default State
             SetDefaultRasterState();
+            SetWireframeRasterState();
             SetDefaultDepthState();
             SetDefaultBlendState();
             SetDefaultSamplerState();
-
-            Font = new Sharp2D(this);
 
             //Resize all items
             Resize();
         }
 
+        #region Draw loop
 
         /// <summary>
-        /// Create and Resize all items
+        /// Draw vertices and call the callback between setting object-specific shaders and object-specific buffers.
         /// </summary>
-        public void Resize()
+        /// <param name="deltaTime"></param>
+        /// <param name="updateCallbackAction"></param>
+        public void Draw(float deltaTime, Action<GameObject> updateCallbackAction)
         {
-            // Dispose all previous allocated resources
-            Font.Release();
-            Utilities.Dispose(ref _backbufferView);
-            Utilities.Dispose(ref _zbufferView);
-
-
-            if (View.ClientSize.Width == 0 || View.ClientSize.Height == 0)
-                return;
-
-            // Resize the backbuffer
-            SwapChain.ResizeBuffers(1, View.ClientSize.Width, View.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.None);
-
-            // Get the backbuffer from the swapchain
-            var _backBufferTexture = SwapChain.GetBackBuffer<Texture2D>(0);
-
-            //update font
-            Font.UpdateResources(_backBufferTexture);
-
-            // Backbuffer
-            _backbufferView = new RenderTargetView(Device, _backBufferTexture);
-            _backBufferTexture.Dispose();
-
-            // Depth buffer
-
-            var _zbufferTexture = new Texture2D(Device, new Texture2DDescription()
+            // Close program with esc
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.ESCAPE))
             {
-                Format = Format.D16_UNorm,
-                ArraySize = 1,
-                MipLevels = 1,
-                Width = View.ClientSize.Width,
-                Height = View.ClientSize.Height,
-                SampleDescription = new SampleDescription(1, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None
-            });
+                renderForm.Dispose();
+            }
 
+            //Resizing
+            if (MustResize)
+            {
+                Resize();
+            }
 
-            // Create the depth buffer view
-            _zbufferView = new DepthStencilView(Device, _zbufferTexture);
-            _zbufferTexture.Dispose();
+            //clear color
+            Clear(Color.CornflowerBlue);
+            UpdateAllStates();
 
-            SetDefaultTargers();
+            //d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
+            //d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 103, 178));
 
-            // End resize
-            MustResize = false;
-        }
+            // These matrices are not per-object
+            frameBuffer.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
+            frameBuffer.projectionMatrix = ProjectionMatrix();
+            frameBuffer.viewMatrix.Transpose();
+            frameBuffer.projectionMatrix.Transpose();
 
-        /// <summary>
-        /// Set default render and depth buffer inside device context
-        /// </summary>
-        public void SetDefaultTargers()
-        {
-            // Setup targets and viewport for rendering
-            DeviceContext.Rasterizer.SetViewport(0, 0, View.ClientSize.Width, View.ClientSize.Height);
-            DeviceContext.OutputMerger.SetTargets(_zbufferView, _backbufferView);
-        }
+            // Render all GameObjects in scene
+            foreach (GameObject gameObject in Engine.CurrentScene.GameObjects)
+            {
+                // This matrix is per-object
+                frameBuffer.modelMatrix = gameObject.ModelMatrix();
+                frameBuffer.modelMatrix.Transpose();
 
-        /// <summary>
-        /// Dispose element
-        /// </summary>
-        public void Dispose()
-        {
-            Font.Dispose();
-            _rasterState.Dispose();
-            _blendState.Dispose();
-            _depthState.Dispose();
-            _samplerState.Dispose();
+                Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
+                    BindFlags.ConstantBuffer,
+                    ref frameBuffer,
+                    Utilities.SizeOf<PerFrameBuffer>(),
+                    ResourceUsage.Default,
+                    CpuAccessFlags.None,
+                    ResourceOptionFlags.None,
+                    0);
 
-            _backbufferView.Dispose();
-            _zbufferView.Dispose();
-            _swapchain.Dispose();
-            _deviceContext.Dispose();
-            _device.Dispose();
+                gameObject.Shader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
+
+                // Set as current shaders
+                d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.GetInputLayout();
+                d3dDeviceContext.VertexShader.Set(gameObject.Shader.VertexShader);
+                d3dDeviceContext.HullShader.Set(gameObject.Shader.HullShader);
+                d3dDeviceContext.DomainShader.Set(gameObject.Shader.DomainShader);
+                d3dDeviceContext.GeometryShader.Set(gameObject.Shader.GeometryShader);
+                d3dDeviceContext.PixelShader.Set(gameObject.Shader.PixelShader);
+
+                // TODO set gameObject buffers even if using the same shader
+                foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResources(gameObject))
+                {
+                    d3dDeviceContext.PixelShader.SetShaderResource(shaderResource.Key, shaderResource.Value);
+                }
+
+                // Call Updates
+                updateCallbackAction(gameObject);
+
+                // Draw object through its Mesh class
+                gameObject.Mesh.DrawPatch(PrimitiveTopology.PatchListWith3ControlPoints);
+                //gameObject.Mesh.Draw();
+
+                sharpDxPerFrameBuffer.Dispose();
+            }
+
+            // Present scene to screen
+            Present();
         }
 
         /// <summary>
@@ -212,8 +197,8 @@ namespace EconSim.Core.Rendering
         /// <param name="color">background color</param>
         public void Clear(Color4 color)
         {
-            DeviceContext.ClearRenderTargetView(_backbufferView, color);
-            DeviceContext.ClearDepthStencilView(_zbufferView, DepthStencilClearFlags.Depth, 1.0F, 0);
+            d3dDeviceContext.ClearRenderTargetView(_backbufferView, color);
+            d3dDeviceContext.ClearDepthStencilView(_zbufferView, DepthStencilClearFlags.Depth, 1.0F, 0);
         }
 
         /// <summary>
@@ -221,8 +206,23 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void Present()
         {
-            SwapChain.Present(0, PresentFlags.None);
+            swapChain.Present(1, PresentFlags.None);
         }
+
+        #endregion
+
+        public Matrix ProjectionMatrix()
+        {
+            float aspectRatio = (float)renderForm.Width / (float)renderForm.Height;
+            float fieldOfView = (float)Math.PI / 4.0f;
+            float nearClipPlane = 0.1f;
+            float farClipPlane = 200.0f;
+
+            return Matrix.PerspectiveFovLH(
+                fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
+        }
+
+        #region States
 
         /// <summary>
         /// Set current rasterizer state to default
@@ -232,8 +232,9 @@ namespace EconSim.Core.Rendering
             Utilities.Dispose(ref _rasterState);
             //Rasterize state
             RasterizerStateDescription rasterDescription = RasterizerStateDescription.Default();
-            _rasterState = new RasterizerState(Device, rasterDescription);
-            DeviceContext.Rasterizer.State = _rasterState;
+            rasterDescription.FillMode = FillMode.Solid;
+            _rasterState = new RasterizerState(d3dDevice, rasterDescription);
+            d3dDeviceContext.Rasterizer.State = _rasterState;
         }
 
         /// <summary>
@@ -245,9 +246,8 @@ namespace EconSim.Core.Rendering
             //Rasterize state
             RasterizerStateDescription rasterDescription = RasterizerStateDescription.Default();
             rasterDescription.FillMode = FillMode.Wireframe;
-            _rasterState = new RasterizerState(Device, rasterDescription);
-
-            DeviceContext.Rasterizer.State = _rasterState;
+            _rasterState = new RasterizerState(d3dDevice, rasterDescription);
+            d3dDeviceContext.Rasterizer.State = _rasterState;
         }
 
         /// <summary>
@@ -257,7 +257,7 @@ namespace EconSim.Core.Rendering
         {
             Utilities.Dispose(ref _blendState);
             BlendStateDescription description = BlendStateDescription.Default();
-            _blendState = new BlendState(Device, description);
+            _blendState = new BlendState(d3dDevice, description);
         }
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace EconSim.Core.Rendering
             description.RenderTarget[0].SourceBlend = source;
             description.RenderTarget[0].DestinationBlend = destination;
             description.RenderTarget[0].IsBlendEnabled = true;
-            _blendState = new BlendState(Device, description);
+            _blendState = new BlendState(d3dDevice, description);
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace EconSim.Core.Rendering
             description.DepthComparison = Comparison.LessEqual;
             description.IsDepthEnabled = true;
 
-            _depthState = new DepthStencilState(Device, description);
+            _depthState = new DepthStencilState(d3dDevice, description);
         }
 
         /// <summary>
@@ -301,7 +301,14 @@ namespace EconSim.Core.Rendering
             description.Filter = Filter.MinMagMipLinear;
             description.AddressU = TextureAddressMode.Wrap;
             description.AddressV = TextureAddressMode.Wrap;
-            _samplerState = new SamplerState(Device, description);
+            description.AddressW = TextureAddressMode.Wrap;
+            description.BorderColor = new Color4(0, 0, 0, 1);
+            description.ComparisonFunction = Comparison.Never;
+            description.MipLodBias = 0;
+            description.MinimumLod = -float.MaxValue;
+            description.MaximumLod = float.MaxValue;
+            _samplerState = new SamplerState(d3dDevice, description);
+
         }
 
         /// <summary>
@@ -309,44 +316,105 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void UpdateAllStates()
         {
-            DeviceContext.Rasterizer.State = _rasterState;
-            DeviceContext.OutputMerger.SetBlendState(_blendState);
-            DeviceContext.OutputMerger.SetDepthStencilState(_depthState);
-            DeviceContext.PixelShader.SetSampler(0, _samplerState);
+            d3dDeviceContext.Rasterizer.State = _rasterState;
+            d3dDeviceContext.OutputMerger.SetBlendState(_blendState);
+            d3dDeviceContext.OutputMerger.SetDepthStencilState(_depthState);
+            d3dDeviceContext.PixelShader.SetSampler(0, _samplerState);
         }
 
-        /// <summary>
-        /// Update constant buffer
-        /// </summary>
-        /// <typeparam name="T">Data Type</typeparam>
-        /// <param name="buffer">Buffer to update</param>
-        /// <param name="data">Data to write inside buffer</param>
-        public void UpdateData<T>(Buffer11 buffer, T data) where T : struct
-        {
-            DeviceContext.UpdateSubresource(ref data, buffer);
-        }
+        #endregion
 
-        /// <summary>
-        /// Apply multiple targets to device
-        /// </summary>
-        /// <param name="targets">List of targets. Depth Buffer is taken from first one</param>
-        public void ApplyMultipleRenderTarget(params RenderTarget[] targets)
-        {
-            var targetsView = targets.Select(t => t.Target).ToArray();
-            DeviceContext.OutputMerger.SetTargets(targets[0].Zbuffer, targetsView);
-            DeviceContext.Rasterizer.SetViewport(0, 0, targets[0].Width, targets[0].Height);
-        }
+        #region Resize
+
 
 
         /// <summary>
-        /// DirectX11 Support Avaiable
+        /// Create and Resize all items
         /// </summary>
-        /// <returns>Supported</returns>
-        public static bool IsDirectX11Supported()
+        public void Resize()
         {
-            return SharpDX.Direct3D11.Device.GetSupportedFeatureLevel() == FeatureLevel.Level_11_0;
+            // Dispose all previous allocated resources
+            //font.Release();
+            Utilities.Dispose(ref _backbufferView);
+            Utilities.Dispose(ref _zbufferView);
+
+
+            if (renderForm.ClientSize.Width == 0 || renderForm.ClientSize.Height == 0)
+                return;
+
+            // Resize the backbuffer
+            swapChain.ResizeBuffers(1, renderForm.ClientSize.Width, renderForm.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.None);
+
+            // Get the backbuffer from the swapchain
+            var _backBufferTexture = swapChain.GetBackBuffer<Texture2D>(0);
+
+            //update font
+            //Font.UpdateResources(_backBufferTexture);
+
+            // Backbuffer
+            _backbufferView = new RenderTargetView(d3dDevice, _backBufferTexture);
+            _backBufferTexture.Dispose();
+
+            // Depth buffer
+
+            var _zbufferTexture = new Texture2D(d3dDevice, new Texture2DDescription()
+            {
+                Format = Format.D16_UNorm,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = renderForm.ClientSize.Width,
+                Height = renderForm.ClientSize.Height,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.DepthStencil,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            });
+
+
+            // Create the depth buffer view
+            _zbufferView = new DepthStencilView(d3dDevice, _zbufferTexture);
+            _zbufferTexture.Dispose();
+
+            SetDefaultTargets();
+
+            // End resize
+            MustResize = false;
         }
 
+        /// <summary>
+        /// Set default render and depth buffer inside device context
+        /// </summary>
+        public void SetDefaultTargets()
+        {
+            // Setup targets and viewport for rendering
+            d3dDeviceContext.Rasterizer.SetViewport(0, 0, renderForm.ClientSize.Width, renderForm.ClientSize.Height);
+            d3dDeviceContext.OutputMerger.SetTargets(_zbufferView, _backbufferView);
+        }
 
+        #endregion
+
+        public void Dispose()
+        {
+            swapChain.Dispose();
+            d3dDevice.Dispose();
+            d3dDeviceContext.Dispose();
+            renderForm.Dispose();
+
+            int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
+
+            // Execute all end methods
+            StaticUpdater.ExecuteEndActions(unixTime);
+
+            // Execute each scene GameObject's end methods
+            foreach (GameObject mainSceneGameObject in Engine.CurrentScene.GameObjects)
+            {
+                foreach (IUpdateable updateable in mainSceneGameObject.Updateables)
+                {
+                    updateable.End(unixTime);
+                }
+            }
+
+        }
     }
 }

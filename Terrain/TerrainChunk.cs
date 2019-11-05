@@ -396,10 +396,10 @@ namespace EconSim.Terrain
             tileBuffer.SetData(tileStructs);
 
             // Render
-            ComputeShader computer = new ComputeShader(EconSim.d3dDevice, "Shaders/terrainGeneration.hlsl", "ComputeTerrain");
+            ComputeShader computer = new ComputeShader(Engine.RenderDevice.d3dDevice, "Shaders/terrainGeneration.hlsl", "ComputeTerrain");
 
             // Input texture
-            Texture2D computeResource = new Texture2D(EconSim.d3dDevice, new Texture2DDescription()
+            Texture2D computeResource = new Texture2D(Engine.RenderDevice.d3dDevice, new Texture2DDescription()
             {
                 BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
                 Format = Format.R8G8B8A8_UNorm,

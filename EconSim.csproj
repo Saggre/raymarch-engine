@@ -127,6 +127,15 @@
     <Content Include="Shaders\GeometryTess\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\Test\Common.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Test\Pixel.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Test\Vertex.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\Tessellation.hlsl" />
     <Content Include="Shaders\Tessellation\Common.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -154,6 +163,7 @@
     <Compile Include="Core\AutoUpdateable.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\GameObject.cs" />
+    <Compile Include="Core\Input\InputDevice.cs" />
     <Compile Include="Core\Input\Keyboard.cs" />
     <Compile Include="Core\Input\Mouse.cs" />
     <Compile Include="Core\Input\PlayerMovement.cs" />
@@ -168,7 +178,7 @@
     <Compile Include="Core\Rendering\Sharp2D.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
     <Compile Include="Core\Util.cs" />
-    <Compile Include="EconSim.cs" />
+    <Compile Include="Engine.cs" />
     <Compile Include="Game\GameLogic.cs" />
     <Compile Include="Geometry\CardinalCollection.cs" />
     <Compile Include="Geometry\Edge.cs" />

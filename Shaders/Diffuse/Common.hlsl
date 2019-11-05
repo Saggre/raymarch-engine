@@ -1,13 +1,13 @@
 struct VertexInputType
 {
-    float4 Position : POSITION0;
-    float2 TexCoord : TEXCOORD0;
+    float4 Position : POSITION;
+    float2 TexCoord : TEXCOORD;
 };
 
 struct PixelInputType
 {
     float4 Position : SV_POSITION;
-    float2 TexCoord : TEXCOORD0;
+    float2 TexCoord : TEXCOORD;
 };
 
 cbuffer ShaderBuffer : register(b0)

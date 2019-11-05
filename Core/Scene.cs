@@ -6,6 +6,8 @@ namespace EconSim.Core
 {
     public class Scene
     {
+        // The camera that is currently used in rendering this scene
+        private Camera activeCamera = null;
         private List<GameObject> gameObjects;
 
         public Scene()
@@ -19,5 +21,11 @@ namespace EconSim.Core
         }
 
         public List<GameObject> GameObjects => gameObjects;
+
+        public Camera ActiveCamera
+        {
+            get => activeCamera;
+            set => activeCamera = value;
+        }
     }
 }

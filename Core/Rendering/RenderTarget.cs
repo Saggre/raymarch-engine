@@ -70,7 +70,7 @@ namespace EconSim.Core.Rendering
             Height = height;
             Width = width;
 
-            Texture2D target = new Texture2D(device.Device, new Texture2DDescription()
+            Texture2D target = new Texture2D(Engine.RenderDevice.d3dDevice, new Texture2DDescription()
             {
                 Format = format,
                 Width = width,
@@ -84,11 +84,11 @@ namespace EconSim.Core.Rendering
                 Usage = ResourceUsage.Default,
             });
 
-            _target = new RenderTargetView(device.Device, target);
-            _resource = new ShaderResourceView(device.Device, target);
+            _target = new RenderTargetView(Engine.RenderDevice.d3dDevice, target);
+            _resource = new ShaderResourceView(Engine.RenderDevice.d3dDevice, target);
             target.Dispose();
 
-            var _zbufferTexture = new Texture2D(Device.Device, new Texture2DDescription()
+            var _zbufferTexture = new Texture2D(Engine.RenderDevice.d3dDevice, new Texture2DDescription()
             {
                 Format = Format.D16_UNorm,
                 ArraySize = 1,
@@ -103,7 +103,7 @@ namespace EconSim.Core.Rendering
             });
 
             // Create the depth buffer view
-            _zbuffer = new DepthStencilView(Device.Device, _zbufferTexture);
+            _zbuffer = new DepthStencilView(Engine.RenderDevice.d3dDevice, _zbufferTexture);
             _zbufferTexture.Dispose();
 
         }
@@ -113,8 +113,8 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void Apply()
         {
-            Device.DeviceContext.Rasterizer.SetViewport(0, 0, Width, Height);
-            Device.DeviceContext.OutputMerger.SetTargets(_zbuffer, _target);
+            Engine.RenderDevice.d3dDeviceContext.Rasterizer.SetViewport(0, 0, Width, Height);
+            Engine.RenderDevice.d3dDeviceContext.OutputMerger.SetTargets(_zbuffer, _target);
         }
 
         /// <summary>
@@ -134,8 +134,8 @@ namespace EconSim.Core.Rendering
         /// <param name="color">background color</param>
         public void Clear(Color4 color)
         {
-            Device.DeviceContext.ClearRenderTargetView(_target, color);
-            Device.DeviceContext.ClearDepthStencilView(_zbuffer, DepthStencilClearFlags.Depth, 1.0F, 0);
+            Engine.RenderDevice.d3dDeviceContext.ClearRenderTargetView(_target, color);
+            Engine.RenderDevice.d3dDeviceContext.ClearDepthStencilView(_zbuffer, DepthStencilClearFlags.Depth, 1.0F, 0);
         }
 
 

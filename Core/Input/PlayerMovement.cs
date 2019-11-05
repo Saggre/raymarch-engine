@@ -10,11 +10,11 @@ namespace EconSim.Core.Input
     public class PlayerMovement : IUpdateable
     {
         private Vector3 movementInput;
-        private Keyboard keyboard;
+        //private Keyboard keyboard;
 
         public PlayerMovement()
         {
-            keyboard = new Keyboard();
+            //keyboard = new Keyboard();
             StaticUpdater.Add(this);
         }
 
@@ -32,20 +32,20 @@ namespace EconSim.Core.Input
             movementInput = Vector3.Zero;
 
             float playerSpeed = 1f;
-            if (keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
                 playerSpeed = 2f;
 
-            if (keyboard.IsKeyDown(VirtualKeyCode.VK_D))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_D))
                 movementInput -= Vector3.UnitX;
-            if (keyboard.IsKeyDown(VirtualKeyCode.VK_A))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_A))
                 movementInput += Vector3.UnitX;
-            if (keyboard.IsKeyDown(VirtualKeyCode.VK_W))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_W))
                 movementInput += Vector3.UnitZ;
-            if (keyboard.IsKeyDown(VirtualKeyCode.VK_S))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_S))
                 movementInput -= Vector3.UnitZ;
-            if (keyboard.IsKeyDown(VirtualKeyCode.SPACE))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.SPACE))
                 movementInput -= Vector3.UnitY;
-            if (keyboard.IsKeyDown(VirtualKeyCode.LCONTROL))
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LCONTROL))
                 movementInput += Vector3.UnitY;
 
         }

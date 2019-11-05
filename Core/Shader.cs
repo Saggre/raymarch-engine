@@ -65,10 +65,10 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "vs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    vertexShader = new VertexShader(EconSim.d3dDevice, byteCode);
+                    vertexShader = new VertexShader(Engine.RenderDevice.d3dDevice, byteCode);
 
                     ShaderSignature inputSignature = ShaderSignature.GetInputSignature(byteCode);
-                    inputLayout = new InputLayout(EconSim.d3dDevice, inputSignature, RenderVertex.InputElements);
+                    inputLayout = new InputLayout(Engine.RenderDevice.d3dDevice, inputSignature, RenderVertex.InputElements);
                 }
                 else
                 {
@@ -84,7 +84,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "hs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    hullShader = new HullShader(EconSim.d3dDevice, byteCode);
+                    hullShader = new HullShader(Engine.RenderDevice.d3dDevice, byteCode);
                 }
             }
 
@@ -96,7 +96,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ds_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    domainShader = new DomainShader(EconSim.d3dDevice, byteCode);
+                    domainShader = new DomainShader(Engine.RenderDevice.d3dDevice, byteCode);
                 }
             }
 
@@ -108,7 +108,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "gs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    geometryShader = new GeometryShader(EconSim.d3dDevice, byteCode);
+                    geometryShader = new GeometryShader(Engine.RenderDevice.d3dDevice, byteCode);
                 }
             }
 
@@ -120,7 +120,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ps_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    pixelShader = new PixelShader(EconSim.d3dDevice, byteCode);
+                    pixelShader = new PixelShader(Engine.RenderDevice.d3dDevice, byteCode);
                 }
             }
 
@@ -148,22 +148,11 @@ namespace EconSim.Core
         /// <param name="constantBuffer"></param>
         public void SetConstantBuffer(int slot, Buffer constantBuffer)
         {
-            EconSim.d3dDeviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
-            EconSim.d3dDeviceContext.HullShader.SetConstantBuffer(slot, constantBuffer);
-            EconSim.d3dDeviceContext.DomainShader.SetConstantBuffer(slot, constantBuffer);
-            EconSim.d3dDeviceContext.GeometryShader.SetConstantBuffer(slot, constantBuffer);
-            EconSim.d3dDeviceContext.PixelShader.SetConstantBuffer(slot, constantBuffer);
-        }
-
-        /// <summary>
-        /// Sampler
-        /// </summary>
-        /// <param name="slot"></param>
-        /// <param name="sampler"></param>
-        public void SetSampler(int slot, SamplerState sampler)
-        {
-            EconSim.d3dDeviceContext.VertexShader.SetSampler(slot, sampler);
-            // TODO add also other shaders?
+            Engine.RenderDevice.d3dDeviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.d3dDeviceContext.HullShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.d3dDeviceContext.DomainShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.d3dDeviceContext.GeometryShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.d3dDeviceContext.PixelShader.SetConstantBuffer(slot, constantBuffer);
         }
 
         /// <summary>
@@ -190,36 +179,4 @@ namespace EconSim.Core
         public PixelShader PixelShader => pixelShader;
     }
 
-    public static class ShaderUtils
-    {
-        private static SamplerState defaultSamplerState;
-
-        // TODO default shader
-
-        /// <summary>
-        /// Returns a default sampler
-        /// </summary>
-        /// <returns></returns>
-        public static SamplerState DefaultSamplerState()
-        {
-            if (defaultSamplerState == null)
-            {
-                defaultSamplerState = new SamplerState(EconSim.d3dDevice, new SamplerStateDescription()
-                {
-                    Filter = Filter.MinMagMipLinear,
-                    AddressU = TextureAddressMode.Wrap,
-                    AddressV = TextureAddressMode.Wrap,
-                    AddressW = TextureAddressMode.Wrap,
-                    BorderColor = new Color4(0, 0, 0, 1),
-                    ComparisonFunction = Comparison.Never,
-                    MaximumAnisotropy = 16,
-                    MipLodBias = 0,
-                    MinimumLod = -float.MaxValue,
-                    MaximumLod = float.MaxValue
-                });
-            }
-
-            return defaultSamplerState;
-        }
-    }
 }

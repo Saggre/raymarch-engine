@@ -12,8 +12,8 @@ GS_INPUT main(HS_CONSTANT_DATA input,
 	
     //outP.Pos.y = 2.0F * sin(outP.Pos.x / 4.0F) * cos(outP.Pos.z / 4.0F);
 		
-    outP.Pos = mul(viewMatrix, outP.Pos);
-    outP.Pos = mul(projectionMatrix, outP.Pos);
+    outP.Pos = mul(outP.Pos, viewMatrix);
+    outP.Pos = mul(outP.Pos, projectionMatrix);
     
     return outP;
 }
