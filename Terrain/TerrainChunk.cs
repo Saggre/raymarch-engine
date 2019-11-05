@@ -130,7 +130,7 @@ namespace EconSim.Terrain
         {
             terrainPlane.ForEachVertex((int x, int y, int i) =>
             {
-                terrainPlane.Vertices[x, y].Elevation = noise.GetNoise(bounds.X + x, bounds.Y - y);
+                terrainPlane.Vertices[x, y].Elevation = noise.GetNoise(bounds.X + x, bounds.Y + y);
             });
         }
 

@@ -1,18 +1,15 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
-using System;
 using System.Numerics;
 using EconSim.Core;
 using EconSim.Geometry;
 using EconSim.Terrain;
 using SharpDX.Direct3D11;
-using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace EconSim.Game
 {
     public class GameLogic : AutoUpdateable
     {
-
         public override void Start(int startTime)
         {
             // Temp
@@ -23,7 +20,7 @@ namespace EconSim.Game
 
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
 
-            // Neighbours
+            // Neighbors
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(1, 0, 0), shader, terrainGenerator));
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
             EconSim.mainScene.AddGameObject(CreateTile(new Vector3(0, 0, 1), shader, terrainGenerator));
@@ -38,7 +35,8 @@ namespace EconSim.Game
             Texture2D texture = c.CreateVertexMaps();
             ShaderResourceView textureView = new ShaderResourceView(EconSim.d3dDevice, texture);
 
-            GameObject plane = new GameObject(new Mesh(Primitive.Plane()));
+
+            GameObject plane = new GameObject(Mesh.CreateQuad());
             plane.Position = position;
             plane.Shader = shader;
             // TODO both planes render the same texture

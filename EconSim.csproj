@@ -72,6 +72,9 @@
     <Reference Include="SharpDX.Desktop, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>packages\SharpDX.Desktop.4.2.0\lib\net40\SharpDX.Desktop.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.Direct2D1, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.Direct2D1.4.2.0\lib\net45\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>packages\SharpDX.Direct3D11.4.2.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
@@ -112,11 +115,29 @@
     <Content Include="Shaders\terrainGeneration.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\GeometryTess\Common.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\GeometryTess\Geometry.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\GeometryTess\Pixel.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\GeometryTess\Vertex.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\Tessellation.hlsl" />
-    <Content Include="Shaders\Tessellation\Domain.hlsl">
+    <Content Include="Shaders\Tessellation\Common.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Tessellation\Geometry.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\Tessellation\Hull.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Tessellation\Domain.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\Tessellation\Pixel.hlsl">
@@ -137,10 +158,14 @@
     <Compile Include="Core\Input\Mouse.cs" />
     <Compile Include="Core\Input\PlayerMovement.cs" />
     <Compile Include="Core\IUpdateable.cs" />
+    <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\Rendering\RenderDevice.cs" />
+    <Compile Include="Core\Rendering\RenderTarget.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
     <Compile Include="Core\SharedShader.cs" />
+    <Compile Include="Core\Rendering\Sharp2D.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
     <Compile Include="Core\Util.cs" />
     <Compile Include="EconSim.cs" />
