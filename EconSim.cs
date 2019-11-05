@@ -3,20 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using EconSim.Geometry;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
 using WindowsInput.Native;
 using SharpDX;
-using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Windows;
 
 using Buffer = SharpDX.Direct3D11.Buffer;
-using Color = System.Drawing.Color;
 using Vector3 = System.Numerics.Vector3;
 using Vector2 = System.Numerics.Vector2;
 using Quaternion = System.Numerics.Quaternion;
@@ -32,11 +28,6 @@ using Matrix = SharpDX.Matrix;
 namespace EconSim
 {
 
-
-
-    /// <summary>
-    /// This is the main type for your game.
-    /// </summary>
     public class EconSim : IDisposable
     {
         [StructLayout(LayoutKind.Sequential)]
@@ -256,15 +247,13 @@ namespace EconSim
 
                 gameObject.Shader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
 
-                Buffer vertexBuffer = gameObject.Mesh.GetVertexBuffer();
-
-                // TODO also set other shaders
-                // Set as current vertex and pixel shaders
+                // Set as current shaders
                 d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.GetInputLayout();
                 d3dDeviceContext.VertexShader.Set(gameObject.Shader.VertexShader);
+                d3dDeviceContext.HullShader.Set(gameObject.Shader.HullShader);
+                d3dDeviceContext.DomainShader.Set(gameObject.Shader.DomainShader);
+                d3dDeviceContext.GeometryShader.Set(gameObject.Shader.GeometryShader);
                 d3dDeviceContext.PixelShader.Set(gameObject.Shader.PixelShader);
-
-                d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<RenderVertex>(), 0));
 
                 // TODO set gameObject buffers even if using the same shader
                 foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResources(gameObject))
@@ -275,7 +264,9 @@ namespace EconSim
                 // Call Updates
                 updateCallbackAction(gameObject);
 
-                d3dDeviceContext.Draw(gameObject.Mesh.Vertices.Length, 0);
+                // Draw object through its Mesh class
+                //gameObject.Mesh.DrawPatch(PrimitiveTopology.PatchListWith3ControlPoints);
+                gameObject.Mesh.Draw();
 
                 sharpDxPerFrameBuffer.Dispose();
             }

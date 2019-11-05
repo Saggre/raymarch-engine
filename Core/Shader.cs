@@ -63,7 +63,7 @@ namespace EconSim.Core
 
                 if (File.Exists(path))
                 {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", shaderFlags,
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "vs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
                     vertexShader = new VertexShader(EconSim.d3dDevice, byteCode);
 
@@ -82,7 +82,7 @@ namespace EconSim.Core
 
                 if (File.Exists(path))
                 {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "HS", "hs_5_0", shaderFlags,
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "hs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
                     hullShader = new HullShader(EconSim.d3dDevice, byteCode);
                 }
@@ -94,7 +94,7 @@ namespace EconSim.Core
 
                 if (File.Exists(path))
                 {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "DS", "ds_5_0", shaderFlags,
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ds_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
                     domainShader = new DomainShader(EconSim.d3dDevice, byteCode);
                 }
@@ -106,7 +106,7 @@ namespace EconSim.Core
 
                 if (File.Exists(path))
                 {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "GS", "gs_5_0", shaderFlags,
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "gs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
                     geometryShader = new GeometryShader(EconSim.d3dDevice, byteCode);
                 }
@@ -118,7 +118,7 @@ namespace EconSim.Core
 
                 if (File.Exists(path))
                 {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", shaderFlags,
+                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ps_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
                     pixelShader = new PixelShader(EconSim.d3dDevice, byteCode);
                 }
@@ -149,7 +149,10 @@ namespace EconSim.Core
         public void SetConstantBuffer(int slot, Buffer constantBuffer)
         {
             EconSim.d3dDeviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
-            // TODO add also other shaders
+            EconSim.d3dDeviceContext.HullShader.SetConstantBuffer(slot, constantBuffer);
+            EconSim.d3dDeviceContext.DomainShader.SetConstantBuffer(slot, constantBuffer);
+            EconSim.d3dDeviceContext.GeometryShader.SetConstantBuffer(slot, constantBuffer);
+            EconSim.d3dDeviceContext.PixelShader.SetConstantBuffer(slot, constantBuffer);
         }
 
         /// <summary>
@@ -159,7 +162,8 @@ namespace EconSim.Core
         /// <param name="sampler"></param>
         public void SetSampler(int slot, SamplerState sampler)
         {
-            EconSim.d3dDeviceContext.PixelShader.SetSampler(slot, sampler);
+            EconSim.d3dDeviceContext.VertexShader.SetSampler(slot, sampler);
+            // TODO add also other shaders?
         }
 
         /// <summary>

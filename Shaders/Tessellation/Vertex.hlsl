@@ -1,32 +1,8 @@
-﻿
-//////////////
-// TYPEDEFS //
-//////////////
-struct VertexInputType
+﻿#include "Common.hlsl"
+
+HS_INPUT main(VS_INPUT input)
 {
-    float3 position : POSITION;
-    //float4 color : COLOR;
-};
-
-struct HullInputType
-{
-    float3 position : POSITION;
-    //float4 color : COLOR;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Vertex Shader
-////////////////////////////////////////////////////////////////////////////////
-HullInputType VS(VertexInputType input)
-{
-    HullInputType output;
-
-    // Pass the vertex position into the hull shader.
-    output.position = input.position;
-    
-    // Pass the input color into the hull shader.
-    //output.color = input.color;
-    
+    HS_INPUT output = (HS_INPUT) 0;
+    output.Pos = mul(worldMatrix, input.Pos);
     return output;
 }

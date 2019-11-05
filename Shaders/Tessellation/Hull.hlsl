@@ -1,75 +1,31 @@
-﻿
-/////////////
-// GLOBALS //
-/////////////
+﻿#include "Common.hlsl"
 
-cbuffer TessellationBuffer
+HS_CONSTANT_DATA SampleHSFunction(InputPatch<HS_INPUT, 3> ip,
+                                          uint PatchID : SV_PrimitiveID)
 {
-    float tessellationAmount;
-    float3 padding;
-};
+    HS_CONSTANT_DATA Output;
+    float tessFactor = 10; //factor.x;
 
-//////////////
-// TYPEDEFS //
-//////////////
+    float TessAmount = 10; //factor.y;
 
-struct HullInputType
-{
-    float3 position : POSITION;
-    //float4 color : COLOR;
-};
+    Output.Edges[0] = Output.Edges[1] = Output.Edges[2] = tessFactor;
+    Output.Inside[0] = TessAmount;
 
-
-struct ConstantOutputType
-{
-    float edges[3] : SV_TessFactor;
-    float inside : SV_InsideTessFactor;
-};
-
-struct HullOutputType
-{
-    float3 position : POSITION;
-    //float4 color : COLOR;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Patch Constant Function
-////////////////////////////////////////////////////////////////////////////////
-ConstantOutputType ColorPatchConstantFunction(InputPatch<HullInputType, 3> inputPatch, uint patchId : SV_PrimitiveID)
-{
-    ConstantOutputType output;
-
-
-    // Set the tessellation factors for the three edges of the triangle.
-    output.edges[0] = tessellationAmount;
-    output.edges[1] = tessellationAmount;
-    output.edges[2] = tessellationAmount;
-
-    // Set the tessellation factor for tessallating inside the triangle.
-    output.inside = tessellationAmount;
-
-    return output;
+    return Output;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Hull Shader
-////////////////////////////////////////////////////////////////////////////////
 [domain("tri")]
-[partitioning("integer")]
+[partitioning("pow2")]
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(3)]
-[patchconstantfunc("ColorPatchConstantFunction")]
-
-HullOutputType HS(InputPatch<HullInputType, 3> patch, uint pointId : SV_OutputControlPointID, uint patchId : SV_PrimitiveID)
+[patchconstantfunc("SampleHSFunction")]
+DS_INPUT main(InputPatch<HS_INPUT, 3> p,
+                    uint i : SV_OutputControlPointID,
+                    uint PatchID : SV_PrimitiveID)
 {
-    HullOutputType output;
 
 
-    // Set the position for this control point as the output position.
-    output.position = patch[pointId].position;
-
-    // Set the input color as the output color.
-    //output.color = patch[pointId].color;
-
-    return output;
+    DS_INPUT Output = (DS_INPUT) 0;
+    Output.Pos = p[i].Pos;
+    return Output;
 }

@@ -1,63 +1,19 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-// Filename: color.ds
-////////////////////////////////////////////////////////////////////////////////
+﻿#include "Common.hlsl"
 
-
-/////////////
-// GLOBALS //
-/////////////
-
-cbuffer MatrixBuffer
-{
-    matrix worldMatrix;
-    matrix viewMatrix;
-    matrix projectionMatrix;
-};
-
-
-//////////////
-// TYPEDEFS //
-//////////////
-
-struct ConstantOutputType
-{
-    float edges[3] : SV_TessFactor;
-    float inside : SV_InsideTessFactor;
-};
-
-struct HullOutputType
-{
-    float3 position : POSITION;
-    //float4 color : COLOR;
-};
-
-struct PixelInputType
-{
-    float4 position : SV_POSITION;
-    //float4 color : COLOR;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Domain Shader
-////////////////////////////////////////////////////////////////////////////////
 [domain("tri")]
-
-PixelInputType DS(ConstantOutputType input, float3 uvwCoord : SV_DomainLocation, const OutputPatch<HullOutputType, 3> patch)
+GS_INPUT main(HS_CONSTANT_DATA input,
+                    float3 UV : SV_DomainLocation,
+                    const OutputPatch<DS_INPUT, 3> TrianglePatch)
 {
-    float3 vertexPosition;
-    PixelInputType output;
- 
-
-    // Determine the position of the new vertex.
-    vertexPosition = uvwCoord.x * patch[0].position + uvwCoord.y * patch[1].position + uvwCoord.z * patch[2].position;
+    GS_INPUT outP = (GS_INPUT) 0;
     
-    // Calculate the position of the new vertex against the world, view, and projection matrices.
-    output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
-    output.position = mul(output.position, viewMatrix);
-    output.position = mul(output.position, projectionMatrix);
-
-    // Send the input color into the pixel shader.
-    //output.color = patch[0].color;
-
-    return output;
+    outP.Pos = UV.x * TrianglePatch[0].Pos + UV.y * TrianglePatch[1].Pos + UV.z * TrianglePatch[2].Pos;
+    outP.Pos /= outP.Pos.w;
+	
+    //outP.Pos.y = 2.0F * sin(outP.Pos.x / 4.0F) * cos(outP.Pos.z / 4.0F);
+		
+    outP.Pos = mul(viewMatrix, outP.Pos);
+    outP.Pos = mul(projectionMatrix, outP.Pos);
+    
+    return outP;
 }
