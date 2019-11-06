@@ -7,13 +7,13 @@ GS_INPUT main(HS_CONSTANT_DATA input,
 {
     GS_INPUT outP = (GS_INPUT) 0;
     
-    outP.Pos = UV.x * TrianglePatch[0].Pos + UV.y * TrianglePatch[1].Pos + UV.z * TrianglePatch[2].Pos;
-    outP.Pos /= outP.Pos.w;
-	
-    //outP.Pos.y = 2.0F * sin(outP.Pos.x / 4.0F) * cos(outP.Pos.z / 4.0F);
+    outP.TexCoord = UV.x * TrianglePatch[0].TexCoord + UV.y * TrianglePatch[1].TexCoord + UV.z * TrianglePatch[2].TexCoord;
+
+    outP.Position = UV.x * TrianglePatch[0].Position + UV.y * TrianglePatch[1].Position + UV.z * TrianglePatch[2].Position;
+    outP.Position /= outP.Position.w;
 		
-    outP.Pos = mul(outP.Pos, viewMatrix);
-    outP.Pos = mul(outP.Pos, projectionMatrix);
+    outP.Position = mul(outP.Position, viewMatrix);
+    outP.Position = mul(outP.Position, projectionMatrix);
     
     return outP;
 }

@@ -102,7 +102,7 @@ namespace EconSim.Core.Rendering
 
             //Set Default State
             SetDefaultRasterState();
-            SetWireframeRasterState();
+            //SetWireframeRasterState();
             SetDefaultDepthState();
             SetDefaultBlendState();
             SetDefaultSamplerState();
@@ -152,16 +152,8 @@ namespace EconSim.Core.Rendering
                 frameBuffer.modelMatrix = gameObject.ModelMatrix();
                 frameBuffer.modelMatrix.Transpose();
 
-                Buffer sharpDxPerFrameBuffer = Buffer.Create(d3dDevice,
-                    BindFlags.ConstantBuffer,
-                    ref frameBuffer,
-                    Utilities.SizeOf<PerFrameBuffer>(),
-                    ResourceUsage.Default,
-                    CpuAccessFlags.None,
-                    ResourceOptionFlags.None,
-                    0);
-
-                gameObject.Shader.SetConstantBuffer(0, sharpDxPerFrameBuffer);
+                Buffer sharpDxPerFrameBuffer = Shader.CreateSingleElementBuffer(ref frameBuffer);
+                gameObject.Shader.SendBufferToShader(0, sharpDxPerFrameBuffer);
 
                 // Set as current shaders
                 d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.GetInputLayout();
@@ -171,10 +163,17 @@ namespace EconSim.Core.Rendering
                 d3dDeviceContext.GeometryShader.Set(gameObject.Shader.GeometryShader);
                 d3dDeviceContext.PixelShader.Set(gameObject.Shader.PixelShader);
 
-                // TODO set gameObject buffers even if using the same shader
-                foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResources(gameObject))
+                // Get GameObject-specific buffers
+                foreach (KeyValuePair<int, Buffer> buffer in gameObject.Shader.ConstantBuffers(gameObject))
                 {
-                    d3dDeviceContext.PixelShader.SetShaderResource(shaderResource.Key, shaderResource.Value);
+                    // Updates buffer in all shader types at once
+                    gameObject.Shader.SendBufferToShader(buffer.Key, buffer.Value);
+                }
+
+                // Get GameObject-specific resource views
+                foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader.ShaderResourceViews(gameObject))
+                {
+                    gameObject.Shader.SendResourceViewToShader(shaderResource.Key, shaderResource.Value);
                 }
 
                 // Call Updates
@@ -320,6 +319,8 @@ namespace EconSim.Core.Rendering
             d3dDeviceContext.OutputMerger.SetBlendState(_blendState);
             d3dDeviceContext.OutputMerger.SetDepthStencilState(_depthState);
             d3dDeviceContext.PixelShader.SetSampler(0, _samplerState);
+            d3dDeviceContext.DomainShader.SetSampler(0, _samplerState);
+            // TODO set also other shaders
         }
 
         #endregion

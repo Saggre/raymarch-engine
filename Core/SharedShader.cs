@@ -14,36 +14,16 @@ namespace EconSim.Core
     /// </summary>
     public class SharedShader : Shader
     {
-        public class PerObjectShaderBuffers
-        {
-            // Dict keys are shader slots
-            public Dictionary<int, Buffer> ConstantBuffers;
-            public Dictionary<int, SamplerState> Samplers;
-            public Dictionary<int, ShaderResourceView> ResourceViews;
 
-            public PerObjectShaderBuffers()
-            {
-                ConstantBuffers = new Dictionary<int, Buffer>();
-                Samplers = new Dictionary<int, SamplerState>();
-                ResourceViews = new Dictionary<int, ShaderResourceView>();
-            }
-        }
-
-        /*public static SharedShader FromShader(Shader sourceShader)
-        {
-            SharedShader sharedShader = (SharedShader)sourceShader;
-            return
-        }*/
-
-        private Dictionary<GameObject, PerObjectShaderBuffers> perObjectShaderResources;
+        private Dictionary<GameObject, PerObjectResources> perObjectShaderResources;
 
         public SharedShader(InputLayout inputLayout, VertexShader vertexShader, HullShader hullShader, DomainShader domainShader,
             GeometryShader geometryShader, PixelShader pixelShader) : base(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader)
         {
-            perObjectShaderResources = new Dictionary<GameObject, PerObjectShaderBuffers>();
+            perObjectShaderResources = new Dictionary<GameObject, PerObjectResources>();
         }
 
-        public Dictionary<GameObject, PerObjectShaderBuffers> PerObjectShaderResources => perObjectShaderResources;
+        public Dictionary<GameObject, PerObjectResources> PerObjectShaderResources => perObjectShaderResources;
 
         #region Implements
 
@@ -55,38 +35,51 @@ namespace EconSim.Core
         {
             if (!perObjectShaderResources.ContainsKey(gameObject))
             {
-                perObjectShaderResources.Add(gameObject, new PerObjectShaderBuffers());
+                perObjectShaderResources.Add(gameObject, new PerObjectResources());
             }
         }
 
-        public new Dictionary<int, ShaderResourceView> ShaderResources(GameObject gameObject)
+        /// <summary>
+        /// Get all ShaderResourceViews attached to a GameObject
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <returns></returns>
+        public new Dictionary<int, ShaderResourceView> ShaderResourceViews(GameObject gameObject)
         {
-            // TODO check if gameObject is added
-            return perObjectShaderResources[gameObject].ResourceViews;
+            return perObjectShaderResources.ContainsKey(gameObject) ? perObjectShaderResources[gameObject].ShaderResourceViews : null;
         }
 
         /// <summary>
-        /// CBV
+        /// Get all Buffers attached to a GameObject
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <returns></returns>
+        public new Dictionary<int, Buffer> ConstantBuffers(GameObject gameObject)
+        {
+            return perObjectShaderResources.ContainsKey(gameObject) ? perObjectShaderResources[gameObject].ConstantBuffers : null;
+        }
+
+        /// <summary>
+        /// Add a per-object buffer to the shader, or update it if it already exists.
         /// </summary>
         /// <param name="gameObject"></param>
         /// <param name="slot"></param>
         /// <param name="constantBuffer"></param>
         public void SetConstantBuffer(GameObject gameObject, int slot, Buffer constantBuffer)
         {
+            // Check if the gameObject is already in resource list
             AddGameObjectIfNotExists(gameObject);
-            perObjectShaderResources[gameObject].ConstantBuffers.Add(slot, constantBuffer);
-        }
 
-        /// <summary>
-        /// Sampler
-        /// </summary>
-        /// <param name="gameObject"></param>
-        /// <param name="slot"></param>
-        /// <param name="sampler"></param>
-        public void SetSampler(GameObject gameObject, int slot, SamplerState sampler)
-        {
-            AddGameObjectIfNotExists(gameObject);
-            perObjectShaderResources[gameObject].Samplers.Add(slot, sampler);
+            // Check if a buffer in this slot exists already
+            if (perObjectShaderResources[gameObject].ConstantBuffers.ContainsKey(slot))
+            {
+                perObjectShaderResources[gameObject].ConstantBuffers[slot].Dispose();
+                perObjectShaderResources[gameObject].ConstantBuffers[slot] = constantBuffer;
+            }
+            else
+            {
+                perObjectShaderResources[gameObject].ConstantBuffers.Add(slot, constantBuffer);
+            }
         }
 
         /// <summary>
@@ -97,8 +90,10 @@ namespace EconSim.Core
         /// <param name="resourceView"></param>
         public void SetShaderResource(GameObject gameObject, int slot, ShaderResourceView resourceView)
         {
+            // TODO make shader resources updateable
+
             AddGameObjectIfNotExists(gameObject);
-            perObjectShaderResources[gameObject].ResourceViews.Add(slot, resourceView);
+            perObjectShaderResources[gameObject].ShaderResourceViews.Add(slot, resourceView);
         }
 
         #endregion
