@@ -12,6 +12,20 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace EconSim.Core
 {
+
+    public class PerObjectResources
+    {
+        // Dict keys are shader slots
+        public Dictionary<int, Buffer> ConstantBuffers;
+        public Dictionary<int, ShaderResourceView> ShaderResourceViews;
+
+        public PerObjectResources()
+        {
+            ConstantBuffers = new Dictionary<int, Buffer>();
+            ShaderResourceViews = new Dictionary<int, ShaderResourceView>();
+        }
+    }
+
     /// <summary>
     /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.
     /// </summary>
@@ -24,8 +38,6 @@ namespace EconSim.Core
         private GeometryShader geometryShader;
         private PixelShader pixelShader;
 
-        // Example
-        private Dictionary<int, ShaderResourceView> shaderResources;
 
         public Shader(InputLayout inputLayout, VertexShader vertexShader, HullShader hullShader, DomainShader domainShader, GeometryShader geometryShader, PixelShader pixelShader)
         {
@@ -35,8 +47,6 @@ namespace EconSim.Core
             this.domainShader = domainShader;
             this.geometryShader = geometryShader;
             this.pixelShader = pixelShader;
-
-            shaderResources = new Dictionary<int, ShaderResourceView>();
         }
 
         /// <summary>
@@ -127,26 +137,41 @@ namespace EconSim.Core
             return new SharedShader(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader);
         }
 
-        public Dictionary<int, ShaderResourceView> ShaderResources => shaderResources;
-
         public InputLayout GetInputLayout()
         {
             return inputLayout;
         }
 
-        #region Implements
-
-        public void SetVertexBuffers()
-        {
-
-        }
+        #region MyRegion
 
         /// <summary>
-        /// CBV
+        /// Creates a buffer containing a single instance if a struct
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="bufferData"></param>
+        /// <returns></returns>
+        public static Buffer CreateSingleElementBuffer<T>(ref T bufferData) where T : struct
+        {
+            return Buffer.Create(Engine.RenderDevice.d3dDevice,
+                BindFlags.ConstantBuffer,
+                ref bufferData,
+                Utilities.SizeOf<T>(),
+                ResourceUsage.Default,
+                CpuAccessFlags.None,
+                ResourceOptionFlags.None,
+                0);
+        }
+
+        #endregion
+
+        #region Implements
+
+        /// <summary>
+        /// Send the buffer to all shader stages
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="constantBuffer"></param>
-        public void SetConstantBuffer(int slot, Buffer constantBuffer)
+        public void SendBufferToShader(int slot, Buffer constantBuffer)
         {
             Engine.RenderDevice.d3dDeviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
             Engine.RenderDevice.d3dDeviceContext.HullShader.SetConstantBuffer(slot, constantBuffer);
@@ -156,14 +181,18 @@ namespace EconSim.Core
         }
 
         /// <summary>
-        /// SRV
+        /// Send the shader resource view to all shader stages
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="resourceView"></param>
-        public void SetShaderResource(int slot, ShaderResourceView resourceView)
+        public void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
         {
-            shaderResources.Add(slot, resourceView);
-            //EconSim.d3dDeviceContext.PixelShader.SetShaderResource(0, resourceView);
+            // TODO ability to send selectively to only certain stages
+            Engine.RenderDevice.d3dDeviceContext.VertexShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.d3dDeviceContext.HullShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.d3dDeviceContext.DomainShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.d3dDeviceContext.GeometryShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.d3dDeviceContext.PixelShader.SetShaderResource(slot, resourceView);
         }
 
         #endregion

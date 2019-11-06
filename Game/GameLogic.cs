@@ -1,5 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
+using System.Collections.Generic;
 using System.Numerics;
 using EconSim.Core;
 using EconSim.Core.Input;
@@ -12,13 +13,23 @@ namespace EconSim.Game
 {
     public class GameLogic : AutoUpdateable
     {
+        struct ShaderBuffer
+        {
+            public Vector4 cameraPosition;
+        }
+
         public static Camera camera;
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
+
+        private List<GameObject> tiles;
+
         public override void Start(int startTime)
         {
             // Init movement manager
             playerMovement = new PlayerMovement();
+
+            tiles = new List<GameObject>();
 
             // Set camera initial pos
             camera = new Camera();
@@ -31,13 +42,18 @@ namespace EconSim.Game
 
             SharedShader shader = (SharedShader)Shader.CompileFromFiles(@"Shaders\Tessellation");
 
-            Engine.CurrentScene.AddGameObject(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
+            tiles.Add(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
 
             // Neighbors
-            Engine.CurrentScene.AddGameObject(CreateTile(new Vector3(1, 0, 0), shader, terrainGenerator));
-            Engine.CurrentScene.AddGameObject(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
-            Engine.CurrentScene.AddGameObject(CreateTile(new Vector3(0, 0, 1), shader, terrainGenerator));
-            Engine.CurrentScene.AddGameObject(CreateTile(new Vector3(0, 0, -1), shader, terrainGenerator));
+            tiles.Add(CreateTile(new Vector3(1, 0, 0), shader, terrainGenerator));
+            tiles.Add(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
+            tiles.Add(CreateTile(new Vector3(0, 0, 1), shader, terrainGenerator));
+            tiles.Add(CreateTile(new Vector3(0, 0, -1), shader, terrainGenerator));
+
+            foreach (GameObject gameObject in tiles)
+            {
+                Engine.CurrentScene.AddGameObject(gameObject);
+            }
         }
 
         private void CameraLook(float deltaTime)
@@ -71,7 +87,6 @@ namespace EconSim.Game
             Texture2D texture = c.CreateVertexMaps();
             ShaderResourceView textureView = new ShaderResourceView(Engine.RenderDevice.d3dDevice, texture);
 
-
             GameObject plane = new GameObject(Mesh.CreateQuad());
             plane.Position = position;
             plane.Shader = shader;
@@ -84,6 +99,17 @@ namespace EconSim.Game
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
+
+            ShaderBuffer tessellationShaderBuffer;
+            tessellationShaderBuffer.cameraPosition = new Vector4(camera.Position, 0f);
+
+            foreach (GameObject gameObject in tiles)
+            {
+                gameObject.Shader.SetConstantBuffer(gameObject, 1,
+                    Shader.CreateSingleElementBuffer(ref tessellationShaderBuffer)
+                );
+            }
+
         }
 
         public override void End(int endTime)
