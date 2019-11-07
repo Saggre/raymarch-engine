@@ -6,42 +6,74 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
+using EconSim.Core;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
-using Color = System.Drawing.Color;
 using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 
+// TODO all
 namespace EconSim.EMath
 {
-
     public class ComputeShader
     {
-        private readonly Device d3dDevice;
-        private readonly SharpDX.Direct3D11.ComputeShader shader;
+
+        private Device d3dDevice;
+        private DeviceContext d3dDeviceContext;
+        private SharpDX.Direct3D11.ComputeShader computeShader;
 
         /// <summary>
         /// Dictionary key will be its index in the shader eg. register(u0);
         /// </summary>
         private Dictionary<int, BufferData> buffers;
 
-        public ComputeShader(Device graphicsDevice, string filename, string functionName)
+        public ComputeShader(SharpDX.Direct3D11.ComputeShader computeShader)
         {
-            if (graphicsDevice == null)
+            Init();
+
+            this.computeShader = computeShader;
+        }
+
+        /// <summary>
+        /// Compiles files into shader byte-code and creates a shader from the shader files that exist
+        /// </summary>
+        /// <param name="folderPath"></param>
+        /// <param name="fileName"></param>
+        public ComputeShader(string folderPath, string fileName)
+        {
+            Init();
+
+            ShaderFlags shaderFlags = ShaderFlags.Debug;
+            SharpDX.Direct3D11.ComputeShader computeShader = null;
+
+            // Handler for #include directive
+            HLSLFileIncludeHandler includeHandler = new HLSLFileIncludeHandler(folderPath);
+
+            string path = Path.Combine(folderPath, fileName);
+
+            if (File.Exists(path))
             {
-                Debug.WriteLine("Error");
-                return;
+                CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "cs_5_0", shaderFlags,
+                    EffectFlags.None, null, includeHandler);
+                computeShader = new SharpDX.Direct3D11.ComputeShader(d3dDevice, byteCode);
             }
 
+            this.computeShader = computeShader;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void Init()
+        {
+            // Create separate device for compute shader
+            d3dDevice = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.SingleThreaded);
+            d3dDeviceContext = d3dDevice.ImmediateContext;
+
             buffers = new Dictionary<int, BufferData>();
-
-            d3dDevice = graphicsDevice;
-
-            var computeShaderByteCode = ShaderBytecode.CompileFromFile(filename, functionName, "cs_5_0");
-            shader = new SharpDX.Direct3D11.ComputeShader(d3dDevice, computeShaderByteCode);
         }
 
         public void SetComputeBuffer(ComputeBuffer computeBuffer, int shaderBufferIndex)
@@ -173,7 +205,7 @@ namespace EconSim.EMath
             });
 
             // Add data pointer
-            d3dDevice.ImmediateContext.UpdateSubresource(new DataBox(Core.Util.GetDataPtr(inputData.GetData())), computeResource);
+            d3dDeviceContext.UpdateSubresource(new DataBox(Core.Util.GetDataPtr(inputData.GetData())), computeResource);
 
             // Staging
             stagingResource = new Buffer(d3dDevice, new BufferDescription()
@@ -196,7 +228,7 @@ namespace EconSim.EMath
 
         private void SendUnorderedAccessView(BufferData bufferData)
         {
-            d3dDevice.ImmediateContext.ComputeShader.SetUnorderedAccessView(bufferData.GetShaderBufferIndex(), bufferData.GetUnorderedAccessView());
+            d3dDeviceContext.ComputeShader.SetUnorderedAccessView(bufferData.GetShaderBufferIndex(), bufferData.GetUnorderedAccessView());
 
         }
 
@@ -226,10 +258,10 @@ namespace EconSim.EMath
             Texture2D stagingResource = tbd.GetStagingResource();
 
             // Copy resource
-            d3dDevice.ImmediateContext.CopyResource(tbd.GetComputeResource(), stagingResource);
+            d3dDeviceContext.CopyResource(tbd.GetComputeResource(), stagingResource);
 
             // Map to a data stream
-            d3dDevice.ImmediateContext.MapSubresource(stagingResource, 0, MapMode.Read, MapFlags.None, out var dataStream);
+            d3dDeviceContext.MapSubresource(stagingResource, 0, MapMode.Read, MapFlags.None, out var dataStream);
 
 
             /*
@@ -257,9 +289,12 @@ namespace EconSim.EMath
             return t;
         }
 
+        /// <summary>
+        /// Set current compute shader
+        /// </summary>
         public void Begin()
         {
-            d3dDevice.ImmediateContext.ComputeShader.Set(shader);
+            d3dDeviceContext.ComputeShader.Set(computeShader);
         }
 
         public void Dispatch(int threadGroupCountX, int threadGroupCountY, int threadGroupCountZ)
@@ -270,13 +305,17 @@ namespace EconSim.EMath
         public void End()
         {
             // Clean and jerk
-            d3dDevice.ImmediateContext.Flush();
-            d3dDevice.ImmediateContext.ComputeShader.SetUnorderedAccessView(0, null);
+            d3dDeviceContext.Flush();
+            d3dDeviceContext.ComputeShader.SetUnorderedAccessView(0, null);
             foreach (var keyValuePair in buffers)
             {
                 BufferData buffer = keyValuePair.Value;
-                d3dDevice.ImmediateContext.ComputeShader.SetUnorderedAccessView(buffer.GetShaderBufferIndex(), null);
+                d3dDeviceContext.ComputeShader.SetUnorderedAccessView(buffer.GetShaderBufferIndex(), null);
             }
+            // TODO remove compute shader?
+            d3dDeviceContext.ComputeShader.Set(null);
         }
+
+
     }
 }

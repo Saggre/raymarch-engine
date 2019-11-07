@@ -112,7 +112,10 @@
     <Content Include="Shaders\Diffuse\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\terrainGeneration.hlsl">
+    <Content Include="Shaders\Terrain\Heightmap.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Terrain\MapGenerator.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\GeometryTess\Common.hlsl">
@@ -136,7 +139,6 @@
     <Content Include="Shaders\Test\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\Tessellation.hlsl" />
     <Content Include="Shaders\Tessellation\Common.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -155,10 +157,8 @@
     <Content Include="Shaders\Tessellation\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\test.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddressHelper.cs" />
     <Compile Include="Collections\Util.cs" />
     <Compile Include="Core\AutoUpdateable.cs" />
     <Compile Include="Core\Camera.cs" />
@@ -167,9 +167,11 @@
     <Compile Include="Core\Input\Keyboard.cs" />
     <Compile Include="Core\Input\Mouse.cs" />
     <Compile Include="Core\Input\PlayerMovement.cs" />
+    <Compile Include="Core\IShader.cs" />
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\Rendering\ComputeDevice.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Rendering\RenderTarget.cs" />
     <Compile Include="Core\Scene.cs" />
@@ -178,7 +180,9 @@
     <Compile Include="Core\Rendering\Sharp2D.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
     <Compile Include="Core\Util.cs" />
-    <Compile Include="Engine.cs" />
+    <Compile Include="Core\Engine.cs" />
+    <Compile Include="EMath\Byte4.cs" />
+    <Compile Include="EMath\Vector2Int.cs" />
     <Compile Include="Game\GameLogic.cs" />
     <Compile Include="Geometry\CardinalCollection.cs" />
     <Compile Include="Geometry\Edge.cs" />
@@ -192,7 +196,6 @@
     <Compile Include="EMath\ComputeShader.cs" />
     <Compile Include="EMath\FastNoise.cs" />
     <Compile Include="EMath\Util.cs" />
-    <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\HLSLFileIncludeHandler.cs" />

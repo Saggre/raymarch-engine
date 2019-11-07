@@ -8,6 +8,36 @@ namespace EconSim.Collections
     {
 
         /// <summary>
+        /// Iterate each element in a 2D array
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="array"></param>
+        /// <param name="action"></param>
+        public static void ForEach2D<T>(this T[,] array, Action<T, int, int> action)
+        {
+            for (int x = 0; x < array.GetLength(0); x++)
+            {
+                for (int y = 0; y < array.GetLength(1); y++)
+                {
+                    action(array[x, y], x, y);
+                }
+            }
+        }
+
+        public static T[,] Populate2D<T>(this T[,] array, Func<int, int, T> provider)
+        {
+            for (int x = 0; x < array.GetLength(0); x++)
+            {
+                for (int y = 0; y < array.GetLength(1); y++)
+                {
+                    array[x, y] = provider(x, y);
+                }
+            }
+
+            return array;
+        }
+
+        /// <summary>
         /// Iterate each element starting from (startX, startY) and continuing outwards in a spiral.
         /// Makes finding the closest tile of a certain type a lot faster.
         /// Winds counterclockwise.

@@ -1,32 +1,21 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using WindowsInput.Native;
-using SharpDX;
-using SharpDX.Direct3D;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
-using SharpDX.Windows;
-
-using EconSim.Core;
+using System.Windows.Forms;
 using EconSim.Core.Input;
 using EconSim.Core.Rendering;
 using EconSim.Game;
-using EconSim.EMath;
-using Matrix = SharpDX.Matrix;
+using SharpDX.Windows;
 
-namespace EconSim
+namespace EconSim.Core
 {
-
     public class Engine : IDisposable
     {
         private RenderForm renderForm;
-        private const int Width = 1280;
-        private const int Height = 720;
+        private int Width = Screen.PrimaryScreen.Bounds.Width;
+        private int Height = Screen.PrimaryScreen.Bounds.Height;
 
         // The scene that is currently active
         private static Scene currentScene;
