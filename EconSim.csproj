@@ -112,6 +112,12 @@
     <Content Include="Shaders\Diffuse\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\Noise\Noise.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Terrain\Erosion.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\Terrain\Heightmap.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -171,6 +177,7 @@
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\Rendering\TextureComputeDevice .cs" />
     <Compile Include="Core\Rendering\ComputeDevice.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Rendering\RenderTarget.cs" />
@@ -233,6 +240,9 @@
     <None Include="app.config" />
     <None Include="app.manifest" />
     <None Include="packages.config" />
+    <Content Include="Shaders\Noise\Simplex.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include=".git\objects\info\" />

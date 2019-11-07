@@ -68,7 +68,7 @@ namespace EconSim.Core
                 directoryToSearch.AddRange(IncludeDirectories);
                 foreach (var dirPath in directoryToSearch)
                 {
-                    var selectedFile = Path.Combine(dirPath, fileName);
+                    var selectedFile = Path.GetFullPath(Path.Combine(dirPath, fileName));
                     if (NativeFile.Exists(selectedFile))
                     {
                         filePath = selectedFile;

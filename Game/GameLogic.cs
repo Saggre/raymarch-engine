@@ -56,8 +56,8 @@ namespace EconSim.Game
 
             // Rotate camera
             // 180, 171
-            lookVector.X += InputDevice.Mouse.DeltaPosition.X * deltaTime;
-            lookVector.Y -= InputDevice.Mouse.DeltaPosition.Y * deltaTime;
+            lookVector.X += InputDevice.Mouse.DeltaPosition.X * 0.02f;
+            lookVector.Y -= InputDevice.Mouse.DeltaPosition.Y * 0.02f;
 
             if (lookVector.Y < 100)
             {
@@ -80,7 +80,7 @@ namespace EconSim.Game
         {
             SharedShader shader = SharedShader.CompileFromFiles(@"Shaders\Tessellation");
 
-            int renderDistance = 2; // How many tiles to render in each direction
+            int renderDistance = 3; // How many tiles to render in each direction
             tiles = new GameObject[1 + 2 * renderDistance, 1 + 2 * renderDistance].Populate2D((int x, int y) =>
             {
                 GameObject gameObject = new GameObject(Mesh.CreateQuad())
@@ -120,7 +120,6 @@ namespace EconSim.Game
                 tile.Shader.SetShaderResource(tile, 0, textureView);
             });
         }
-
 
         public override void Update(float deltaTime)
         {

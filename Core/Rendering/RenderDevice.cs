@@ -299,17 +299,16 @@ namespace EconSim.Core.Rendering
         {
             Utilities.Dispose(ref samplerState);
             SamplerStateDescription description = SamplerStateDescription.Default();
-            description.Filter = Filter.MinMagMipLinear;
-            description.AddressU = TextureAddressMode.Wrap;
-            description.AddressV = TextureAddressMode.Wrap;
-            description.AddressW = TextureAddressMode.Wrap;
+            description.Filter = Filter.MinMagMipPoint;
+            description.AddressU = TextureAddressMode.Clamp;
+            description.AddressV = TextureAddressMode.Clamp;
+            description.AddressW = TextureAddressMode.Clamp;
             description.BorderColor = new Color4(0, 0, 0, 1);
             description.ComparisonFunction = Comparison.Never;
             description.MipLodBias = 0;
             description.MinimumLod = -float.MaxValue;
             description.MaximumLod = float.MaxValue;
             samplerState = new SamplerState(d3dDevice, description);
-
         }
 
         /// <summary>
