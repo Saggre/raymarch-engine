@@ -1,7 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
+using System;
 using System.Collections.Generic;
 using System.Numerics;
+using EconSim.Collections;
 using EconSim.Core;
 using EconSim.Core.Input;
 using EconSim.Geometry;
@@ -11,6 +13,11 @@ using SharpDX.Direct3D11;
 
 namespace EconSim.Game
 {
+    /// <summary>
+    /// Main class for the game logic separated from the engine itself
+    ///
+    /// Creates enough tile objects to satisfy the render distance, and updates them with new terrain maps when moving
+    /// </summary>
     public class GameLogic : AutoUpdateable
     {
         struct ShaderBuffer
@@ -18,18 +25,19 @@ namespace EconSim.Game
             public Vector4 cameraPosition;
         }
 
-        public static Camera camera;
+        private Camera camera;
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
 
-        private List<GameObject> tiles;
+        private GameObject[,] visibleTiles;
+        private Vector2Int visibleTilesCenter;
+
+        private TerrainGenerator terrainGenerator;
 
         public override void Start(int startTime)
         {
             // Init movement manager
             playerMovement = new PlayerMovement();
-
-            tiles = new List<GameObject>();
 
             // Set camera initial pos
             camera = new Camera();
@@ -37,23 +45,8 @@ namespace EconSim.Game
             Engine.CurrentScene.ActiveCamera = camera; // TODO more elegantly
             lookVector = new Vector2(0, 140);
 
-            // Temp
-            TerrainGenerator terrainGenerator = new TerrainGenerator();
-
-            SharedShader shader = (SharedShader)Shader.CompileFromFiles(@"Shaders\Tessellation");
-
-            tiles.Add(CreateTile(new Vector3(0, 0, 0), shader, terrainGenerator));
-
-            // Neighbors
-            tiles.Add(CreateTile(new Vector3(1, 0, 0), shader, terrainGenerator));
-            tiles.Add(CreateTile(new Vector3(-1, 0, 0), shader, terrainGenerator));
-            tiles.Add(CreateTile(new Vector3(0, 0, 1), shader, terrainGenerator));
-            tiles.Add(CreateTile(new Vector3(0, 0, -1), shader, terrainGenerator));
-
-            foreach (GameObject gameObject in tiles)
-            {
-                Engine.CurrentScene.AddGameObject(gameObject);
-            }
+            terrainGenerator = new TerrainGenerator();
+            InitVisibleTiles(out visibleTiles);
         }
 
         private void CameraLook(float deltaTime)
@@ -79,22 +72,55 @@ namespace EconSim.Game
                                   Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
         }
 
-        private GameObject CreateTile(Vector3 position, SharedShader shader, TerrainGenerator terrainGenerator)
+        /// <summary>
+        /// Initialize visible tiles
+        /// </summary>
+        /// <param name="tiles"></param>
+        private void InitVisibleTiles(out GameObject[,] tiles)
         {
-            const int size = 128;
+            SharedShader shader = SharedShader.CompileFromFiles(@"Shaders\Tessellation");
 
-            TerrainChunk c = terrainGenerator.CreateTerrainChunk(new SquareRect((int)(size * position.X), (int)(size * position.Z), size));
-            Texture2D texture = c.CreateVertexMaps();
-            ShaderResourceView textureView = new ShaderResourceView(Engine.RenderDevice.d3dDevice, texture);
+            int renderDistance = 2; // How many tiles to render in each direction
+            tiles = new GameObject[1 + 2 * renderDistance, 1 + 2 * renderDistance].Populate2D((int x, int y) =>
+            {
+                GameObject gameObject = new GameObject(Mesh.CreateQuad())
+                {
+                    Shader = shader
+                };
+                return gameObject;
+            });
 
-            GameObject plane = new GameObject(Mesh.CreateQuad());
-            plane.Position = position;
-            plane.Shader = shader;
-            // TODO both planes render the same texture
-            plane.Shader.SetShaderResource(plane, 0, textureView);
+            visibleTilesCenter = new Vector2Int(0, 0);
+            PositionVisibleTiles(ref tiles, visibleTilesCenter);
 
-            return plane;
+            // Add to scene
+            foreach (GameObject gameObject in visibleTiles)
+            {
+                Engine.CurrentScene.AddGameObject(gameObject);
+            }
         }
+
+        /// <summary>
+        /// Position tiles to surround center position
+        /// Assumes that each tile is of size 1x1
+        /// </summary>
+        /// <param name="tiles"></param>
+        /// <param name="centerPosition"></param>
+        private void PositionVisibleTiles(ref GameObject[,] tiles, Vector2Int centerPosition)
+        {
+            // Note: tile x or y length must be odd
+            int firstTileOffset = (tiles.GetLength(0) - 1) / 2;
+
+            tiles.ForEach2D((GameObject tile, int x, int y) =>
+            {
+                Vector2Int tileIndexPosition = new Vector2Int(centerPosition.X + x - firstTileOffset, centerPosition.Y + y - firstTileOffset);
+                tile.Position = new Vector3(tileIndexPosition.X, 0, tileIndexPosition.Y);
+
+                ShaderResourceView textureView = new ShaderResourceView(Engine.RenderDevice.d3dDevice, terrainGenerator.GetTerrainChunkAt(tileIndexPosition.X, tileIndexPosition.Y).TerrainMaps.HeightMap);
+                tile.Shader.SetShaderResource(tile, 0, textureView);
+            });
+        }
+
 
         public override void Update(float deltaTime)
         {
@@ -103,11 +129,19 @@ namespace EconSim.Game
             ShaderBuffer tessellationShaderBuffer;
             tessellationShaderBuffer.cameraPosition = new Vector4(camera.Position, 0f);
 
-            foreach (GameObject gameObject in tiles)
+            foreach (GameObject gameObject in visibleTiles)
             {
+                // Send distance to camera to tessellation shader
                 gameObject.Shader.SetConstantBuffer(gameObject, 1,
                     Shader.CreateSingleElementBuffer(ref tessellationShaderBuffer)
                 );
+            }
+
+            Vector2Int cameraPositionInt = new Vector2Int(camera.Position.X - 0.5f, camera.Position.Z - 0.5f);
+            if (visibleTilesCenter != cameraPositionInt)
+            {
+                visibleTilesCenter = cameraPositionInt;
+                PositionVisibleTiles(ref visibleTiles, visibleTilesCenter);
             }
 
         }

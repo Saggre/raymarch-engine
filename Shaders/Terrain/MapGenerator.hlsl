@@ -65,7 +65,7 @@ void getVertexElevationAndMoisture(in Vertex vertex, in uint sitesLength, out fl
 }
 
 [numthreads(32, 32, 1)]
-void ComputeTerrain(uint3 id : SV_DispatchThreadID)
+void main(uint3 id : SV_DispatchThreadID)
 {
 	uint verticesLength[2];
 	uint sitesLength[2];
@@ -85,14 +85,16 @@ void ComputeTerrain(uint3 id : SV_DispatchThreadID)
 		}
 	}
 
-	if (closestVertex.elevation > 0.5) {
+    result[elevationIndex] = closestVertex.elevation;
+
+	/*if (closestVertex.elevation > 0.5) {
 		// Transform [0,1] back into [-1,1]
 		result[elevationIndex] = closestVertex.elevation * 2 - 1;
 	}
 	else {
 		// Transform [0,1] back into [-1,1] and invert
 		result[depthIndex] = -(closestVertex.elevation * 2 - 1);
-	}
+	}*/
 	result[moistureIndex] = closestVertex.moisture;
 
 	Result[id.xy] = result;

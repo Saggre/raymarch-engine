@@ -15,12 +15,15 @@ namespace EconSim.Core
         private Quaternion rotation;
         private Vector3 scale;
 
+        private bool active;
+
         private Mesh mesh;
         private SharedShader shader;
         private List<IUpdateable> updateables;
 
         public GameObject()
         {
+            active = true;
             position = Vector3.Zero;
             rotation = Quaternion.Identity;
             scale = Vector3.One;
@@ -29,6 +32,7 @@ namespace EconSim.Core
 
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            active = true;
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
@@ -37,6 +41,7 @@ namespace EconSim.Core
 
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale, Mesh mesh)
         {
+            active = true;
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
@@ -46,6 +51,7 @@ namespace EconSim.Core
 
         public GameObject(Mesh mesh)
         {
+            active = true;
             this.mesh = mesh;
             position = Vector3.Zero;
             rotation = Quaternion.Identity;
@@ -56,6 +62,12 @@ namespace EconSim.Core
         {
             get => shader;
             set => shader = value;
+        }
+
+        public bool Active
+        {
+            get => active;
+            set => active = value;
         }
 
         /// <summary>

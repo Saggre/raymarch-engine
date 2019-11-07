@@ -20,14 +20,13 @@ namespace EconSim.Core.Rendering
     /// </summary>
     public class RenderDevice : IDisposable
     {
-        private RenderTargetView _backbufferView;
-        private DepthStencilView _zbufferView;
+        private RenderTargetView backbufferView;
+        private DepthStencilView zbufferView;
 
-        private RasterizerState _rasterState;
-        private BlendState _blendState;
-        private DepthStencilState _depthState;
-        private SamplerState _samplerState;
-
+        private RasterizerState rasterState;
+        private BlendState blendState;
+        private DepthStencilState depthState;
+        private SamplerState samplerState;
 
         private RenderForm renderForm;
 
@@ -136,9 +135,6 @@ namespace EconSim.Core.Rendering
             Clear(Color.CornflowerBlue);
             UpdateAllStates();
 
-            //d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
-            //d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 103, 178));
-
             // These matrices are not per-object
             frameBuffer.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
             frameBuffer.projectionMatrix = ProjectionMatrix();
@@ -148,6 +144,12 @@ namespace EconSim.Core.Rendering
             // Render all GameObjects in scene
             foreach (GameObject gameObject in Engine.CurrentScene.GameObjects)
             {
+                // Don't render if the object is not active
+                if (!gameObject.Active)
+                {
+                    continue;
+                }
+
                 // This matrix is per-object
                 frameBuffer.modelMatrix = gameObject.ModelMatrix();
                 frameBuffer.modelMatrix.Transpose();
@@ -156,7 +158,7 @@ namespace EconSim.Core.Rendering
                 gameObject.Shader.SendBufferToShader(0, sharpDxPerFrameBuffer);
 
                 // Set as current shaders
-                d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.GetInputLayout();
+                d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.InputLayout;
                 d3dDeviceContext.VertexShader.Set(gameObject.Shader.VertexShader);
                 d3dDeviceContext.HullShader.Set(gameObject.Shader.HullShader);
                 d3dDeviceContext.DomainShader.Set(gameObject.Shader.DomainShader);
@@ -196,8 +198,8 @@ namespace EconSim.Core.Rendering
         /// <param name="color">background color</param>
         public void Clear(Color4 color)
         {
-            d3dDeviceContext.ClearRenderTargetView(_backbufferView, color);
-            d3dDeviceContext.ClearDepthStencilView(_zbufferView, DepthStencilClearFlags.Depth, 1.0F, 0);
+            d3dDeviceContext.ClearRenderTargetView(backbufferView, color);
+            d3dDeviceContext.ClearDepthStencilView(zbufferView, DepthStencilClearFlags.Depth, 1.0F, 0);
         }
 
         /// <summary>
@@ -228,12 +230,12 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void SetDefaultRasterState()
         {
-            Utilities.Dispose(ref _rasterState);
+            Utilities.Dispose(ref rasterState);
             //Rasterize state
             RasterizerStateDescription rasterDescription = RasterizerStateDescription.Default();
             rasterDescription.FillMode = FillMode.Solid;
-            _rasterState = new RasterizerState(d3dDevice, rasterDescription);
-            d3dDeviceContext.Rasterizer.State = _rasterState;
+            rasterState = new RasterizerState(d3dDevice, rasterDescription);
+            d3dDeviceContext.Rasterizer.State = rasterState;
         }
 
         /// <summary>
@@ -241,12 +243,12 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void SetWireframeRasterState()
         {
-            _rasterState.Dispose();
+            rasterState.Dispose();
             //Rasterize state
             RasterizerStateDescription rasterDescription = RasterizerStateDescription.Default();
             rasterDescription.FillMode = FillMode.Wireframe;
-            _rasterState = new RasterizerState(d3dDevice, rasterDescription);
-            d3dDeviceContext.Rasterizer.State = _rasterState;
+            rasterState = new RasterizerState(d3dDevice, rasterDescription);
+            d3dDeviceContext.Rasterizer.State = rasterState;
         }
 
         /// <summary>
@@ -254,9 +256,9 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void SetDefaultBlendState()
         {
-            Utilities.Dispose(ref _blendState);
+            Utilities.Dispose(ref blendState);
             BlendStateDescription description = BlendStateDescription.Default();
-            _blendState = new BlendState(d3dDevice, description);
+            blendState = new BlendState(d3dDevice, description);
         }
 
         /// <summary>
@@ -267,14 +269,14 @@ namespace EconSim.Core.Rendering
         /// <param name="destination">Destination Option</param>
         public void SetBlend(BlendOperation operation, BlendOption source, BlendOption destination)
         {
-            Utilities.Dispose(ref _blendState);
+            Utilities.Dispose(ref blendState);
             BlendStateDescription description = BlendStateDescription.Default();
 
             description.RenderTarget[0].BlendOperation = operation;
             description.RenderTarget[0].SourceBlend = source;
             description.RenderTarget[0].DestinationBlend = destination;
             description.RenderTarget[0].IsBlendEnabled = true;
-            _blendState = new BlendState(d3dDevice, description);
+            blendState = new BlendState(d3dDevice, description);
         }
 
         /// <summary>
@@ -282,12 +284,12 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void SetDefaultDepthState()
         {
-            Utilities.Dispose(ref _depthState);
+            Utilities.Dispose(ref depthState);
             DepthStencilStateDescription description = DepthStencilStateDescription.Default();
             description.DepthComparison = Comparison.LessEqual;
             description.IsDepthEnabled = true;
 
-            _depthState = new DepthStencilState(d3dDevice, description);
+            depthState = new DepthStencilState(d3dDevice, description);
         }
 
         /// <summary>
@@ -295,7 +297,7 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void SetDefaultSamplerState()
         {
-            Utilities.Dispose(ref _samplerState);
+            Utilities.Dispose(ref samplerState);
             SamplerStateDescription description = SamplerStateDescription.Default();
             description.Filter = Filter.MinMagMipLinear;
             description.AddressU = TextureAddressMode.Wrap;
@@ -306,7 +308,7 @@ namespace EconSim.Core.Rendering
             description.MipLodBias = 0;
             description.MinimumLod = -float.MaxValue;
             description.MaximumLod = float.MaxValue;
-            _samplerState = new SamplerState(d3dDevice, description);
+            samplerState = new SamplerState(d3dDevice, description);
 
         }
 
@@ -315,19 +317,17 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public void UpdateAllStates()
         {
-            d3dDeviceContext.Rasterizer.State = _rasterState;
-            d3dDeviceContext.OutputMerger.SetBlendState(_blendState);
-            d3dDeviceContext.OutputMerger.SetDepthStencilState(_depthState);
-            d3dDeviceContext.PixelShader.SetSampler(0, _samplerState);
-            d3dDeviceContext.DomainShader.SetSampler(0, _samplerState);
+            d3dDeviceContext.Rasterizer.State = rasterState;
+            d3dDeviceContext.OutputMerger.SetBlendState(blendState);
+            d3dDeviceContext.OutputMerger.SetDepthStencilState(depthState);
+            d3dDeviceContext.PixelShader.SetSampler(0, samplerState);
+            d3dDeviceContext.DomainShader.SetSampler(0, samplerState);
             // TODO set also other shaders
         }
 
         #endregion
 
         #region Resize
-
-
 
         /// <summary>
         /// Create and Resize all items
@@ -336,8 +336,8 @@ namespace EconSim.Core.Rendering
         {
             // Dispose all previous allocated resources
             //font.Release();
-            Utilities.Dispose(ref _backbufferView);
-            Utilities.Dispose(ref _zbufferView);
+            Utilities.Dispose(ref backbufferView);
+            Utilities.Dispose(ref zbufferView);
 
 
             if (renderForm.ClientSize.Width == 0 || renderForm.ClientSize.Height == 0)
@@ -347,18 +347,18 @@ namespace EconSim.Core.Rendering
             swapChain.ResizeBuffers(1, renderForm.ClientSize.Width, renderForm.ClientSize.Height, Format.R8G8B8A8_UNorm, SwapChainFlags.None);
 
             // Get the backbuffer from the swapchain
-            var _backBufferTexture = swapChain.GetBackBuffer<Texture2D>(0);
+            Texture2D backBufferTexture = swapChain.GetBackBuffer<Texture2D>(0);
 
             //update font
             //Font.UpdateResources(_backBufferTexture);
 
             // Backbuffer
-            _backbufferView = new RenderTargetView(d3dDevice, _backBufferTexture);
-            _backBufferTexture.Dispose();
+            backbufferView = new RenderTargetView(d3dDevice, backBufferTexture);
+            backBufferTexture.Dispose();
 
             // Depth buffer
 
-            var _zbufferTexture = new Texture2D(d3dDevice, new Texture2DDescription()
+            Texture2D zbufferTexture = new Texture2D(d3dDevice, new Texture2DDescription()
             {
                 Format = Format.D16_UNorm,
                 ArraySize = 1,
@@ -374,8 +374,8 @@ namespace EconSim.Core.Rendering
 
 
             // Create the depth buffer view
-            _zbufferView = new DepthStencilView(d3dDevice, _zbufferTexture);
-            _zbufferTexture.Dispose();
+            zbufferView = new DepthStencilView(d3dDevice, zbufferTexture);
+            zbufferTexture.Dispose();
 
             SetDefaultTargets();
 
@@ -390,7 +390,7 @@ namespace EconSim.Core.Rendering
         {
             // Setup targets and viewport for rendering
             d3dDeviceContext.Rasterizer.SetViewport(0, 0, renderForm.ClientSize.Width, renderForm.ClientSize.Height);
-            d3dDeviceContext.OutputMerger.SetTargets(_zbufferView, _backbufferView);
+            d3dDeviceContext.OutputMerger.SetTargets(zbufferView, backbufferView);
         }
 
         #endregion
