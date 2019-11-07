@@ -63,7 +63,7 @@ namespace EconSim.Terrain
         /// </summary>
         public Texture2D CreateVertexMaps()
         {
-            int resolution = 128;
+            int resolution = 64;
             TextureComputeDevice computer = new TextureComputeDevice(@"Shaders/Terrain", @"Heightmap.hlsl", resolution,
                 Format.R8G8B8A8_UNorm);
 

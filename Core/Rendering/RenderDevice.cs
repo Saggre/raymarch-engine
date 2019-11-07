@@ -299,7 +299,7 @@ namespace EconSim.Core.Rendering
         {
             Utilities.Dispose(ref samplerState);
             SamplerStateDescription description = SamplerStateDescription.Default();
-            description.Filter = Filter.MinMagMipPoint;
+            description.Filter = Filter.Anisotropic;
             description.AddressU = TextureAddressMode.Clamp;
             description.AddressV = TextureAddressMode.Clamp;
             description.AddressW = TextureAddressMode.Clamp;
