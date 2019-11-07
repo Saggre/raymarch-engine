@@ -112,7 +112,13 @@
     <Content Include="Shaders\Diffuse\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\Noise\Noise.hlsl">
+    <Content Include="Shaders\Noise\DiamondSquare.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Noise\ClassicPerlinNoise.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\Noise\PerlinNoise.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\Terrain\Erosion.hlsl">
