@@ -1,11 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
 using EconSim.Core;
 using SharpDX;
 using SharpDX.D3DCompiler;

@@ -28,13 +28,20 @@ namespace EconSim.Terrain
         public Texture2D HeightMap;
     }
 
+    public struct HeightmapInput
+    {
+        public int resolution;
+        public Vector2Int offset;
+        public int unused;
+    }
+
     public class TerrainChunk
     {
         // This tile's terrain maps (such as the heightmap)
         public TerrainMaps TerrainMaps;
 
         private Stopwatch stopwatch;
-        private SquareRect bounds;
+        private Vector2Int position;
 
         /*private FastNoise noise;
         private TerrainPlane terrainPlane;
@@ -44,9 +51,9 @@ namespace EconSim.Terrain
         // tiles indexed by terrain type
         private Dictionary<Util.TerrainType, List<Tile>> tilesIndexedByTerrain;*/
 
-        public TerrainChunk(SquareRect bounds, FastNoise noise)
+        public TerrainChunk(Vector2Int position, FastNoise noise)
         {
-            this.bounds = bounds;
+            this.position = position;
             TerrainMaps.HeightMap = CreateVertexMaps();
         }
 
@@ -56,59 +63,34 @@ namespace EconSim.Terrain
         /// </summary>
         public Texture2D CreateVertexMaps()
         {
+            int resolution = 128;
+            TextureComputeDevice computer = new TextureComputeDevice(@"Shaders/Terrain", @"Heightmap.hlsl", resolution,
+                Format.R8G8B8A8_UNorm);
 
-            // Render
-            /*ComputeShader computer = new ComputeShader(@"Shaders/Terrain", @"MapGenerator.hlsl");
-
-            // Input texture
-            Texture2D computeResource = new Texture2D(Engine.RenderDevice.d3dDevice, new Texture2DDescription()
-            {
-                BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                Format = Format.R8G8B8A8_UNorm,
-                Width = 1024,
-                Height = 1024,
-                OptionFlags = ResourceOptionFlags.None,
-                MipLevels = 1,
-                ArraySize = 1,
-                SampleDescription = { Count = 1, Quality = 0 },
-                Usage = ResourceUsage.Default //?
-            });
-
-            computer.SetTexture(computeResource, 0);
-            computer.SetComputeBuffer(vertexBuffer, 1);
-            computer.SetComputeBuffer(tileBuffer, 2);
+            HeightmapInput heightmapInput;
+            heightmapInput.resolution = resolution;
+            heightmapInput.offset = new Vector2Int(position.X, position.Y);
+            heightmapInput.unused = 0;
 
             computer.Begin();
-            computer.Dispatch(32, 32, 1);
-
-            // Get output
-            Texture2D texture = computer.GetTexture(0);
-
-            computer.End();*/
-
-
-            int repetition = 1024 * 1024;
-            ComputeDevice<float> computer = new ComputeDevice<float>(@"Shaders/Terrain/Heightmap.hlsl", "main", repetition);
-
-            //execute compute shader
-            computer.Begin();
-            computer.Start(32, 32, 1);
+            computer.SendBufferToShader(0, Shader.CreateSingleElementBuffer(ref heightmapInput));
+            computer.Start(resolution, resolution, 1);
             computer.End();
 
-            //get result
-            float[] data = computer.ReadData(repetition);
+            // Get result
+            SharpDX.Color[] data = computer.ReadData<SharpDX.Color>(resolution);
 
             Texture2D t = new Texture2D(Engine.RenderDevice.d3dDevice, new Texture2DDescription()
             {
                 BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                Format = Format.R32_Float,
-                Width = 1024,
-                Height = 1024,
+                Format = Format.R8G8B8A8_UNorm,
+                Width = resolution,
+                Height = resolution,
                 OptionFlags = ResourceOptionFlags.None,
                 MipLevels = 1,
                 ArraySize = 1,
                 SampleDescription = { Count = 1, Quality = 0 }
-            }, new DataRectangle(EconSim.Core.Util.GetDataPtr(data), 1024)); // TODO try to get dynamic tex directly
+            }, new DataRectangle(Core.Util.GetDataPtr(data), resolution * 4));
 
             return t;
         }

@@ -37,15 +37,15 @@ namespace EconSim.Terrain
             // Create the chunk if it doesn't exist
             if (terrainChunks[worldToIndex.X, worldToIndex.Y] == null)
             {
-                terrainChunks[worldToIndex.X, worldToIndex.Y] = CreateTerrainChunk(new SquareRect((int)(size * x), (int)(size * y), size));
+                terrainChunks[worldToIndex.X, worldToIndex.Y] = CreateTerrainChunk(new Vector2Int(x, y));
             }
 
             return terrainChunks[worldToIndex.X, worldToIndex.Y];
         }
 
-        private TerrainChunk CreateTerrainChunk(SquareRect area)
+        private TerrainChunk CreateTerrainChunk(Vector2Int position)
         {
-            return new TerrainChunk(area, noiseGenerator);
+            return new TerrainChunk(position, noiseGenerator);
         }
 
     }

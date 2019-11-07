@@ -1,8 +1,14 @@
 ﻿#include "Common.hlsl"
 
+float roundToDecimal(in float input)
+{
+    return round(input * 10) / 10;
+}
+
 float heightmapAtPoint(float2 coord)
 {
     float4 terrainMap = tex.SampleLevel(sam, coord, 0);
+  
     float height = terrainMap.r * 0.5;
 
     return height;

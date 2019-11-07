@@ -1,16 +1,13 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 06/11/2019
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
-
+using SharpDX.DXGI;
 using Buffer11 = SharpDX.Direct3D11.Buffer;
+using Device = SharpDX.Direct3D11.Device;
+using MapFlags = SharpDX.Direct3D11.MapFlags;
 
 namespace EconSim.Core.Rendering
 {
@@ -18,8 +15,7 @@ namespace EconSim.Core.Rendering
     /// <summary>
     /// Execute Compute Shader outside Regular Graphics Device
     /// </summary>
-    /// <typeparam name="T">Result Struct Type</typeparam>
-    public class ComputeDevice<T> where T : struct
+    public class TextureComputeDevice : IShader
     {
 
         /// <summary>
@@ -40,26 +36,30 @@ namespace EconSim.Core.Rendering
 
         private Device _device;
         private DeviceContext _context;
-        private Buffer11 _buffer;
+        private Texture2D _buffer;
         private UnorderedAccessView _accessView;
-        private Buffer11 _resultBuffer;
+        private Texture2D _resultBuffer;
         private ComputeShader _shader;
+
+        private Format textureFormat;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="folderPath"></param>
         /// <param name="fileName"></param>
-        /// <param name="count">Max number of elements</param>
-        public ComputeDevice(string folderPath, string fileName, int count)
+        /// <param name="resolution">Texture resolution</param>
+        public TextureComputeDevice(string folderPath, string fileName, int resolution, Format textureFormat)
         {
             ShaderFlags shaderFlags = ShaderFlags.Debug;
 
             _device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.SingleThreaded);
             _context = _device.ImmediateContext;
 
-            _accessView = CreateUAV(count, out _buffer);
-            _resultBuffer = CreateStaging(count);
+            this.textureFormat = textureFormat;
+
+            _accessView = CreateUAV(resolution, out _buffer);
+            _resultBuffer = CreateStaging(resolution);
 
             HLSLFileIncludeHandler includeHandler = new HLSLFileIncludeHandler(folderPath);
 
@@ -101,62 +101,92 @@ namespace EconSim.Core.Rendering
             DeviceContext.Dispatch(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
         }
 
-        private Buffer11 CreateStaging(int count)
+        /// <summary>
+        /// Create a resource that can be read from
+        /// </summary>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private Texture2D CreateStaging(int resolution)
         {
-            int size = SharpDX.Utilities.SizeOf<T>() * count;
-            BufferDescription bufferDescription = new BufferDescription()
+            return new Texture2D(_device, new Texture2DDescription
             {
-                SizeInBytes = size,
+                CpuAccessFlags = CpuAccessFlags.Read,
                 BindFlags = BindFlags.None,
-                CpuAccessFlags = CpuAccessFlags.Read | CpuAccessFlags.Write,
-                Usage = ResourceUsage.Staging,
+                Format = textureFormat,
+                Width = resolution,
+                Height = resolution,
                 OptionFlags = ResourceOptionFlags.None,
-            };
-
-            return new Buffer11(Device, bufferDescription);
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = { Count = 1, Quality = 0 },
+                Usage = ResourceUsage.Staging
+            });
         }
 
-        private UnorderedAccessView CreateUAV(int count, out Buffer11 buffer)
+        /// <summary>
+        /// Create the resource send to the shader
+        /// </summary>
+        /// <param name="resolution"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        private UnorderedAccessView CreateUAV(int resolution, out Texture2D buffer)
         {
-            int size = SharpDX.Utilities.SizeOf<T>();
-            BufferDescription bufferDescription = new BufferDescription()
+
+            buffer = new Texture2D(Device, new Texture2DDescription
             {
                 BindFlags = BindFlags.UnorderedAccess | BindFlags.ShaderResource,
-                Usage = ResourceUsage.Default,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.BufferStructured,
-                StructureByteStride = size,
-                SizeInBytes = size * count
-            };
-
-            buffer = new Buffer11(Device, bufferDescription);
-
+                Format = textureFormat,
+                Width = resolution,
+                Height = resolution,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = { Count = 1, Quality = 0 }
+            });
 
             UnorderedAccessViewDescription uavDescription = new UnorderedAccessViewDescription()
             {
-                Buffer = new UnorderedAccessViewDescription.BufferResource() { FirstElement = 0, Flags = UnorderedAccessViewBufferFlags.None, ElementCount = count },
-                Format = SharpDX.DXGI.Format.Unknown,
-                Dimension = UnorderedAccessViewDimension.Buffer
+                Format = textureFormat,
+                Dimension = UnorderedAccessViewDimension.Texture2D,
+                Texture2D = { MipSlice = 0 }
             };
 
             return new UnorderedAccessView(Device, buffer, uavDescription);
 
         }
 
+        /// <summary>
+        /// Send the buffer to all shader stages
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="constantBuffer"></param>
+        public void SendBufferToShader(int slot, Buffer11 constantBuffer)
+        {
+            DeviceContext.ComputeShader.SetConstantBuffer(slot, constantBuffer);
+        }
+
+        /// <summary>
+        /// Send the shader resource view to all shader stages
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="resourceView"></param>
+        public void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
+        {
+            DeviceContext.ComputeShader.SetShaderResource(slot, resourceView);
+        }
 
         /// <summary>
         /// Return Executed Data
         /// </summary>
-        /// <param name="count">Number of element to read</param>
+        /// <param name="resolution">Number of element to read</param>
         /// <returns>Result</returns>
-        public T[] ReadData(int count)
+        public T[] ReadData<T>(int resolution) where T : struct
         {
             DataStream stream;
             DataBox box = DeviceContext.MapSubresource(_resultBuffer, 0, MapMode.Read, MapFlags.None, out stream);
-            T[] result = stream.ReadRange<T>(count);
+            T[] result = stream.ReadRange<T>(resolution * resolution);
             DeviceContext.UnmapSubresource(_buffer, 0);
             return result;
-
         }
     }
 }
