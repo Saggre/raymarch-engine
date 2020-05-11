@@ -80,7 +80,7 @@ namespace EconSim.Game
         {
             SharedShader shader = SharedShader.CompileFromFiles(@"Shaders\Tessellation");
 
-            int renderDistance = 3; // How many tiles to render in each direction
+            int renderDistance = 4; // How many tiles to render in each direction
             tiles = new GameObject[1 + 2 * renderDistance, 1 + 2 * renderDistance].Populate2D((int x, int y) =>
             {
                 GameObject gameObject = new GameObject(Mesh.CreateQuad())
