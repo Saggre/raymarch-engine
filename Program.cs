@@ -16,8 +16,8 @@ namespace EconSim
         /// </summary>
         [STAThread]
         static void Main() {
-            using Engine game = new Engine();
-            game.Run();
+            using Engine gameEngine = new Engine();
+            gameEngine.Run();
         }
     }
 //#endif

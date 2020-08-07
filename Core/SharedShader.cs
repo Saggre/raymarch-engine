@@ -64,7 +64,7 @@ namespace EconSim.Core
         /// <returns></returns>
         public Dictionary<int, ShaderResourceView> ShaderResourceViews(GameObject gameObject)
         {
-            return perObjectShaderResources.ContainsKey(gameObject) ? perObjectShaderResources[gameObject].ShaderResourceViews : null;
+            return perObjectShaderResources.ContainsKey(gameObject) ? perObjectShaderResources[gameObject].ShaderResourceViews : new Dictionary<int, ShaderResourceView>();
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace EconSim.Core
         /// <returns></returns>
         public Dictionary<int, Buffer> ConstantBuffers(GameObject gameObject)
         {
-            return perObjectShaderResources.ContainsKey(gameObject) ? perObjectShaderResources[gameObject].ConstantBuffers : null;
+            return perObjectShaderResources.ContainsKey(gameObject) ? perObjectShaderResources[gameObject].ConstantBuffers : new Dictionary<int, Buffer>();
         }
 
         /// <summary>

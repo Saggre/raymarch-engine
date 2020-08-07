@@ -3,7 +3,7 @@
 namespace EconSim.Core
 {
     /// <summary>
-    /// IUpdateable that automatically adds itself to the updateables list
+    /// IUpdateable that automatically adds itself to the updateables list on creation
     /// </summary>
     public class AutoUpdateable : IUpdateable
     {
