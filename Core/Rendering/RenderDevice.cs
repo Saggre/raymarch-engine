@@ -57,6 +57,21 @@ namespace EconSim.Core.Rendering
             InitializeDeviceResources();
         }
 
+        public int Width()
+        {
+            return renderForm.ClientSize.Width;
+        }
+
+        public int Height()
+        {
+            return renderForm.ClientSize.Height;
+        }
+
+        public float AspectRatio()
+        {
+            return Width() / Height();
+        }
+
         /// <summary>
         /// Initialize DirectX
         /// </summary>
@@ -66,7 +81,7 @@ namespace EconSim.Core.Rendering
             int height = renderForm.ClientSize.Height;
 
             ModeDescription backBufferDesc =
-                new ModeDescription(width, height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
+                new ModeDescription(width, height, new Rational(Engine.Fps, 1), Format.R8G8B8A8_UNorm);
 
             SwapChainDescription swapChainDesc = new SwapChainDescription()
             {
@@ -75,7 +90,8 @@ namespace EconSim.Core.Rendering
                 Usage = Usage.RenderTargetOutput,
                 BufferCount = 1,
                 OutputHandle = renderForm.Handle,
-                IsWindowed = true
+                IsWindowed = !Engine.IsFullscreen,
+                Flags = SwapChainFlags.AllowModeSwitch, // Allows other fullscreen resolutions than native one.
             };
 
             FeatureLevel[] levels = { FeatureLevel.Level_11_1 };
@@ -155,6 +171,12 @@ namespace EconSim.Core.Rendering
                 frameBuffer.modelMatrix.Transpose();
 
                 Buffer sharpDxPerFrameBuffer = Shader.CreateSingleElementBuffer(ref frameBuffer);
+
+                if (gameObject.Shader == null)
+                {
+                    throw new ArgumentNullException("A GameObject's shader is not set");
+                }
+
                 gameObject.Shader.SendBufferToShader(0, sharpDxPerFrameBuffer);
 
                 // Set as current shaders
@@ -182,8 +204,8 @@ namespace EconSim.Core.Rendering
                 updateCallbackAction(gameObject);
 
                 // Draw object through its Mesh class
-                gameObject.Mesh.DrawPatch(PrimitiveTopology.PatchListWith3ControlPoints);
-                //gameObject.Mesh.Draw();
+                //gameObject.Mesh.DrawPatch(PrimitiveTopology.PatchListWith3ControlPoints); <-- THIS IS NEEDED FOR TESSELLATION SHADER
+                gameObject.Mesh.Draw(); // <-- THIS IS NEEDED FOR NORMAL SHADER
 
                 sharpDxPerFrameBuffer.Dispose();
             }

@@ -5,6 +5,7 @@ using System.Numerics;
 
 namespace EconSim.Geometry
 {
+    // TODO return indices for all primitives
     public static class Primitive
     {
         /// <summary>
@@ -14,9 +15,9 @@ namespace EconSim.Geometry
         public static RenderVertex[] Triangle()
         {
             return new[]{
- new RenderVertex(new Vector4(-0.5f, 0.0f, 0.5f, 1.0f), new Vector2(0.0f, 1.0f)),
- new RenderVertex(new Vector4(0.5f, 0.0f, 0.5f, 1.0f), new Vector2(1.0f, 1.0f)),
- new RenderVertex(new Vector4(0.0f, 0.0f, -0.5f, 1.0f), new Vector2(0.5f, 0.0f))
+                 new RenderVertex(new Vector4(-0.5f, 0.0f, 0.5f, 1.0f), new Vector2(0.0f, 1.0f)),
+                 new RenderVertex(new Vector4(0.5f, 0.0f, 0.5f, 1.0f), new Vector2(1.0f, 1.0f)),
+                 new RenderVertex(new Vector4(0.0f, 0.0f, -0.5f, 1.0f), new Vector2(0.5f, 0.0f))
  };
         }
 

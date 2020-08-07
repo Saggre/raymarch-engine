@@ -2,20 +2,35 @@
 
 using Matrix = SharpDX.Matrix;
 using System.Numerics;
-using EconSim.EMath;
 using System;
 
 namespace EconSim.Core
 {
     public class Camera : GameObject
     {
+
+        public float nearClipPlane = 0.1f;
+        public float farClipPlane = 1000f;
+        public float fov = (float)(Math.PI / 2.0f);
+
+        public Camera()
+        {
+            fov = (float)(Math.PI / 2.0f);
+        }
+
+        public Camera(float fov)
+        {
+            this.fov = fov;
+        }
+
         /// <summary>
         /// Returns the camera view matrix
         /// </summary>
         /// <returns></returns>
         public Matrix ViewMatrix()
         {
-            return LookAtLH(Position, Position + Forward, Vector3.UnitY);
+            Matrix fovMatrix = Matrix.PerspectiveFovLH(fov, Engine.RenderDevice.AspectRatio(), nearClipPlane, farClipPlane);
+            return LookAtLH(Position, Position + Forward, Vector3.UnitY) * fovMatrix;
         }
 
         /// <summary>

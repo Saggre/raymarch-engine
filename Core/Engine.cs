@@ -14,8 +14,10 @@ namespace EconSim.Core
     public class Engine : IDisposable
     {
         private RenderForm renderForm;
-        private int Width = Screen.PrimaryScreen.Bounds.Width;
-        private int Height = Screen.PrimaryScreen.Bounds.Height;
+        private static int width;
+        private static int height;
+        private static int fps = 60;
+        private static bool isFullscreen = false;
 
         // The scene that is currently active
         private static Scene currentScene;
@@ -28,11 +30,25 @@ namespace EconSim.Core
 
         public static RenderDevice RenderDevice => renderDevice;
 
+        public static int Fps => fps;
+
+        public static bool IsFullscreen => isFullscreen;
+
         public Engine()
         {
+            width = Screen.PrimaryScreen.WorkingArea.Width;
+            height = Screen.PrimaryScreen.WorkingArea.Height;
+
             renderForm = new RenderForm("EconSim");
-            renderForm.ClientSize = new Size(Width, Height);
+            renderForm.AutoSize = false;
+            renderForm.ClientSize = new Size(width, height);
             renderForm.AllowUserResizing = false;
+            renderForm.IsFullscreen = isFullscreen;
+            renderForm.StartPosition = FormStartPosition.Manual;
+            renderForm.Location = new Point(0, 0);
+            renderForm.WindowState = FormWindowState.Maximized;
+            renderForm.MinimizeBox = false;
+            renderForm.Show();
 
             renderDevice = new RenderDevice(renderForm);
 

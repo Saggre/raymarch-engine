@@ -75,7 +75,7 @@ namespace EconSim.Core
         /// <param name="vertices">Vertices</param>
         /// <param name="indices">Indices</param>
         /// <returns>Mesh</returns>
-        public static Mesh Create(RenderVertex[] vertices, int[] indices)
+        public static Mesh FromRenderVertices(RenderVertex[] vertices, int[] indices)
         {
             Mesh mesh = new Mesh();
             mesh.VertexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.VertexBuffer, vertices);
@@ -209,10 +209,10 @@ namespace EconSim.Core
         {
             RenderVertex[] vertices = new RenderVertex[]
             {
-                new RenderVertex( new Vector4(0, 0, 1,1),new Vector2(0,1)),
-                new RenderVertex(new Vector4(0, 0, 0,1),new Vector2(0,0)),
-                new RenderVertex(new Vector4(1, 0, 1,1),new Vector2(1,1)),
-                new RenderVertex(new Vector4(1, 0, 0,1),new Vector2(1,0))
+                new RenderVertex(new Vector4(0, 0, 1,1), new Vector2(0,1)),
+                new RenderVertex(new Vector4(0, 0, 0,1), new Vector2(0,0)),
+                new RenderVertex(new Vector4(1, 0, 1,1), new Vector2(1,1)),
+                new RenderVertex(new Vector4(1, 0, 0,1), new Vector2(1,0))
             };
 
             int[] indices = new int[] { 0, 2, 1, 2, 3, 1 };
