@@ -34,6 +34,15 @@ namespace EconSim.Core
 
         public static bool IsFullscreen => isFullscreen;
 
+        public static int Width => width; // TODO width and height should update on window size changes such as fullscreen entry
+
+        public static int Height => height;
+
+        public static float AspectRatio()
+        {
+            return (float)(width * 1.0 / height);
+        }
+
         public Engine()
         {
             width = Screen.PrimaryScreen.WorkingArea.Width;

@@ -1,19 +1,30 @@
-float sdPlane(float y)
-{
-	return y;
+
+static float3 ray = float3(0, 0, 0);
+
+// Transform object global position into camera-relative coordinates
+float3 globalToLocalSpace(float3 position) {
+	return position - ray;
 }
 
-float sdSphere(float3 p, float s)
+float sdPlane(float height)
 {
-	return length(p) - s;
+	return height;
 }
 
-float sdBox(float3 p, float3 b)
+float sdSphere(float3 position, float radius)
 {
-	float3 d = abs(p) - b;
+	float3 p = globalToLocalSpace(position);
+	return length(p) - radius;
+}
+
+float sdBox(float3 from, float3 position, float3 dimensions)
+{
+	float3 p = globalToLocalSpace(position);
+	float3 d = abs(p) - dimensions;
 	return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
 }
 
+/*
 float sdEllipsoid(in float3 p, in float3 r) // approximated
 {
 	float k0 = length(p / r);
@@ -258,3 +269,4 @@ float sdRhombus(float3 p, float la, float lb, float h, float ra)
 	float2 q = float2(length(p.xz - 0.5 * b * float2(1.0 - f, 1.0 + f)) * sign(p.x * b.y + p.z * b.x - b.x * b.y) - ra, p.y - h);
 	return min(max(q.x, q.y), 0.0) + length(max(q, 0.0));
 }
+*/

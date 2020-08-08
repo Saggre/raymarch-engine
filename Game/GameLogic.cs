@@ -10,6 +10,7 @@ using EconSim.Geometry;
 using EconSim.Terrain;
 using EconSim.EMath;
 using SharpDX.Direct3D11;
+using System.Diagnostics;
 
 namespace EconSim.Game
 {
@@ -22,8 +23,12 @@ namespace EconSim.Game
     {
         struct ShaderBuffer
         {
-            public Vector4 cameraPosition;
+            public Vector3 cameraPosition;
+            public float aspectRatio;
+            public Vector4 cameraDirection;
         }
+
+        private ShaderBuffer raymarchShaderBuffer; // Values to send to the raymarch shader
 
         private Camera camera;
         private Vector2 lookVector;
@@ -85,6 +90,16 @@ namespace EconSim.Game
             plane.Rotation = Quaternion.CreateFromAxisAngle(camera.Right, (float)Math.PI * -0.5f);
             plane.Position = camera.Position + camera.Forward * 2
               - new Vector3(0.5f, 0.5f, 0);
+
+            raymarchShaderBuffer.cameraPosition = camera.Position;
+            raymarchShaderBuffer.aspectRatio = Engine.AspectRatio();
+            raymarchShaderBuffer.cameraDirection = new Vector4(camera.Forward, 0.0f);
+
+            Console.WriteLine(Engine.AspectRatio());
+
+            plane.Shader.SetConstantBuffer(plane, 1,
+                    Shader.CreateSingleElementBuffer(ref raymarchShaderBuffer)
+                );
         }
 
         public override void End(int endTime)

@@ -7,12 +7,9 @@
 #define MAX_OBJECTS 64
 
 float GetDist(float3 p) {
-	float4 s = float4(0, 1, 6, 1);
+	ray = p;
+	float d = sdSphere(float3(1, 0, 6), 1);
 
-	float sphereDist = length(p - s.xyz) - s.w;
-	float planeDist = p.y;
-
-	float d = min(sphereDist, planeDist);
 	return d;
 }
 
@@ -48,7 +45,7 @@ float GetLight(in float3 p) {
 
 	//float3 lightPos = _WorldSpaceLightPos0.xyz; //float3(0, 5, 6);
 	//lightPos.xz += vec2(sin(iTime), cos(iTime)) * 2.;
-	float3 l = normalize(float3(0, 5, 6));// normalize(lightPos - p);
+	float3 l = normalize(float3(0, 5, 0));// normalize(lightPos - p);
 	float3 n = GetNormal(p);
 
 	float dif = clamp(dot(n, l), 0., 1.);
@@ -64,7 +61,8 @@ float4 main(PS_INPUT input) : SV_Target
 {
 
 	float2 uv = input.TexCoord - float2(0.5, 0.5);
-	float3 ro = float3(0, 1, 0);
+	uv.x *= aspectRatio;
+	float3 ro = float3(0, 0, 0);
 	float3 rd = normalize(float3(uv.x, uv.y, 1.0));
 
 	float d = Raymarch(ro, rd);
@@ -75,7 +73,7 @@ float4 main(PS_INPUT input) : SV_Target
 
 	float dif = GetLight(p);
 
-	col.rgb = float3(p);
+	col.rgb = float3(dif, dif, dif);
 
 
 	return float4(col, 1.0);
