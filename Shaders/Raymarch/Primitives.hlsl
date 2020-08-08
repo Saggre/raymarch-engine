@@ -8,7 +8,7 @@ float3 globalToLocalSpace(float3 position) {
 
 float sdPlane(float height)
 {
-	return height;
+	return ray.y - height;
 }
 
 float sdSphere(float3 position, float radius)

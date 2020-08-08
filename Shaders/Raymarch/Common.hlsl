@@ -9,7 +9,8 @@ cbuffer ShaderBuffer : register(b1)
 {
     float3 cameraPosition;
     float aspectRatio;
-    float4 cameraDirection;
+    float3 cameraDirection;
+    float time;
 };
 
 struct VS_INPUT
