@@ -11,11 +11,12 @@ using SharpDX.Windows;
 
 namespace EconSim.Core
 {
+    /// <summary>
+    /// A class that handles initating the rendering class (RenderDevice), rendering loop and input devices
+    /// </summary>
     public class Engine : IDisposable
     {
-        private RenderForm renderForm;
-        private static int width;
-        private static int height;
+        private static RenderForm renderForm;
         private static int fps = 60;
         private static bool isFullscreen = false;
 
@@ -30,34 +31,56 @@ namespace EconSim.Core
 
         public static RenderDevice RenderDevice => renderDevice;
 
+        /// <summary>
+        /// Get the program's frames per second
+        /// </summary>
         public static int Fps => fps;
 
+        /// <summary>
+        /// Is the window full screen?
+        /// </summary>
         public static bool IsFullscreen => isFullscreen;
 
-        public static int Width => width; // TODO width and height should update on window size changes such as fullscreen entry
+        /// <summary>
+        /// Get the window's width
+        /// </summary>
+        public static int Width => renderForm.Width; // TODO width and height should update on window size changes such as fullscreen entry
 
-        public static int Height => height;
+        // TODO check height and width are right
 
+        /// <summary>
+        /// Get the window's height
+        /// </summary>
+        public static int Height => renderForm.Height;
+
+        /// <summary>
+        /// Get the window's aspect ratio
+        /// </summary>
+        /// <returns>Width / Height</returns>
         public static float AspectRatio()
         {
-            return (float)(width * 1.0 / height);
+            return (float)(Width * 1.0 / Height);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public Engine()
         {
-            width = Screen.PrimaryScreen.WorkingArea.Width;
-            height = Screen.PrimaryScreen.WorkingArea.Height;
+            {
+                // Init window
+                renderForm = new RenderForm("EconSim");
+                renderForm.AutoSize = false;
+                renderForm.ClientSize = new Size(Screen.PrimaryScreen.WorkingArea.Width, Screen.PrimaryScreen.WorkingArea.Height);
+                renderForm.AllowUserResizing = false;
+                renderForm.IsFullscreen = isFullscreen;
+                renderForm.StartPosition = FormStartPosition.Manual;
+                renderForm.Location = new Point(0, 0);
+                renderForm.WindowState = FormWindowState.Maximized;
+                renderForm.MinimizeBox = false;
+                renderForm.Show();
+            }
 
-            renderForm = new RenderForm("EconSim");
-            renderForm.AutoSize = false;
-            renderForm.ClientSize = new Size(width, height);
-            renderForm.AllowUserResizing = false;
-            renderForm.IsFullscreen = isFullscreen;
-            renderForm.StartPosition = FormStartPosition.Manual;
-            renderForm.Location = new Point(0, 0);
-            renderForm.WindowState = FormWindowState.Maximized;
-            renderForm.MinimizeBox = false;
-            renderForm.Show();
 
             renderDevice = new RenderDevice(renderForm);
 
@@ -67,19 +90,19 @@ namespace EconSim.Core
             // Init main game logic script
             gameLogic = new GameLogic();
 
-            // Init stopwatch for deltaTime
+            // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();
             stopwatch.Start();
 
             // Init input device
             InputDevice.Init(renderForm);
 
-            int unixTime = Core.Util.ConvertToUnixTimestamp(DateTime.Now);
+            int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
 
             // Execute all start methods
             StaticUpdater.ExecuteStartActions(unixTime);
 
-            // Execute each scene GameObject's updateables
+            // Execute each scene GameObject's updateables' Start method
             foreach (GameObject mainSceneGameObject in currentScene.GameObjects)
             {
                 foreach (IUpdateable updateable in mainSceneGameObject.Updateables)
@@ -89,17 +112,24 @@ namespace EconSim.Core
             }
         }
 
+        /// <summary>
+        /// Starts the rendering loop
+        /// </summary>
         public void Run()
         {
             RenderLoop.Run(renderForm, RenderCallback);
         }
 
         private float lastDeltaTime;
+
+        /// <summary>
+        /// This method runs on every frame
+        /// </summary>
         private void RenderCallback()
         {
             stopwatch.Restart();
 
-            // Execute all update methods
+            // Execute all Update methods
             StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
 
             // Render on each frame
@@ -116,7 +146,9 @@ namespace EconSim.Core
             lastDeltaTime = (float)stopwatch.Elapsed.TotalSeconds;
         }
 
-
+        /// <summary>
+        /// Called on program close
+        /// </summary>
         public void Dispose()
         {
             renderForm.Dispose();

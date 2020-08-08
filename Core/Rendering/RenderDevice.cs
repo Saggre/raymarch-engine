@@ -16,7 +16,7 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 namespace EconSim.Core.Rendering
 {
     /// <summary>
-    /// Encapsulate All DirectX Elements
+    /// A class that handles rendering the visible
     /// </summary>
     public class RenderDevice : IDisposable
     {
@@ -39,14 +39,30 @@ namespace EconSim.Core.Rendering
         /// </summary>
         public bool MustResize { get; private set; }
 
-        [StructLayout(LayoutKind.Sequential)]
+        /// <summary>
+        /// Data that is sent to every shaded object
+        /// </summary>
         public struct PerFrameBuffer
         {
+            /// <summary>
+            /// Object position, rotation, scale
+            /// </summary>
             public Matrix modelMatrix;
+
+            /// <summary>
+            /// Camera position, rotation, scale
+            /// </summary>
             public Matrix viewMatrix;
+
+            /// <summary>
+            /// Projection matrix
+            /// </summary>
             public Matrix projectionMatrix;
         }
 
+        /// <summary>
+        /// Data that is sent to every shaded object
+        /// </summary>
         public PerFrameBuffer frameBuffer;
 
         private Viewport viewport;
@@ -57,31 +73,15 @@ namespace EconSim.Core.Rendering
             InitializeDeviceResources();
         }
 
-        public int Width()
-        {
-            return renderForm.ClientSize.Width;
-        }
-
-        public int Height()
-        {
-            return renderForm.ClientSize.Height;
-        }
-
-        public float AspectRatio()
-        {
-            return Width() / Height();
-        }
 
         /// <summary>
         /// Initialize DirectX
         /// </summary>
         private void InitializeDeviceResources()
         {
-            int width = renderForm.ClientSize.Width;
-            int height = renderForm.ClientSize.Height;
 
             ModeDescription backBufferDesc =
-                new ModeDescription(width, height, new Rational(Engine.Fps, 1), Format.R8G8B8A8_UNorm);
+                new ModeDescription(Engine.Width, Engine.Height, new Rational(Engine.Fps, 1), Format.R8G8B8A8_UNorm);
 
             SwapChainDescription swapChainDesc = new SwapChainDescription()
             {
@@ -104,7 +104,7 @@ namespace EconSim.Core.Rendering
                 renderTargetView = new RenderTargetView(d3dDevice, backBuffer);
             }*/
 
-            viewport = new Viewport(0, 0, width, height);
+            viewport = new Viewport(0, 0, Engine.Width, Engine.Height);
             d3dDevice.ImmediateContext.Rasterizer.SetViewport(viewport);
 
             //Ignore all windows events
@@ -236,7 +236,7 @@ namespace EconSim.Core.Rendering
 
         public Matrix ProjectionMatrix()
         {
-            float aspectRatio = (float)renderForm.Width / (float)renderForm.Height;
+            float aspectRatio = Engine.AspectRatio();
             float fieldOfView = (float)Math.PI / 4.0f;
             float nearClipPlane = 0.1f;
             float farClipPlane = 200.0f;
