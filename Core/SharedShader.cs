@@ -159,6 +159,9 @@ namespace EconSim.Core
         /// <param name="folderPath"></param>
         public static SharedShader CompileFromFiles(string folderPath)
         {
+            // TODO simplify method with a loop
+            // TODO build shaders on program build with dxc
+
             ShaderFlags shaderFlags = ShaderFlags.Debug;
 
             InputLayout inputLayout = null;
