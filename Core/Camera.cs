@@ -8,14 +8,13 @@ namespace EconSim.Core
 {
     public class Camera : GameObject
     {
-
         public float nearClipPlane = 0.1f;
         public float farClipPlane = 1000f;
-        public float fov = (float)(Math.PI / 2.0f);
+        public float fov = (float) (Math.PI / 2.0f);
 
         public Camera()
         {
-            fov = (float)(Math.PI / 2.0f);
+            fov = (float) (Math.PI / 2.0f);
         }
 
         public Camera(float fov)
@@ -29,7 +28,8 @@ namespace EconSim.Core
         /// <returns></returns>
         public Matrix ViewMatrix()
         {
-            Matrix fovMatrix = Matrix.PerspectiveFovLH(fov, Engine.RenderDevice.AspectRatio(), nearClipPlane, farClipPlane);
+            // If viewport is stretched it's because of this matrix's aspect ratio 
+            Matrix fovMatrix = Matrix.PerspectiveFovLH(fov, 1.0f, nearClipPlane, farClipPlane);
             return LookAtLH(Position, Position + Forward, Vector3.UnitY) * fovMatrix;
         }
 
@@ -51,9 +51,15 @@ namespace EconSim.Core
 
             Matrix result = Matrix.Identity;
 
-            result.M11 = xaxis.X; result.M21 = xaxis.Y; result.M31 = xaxis.Z;
-            result.M12 = yaxis.X; result.M22 = yaxis.Y; result.M32 = yaxis.Z;
-            result.M13 = zaxis.X; result.M23 = zaxis.Y; result.M33 = zaxis.Z;
+            result.M11 = xaxis.X;
+            result.M21 = xaxis.Y;
+            result.M31 = xaxis.Z;
+            result.M12 = yaxis.X;
+            result.M22 = yaxis.Y;
+            result.M32 = yaxis.Z;
+            result.M13 = zaxis.X;
+            result.M23 = zaxis.Y;
+            result.M33 = zaxis.Z;
 
             result.M41 = Vector3.Dot(xaxis, eye);
             result.M42 = Vector3.Dot(yaxis, eye);

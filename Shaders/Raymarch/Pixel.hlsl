@@ -8,7 +8,7 @@
 
 float GetDist(float3 p) {
 	ray = p;
-	float d = min(sdSphere(float3(1, 0, 6), 1), sdPlane(-1));
+	float d = min(sdSphere(float3(0, 0, 6), 1), sdPlane(-1));
 
 	return d;
 }
