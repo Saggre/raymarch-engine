@@ -33,6 +33,10 @@ namespace EconSim.Game
             sphere = new GameObject(RaymarchShape.Sphere);
             sphere.Position = new Vector3(2, 2, 0);
             Engine.CurrentScene.AddGameObject(sphere);
+
+            GameObject plane = new GameObject(RaymarchShape.Plane);
+            plane.Position = new Vector3(0, -1, 0);
+            Engine.CurrentScene.AddGameObject(plane);
         }
 
         private void CameraLook(float deltaTime)
@@ -65,8 +69,6 @@ namespace EconSim.Game
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
-            
-            
         }
 
         public override void End(int endTime)

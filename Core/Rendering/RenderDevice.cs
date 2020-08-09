@@ -46,8 +46,8 @@ namespace EconSim.Core.Rendering
         {
             public Vector3 cameraPosition;
             public float aspectRatio;
-            public Vector3 cameraDirection;
             public float time;
+            public int objectCount;
 
             /// <summary>
             /// Camera position, rotation, scale
@@ -61,8 +61,8 @@ namespace EconSim.Core.Rendering
                     viewMatrix,
                     new Matrix4x4(
                         cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time,
-                        cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time,
-                        cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time, 0.0f
+                        Engine.CurrentScene.GameObjects.Count,
+                        1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f
                     ),
                 };
             }
@@ -92,11 +92,10 @@ namespace EconSim.Core.Rendering
             Shader raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
             raymarchRenderPlane = Mesh.CreateQuad();
 
-            //raymarchShaderBuffer = Shader.CreateSingleElementBuffer(ref raymarchShaderBufferData);
             raymarchShaderBuffer = Buffer.Create(Engine.RenderDevice.d3dDevice,
                 BindFlags.ConstantBuffer,
                 ref raymarchShaderBufferData,
-                Utilities.SizeOf<RaymarchShaderBuffer>(),
+                128,
                 ResourceUsage.Default,
                 CpuAccessFlags.None,
                 ResourceOptionFlags.None,
@@ -294,14 +293,13 @@ namespace EconSim.Core.Rendering
             {
                 // These matrices are not per-object
                 raymarchShaderBufferData.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
-
                 raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
-                raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Forward;
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
                 d3dDeviceContext.UpdateSubresource(raymarchShaderBufferData.Get(), raymarchShaderBuffer);
 
+                // TODO don't do this every frame, but only when needed
                 raymarchObjectsBuffer.UpdateValue(Engine.CurrentScene.GameObjects
                     .Select(gameObject => gameObject.GetBufferData()).ToArray());
             }
