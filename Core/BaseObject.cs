@@ -12,9 +12,8 @@ namespace EconSim.Core
     /// A class that represents a physical, visible object in the scene
     /// Must be extended to represent an object with a mesh (GameObject) or a raymarched object (RaymarchGameObject) or something else
     /// </summary>
-    public abstract class Object
+    public abstract class BaseObject
     {
-
         protected Vector3 position;
         protected Quaternion rotation;
         protected Vector3 scale;
@@ -23,7 +22,7 @@ namespace EconSim.Core
 
         protected List<IUpdateable> updateables;
 
-        public Object()
+        public BaseObject()
         {
             active = true;
             position = Vector3.Zero;
@@ -32,7 +31,7 @@ namespace EconSim.Core
             updateables = new List<IUpdateable>();
         }
 
-        public Object(Vector3 position, Quaternion rotation, Vector3 scale)
+        public BaseObject(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             active = true;
             this.position = position;

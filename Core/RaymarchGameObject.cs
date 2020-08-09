@@ -15,17 +15,36 @@ namespace EconSim.Core
     /// </summary>
     public enum RaymarchShape
     {
-        sphere,
-        box,
-        plane,
-        ellipsoid,
-        torus
+        /// <summary>
+        /// A sphere
+        /// </summary>
+        Sphere,
+
+        /// <summary>
+        /// A box
+        /// </summary>
+        Box,
+
+        /// <summary>
+        /// An infinite plane
+        /// </summary>
+        Plane,
+
+        /// <summary>
+        /// An ellipsoid
+        /// </summary>
+        Ellipsoid,
+
+        /// <summary>
+        /// A torus ;)
+        /// </summary>
+        Torus
     }
 
     /// <summary>
     /// A class that represents a raymarched object in the scene
     /// </summary>
-    public class RaymarchGameObject : Object
+    public class RaymarchGameObject : BaseObject
     {
         /// <summary>
         /// Data that is passed to the raymarch shader.

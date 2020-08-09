@@ -1,13 +1,17 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using WindowsInput.Native;
 using EconSim.Core.Input;
 using EconSim.Core.Rendering;
 using EconSim.Game;
+using SharpDX.Direct3D11;
 using SharpDX.Windows;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace EconSim.Core
 {
@@ -44,7 +48,8 @@ namespace EconSim.Core
         /// <summary>
         /// Get the window's width
         /// </summary>
-        public static int Width => renderForm.Width; // TODO width and height should update on window size changes such as fullscreen entry
+        public static int Width =>
+            renderForm.Width; // TODO width and height should update on window size changes such as fullscreen entry
 
         // TODO check height and width are right
 
@@ -59,7 +64,7 @@ namespace EconSim.Core
         /// <returns>Width / Height</returns>
         public static float AspectRatio()
         {
-            return (float)(Width * 1.0 / Height);
+            return (float) (Width * 1.0 / Height);
         }
 
         /// <summary>
@@ -71,7 +76,8 @@ namespace EconSim.Core
                 // Init window
                 renderForm = new RenderForm("EconSim");
                 renderForm.AutoSize = false;
-                renderForm.ClientSize = new Size(Screen.PrimaryScreen.WorkingArea.Width, Screen.PrimaryScreen.WorkingArea.Height);
+                renderForm.ClientSize = new Size(Screen.PrimaryScreen.WorkingArea.Width,
+                    Screen.PrimaryScreen.WorkingArea.Height);
                 renderForm.AllowUserResizing = false;
                 renderForm.IsFullscreen = isFullscreen;
                 renderForm.StartPosition = FormStartPosition.Manual;
@@ -80,7 +86,6 @@ namespace EconSim.Core
                 renderForm.MinimizeBox = false;
                 renderForm.Show();
             }
-
 
             renderDevice = new RenderDevice(renderForm);
 
@@ -102,10 +107,10 @@ namespace EconSim.Core
             // Execute all start methods
             StaticUpdater.ExecuteStartActions(unixTime);
 
-            // Execute each scene GameObject's updateables' Start method
-            foreach (GameObject mainSceneGameObject in currentScene.GameObjects)
+            // Execute each scene object's updateables' Start method
+            foreach (BaseObject mainSceneObject in currentScene.Objects)
             {
-                foreach (IUpdateable updateable in mainSceneGameObject.Updateables)
+                foreach (IUpdateable updateable in mainSceneObject.Updateables)
                 {
                     updateable.Start(unixTime);
                 }
@@ -117,7 +122,7 @@ namespace EconSim.Core
         /// </summary>
         public void Run()
         {
-            RenderLoop.Run(renderForm, RenderCallback);
+            RenderLoop.Run(renderForm, GameLoop);
         }
 
         private float lastDeltaTime;
@@ -125,25 +130,31 @@ namespace EconSim.Core
         /// <summary>
         /// This method runs on every frame
         /// </summary>
-        private void RenderCallback()
+        private void GameLoop()
         {
+            // Close program with esc
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.ESCAPE))
+            {
+                renderForm.Dispose();
+            }
+
             stopwatch.Restart();
 
             // Execute all Update methods
             StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
 
             // Render on each frame
-            renderDevice.Draw(lastDeltaTime, gameObject =>
+            renderDevice.Draw(lastDeltaTime, baseObject =>
             {
                 // Execute updates per-object
-                foreach (IUpdateable updateable in gameObject.Updateables)
+                foreach (IUpdateable updateable in baseObject.Updateables)
                 {
                     updateable.Update(lastDeltaTime);
                 }
             });
 
             stopwatch.Stop();
-            lastDeltaTime = (float)stopwatch.Elapsed.TotalSeconds;
+            lastDeltaTime = (float) stopwatch.Elapsed.TotalSeconds;
         }
 
         /// <summary>
@@ -151,7 +162,42 @@ namespace EconSim.Core
         /// </summary>
         public void Dispose()
         {
+            int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
+
+            // Execute all end methods
+            StaticUpdater.ExecuteEndActions(unixTime);
+
+            // Execute each scene GameObject's end methods
+            foreach (BaseObject baseObject in CurrentScene.Objects)
+            {
+                foreach (IUpdateable updateable in baseObject.Updateables)
+                {
+                    updateable.End(unixTime);
+                }
+            }
+
             renderForm.Dispose();
+
+            // Dispose of GameObjects' custom buffers and resource views
+            foreach (BaseObject baseObject in CurrentScene.Objects)
+            {
+                if (!(baseObject is GameObject))
+                {
+                    continue;
+                }
+
+                GameObject gameObject = (GameObject) baseObject;
+
+                foreach (Buffer buffer in gameObject.Shader.ConstantBuffers(gameObject).Values)
+                {
+                    buffer.Dispose();
+                }
+
+                foreach (ShaderResourceView shaderResource in gameObject.Shader.ShaderResourceViews(gameObject).Values)
+                {
+                    shaderResource.Dispose();
+                }
+            }
         }
     }
 }

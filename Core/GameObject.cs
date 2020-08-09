@@ -10,7 +10,7 @@ namespace EconSim.Core
     /// <summary>
     /// A class that represents a physical, visible object in the scene
     /// </summary>
-    public class GameObject : Object
+    public class GameObject : BaseObject
     {
         private Mesh mesh;
         private SharedShader shader;
