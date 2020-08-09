@@ -14,51 +14,24 @@ namespace EconSim.Game
     /// </summary>
     public class GameLogic : AutoUpdateable
     {
-        struct ShaderBuffer
-        {
-            public Vector3 cameraPosition;
-            public float aspectRatio;
-            public Vector3 cameraDirection;
-            public float time;
-        }
-
-        private ShaderBuffer raymarchShaderBuffer; // Values to send to the raymarch shader
-
-        private float time;
         private Camera camera;
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
 
-        private GameObject plane;
-
-        private RaymarchGameObject sphere;
+        private GameObject sphere;
 
         public override void Start(int startTime)
         {
-            time = 0f;
-
             // Init movement manager
             playerMovement = new PlayerMovement();
 
-            // Set camera initial pos
-            camera = new Camera
-            {
-                Position = new Vector3(0, 2, 0)
-            };
-            Engine.CurrentScene.ActiveCamera = camera; // TODO more elegantly
+            camera = Engine.CurrentScene.ActiveCamera;
+            camera.Position = new Vector3(0, 2, 0);
+
             lookVector = new Vector2(45 + 90, 180);
 
-            SharedShader shader = SharedShader.CompileFromFiles(@"Shaders\Raymarch");
-
-            plane = new GameObject(Mesh.CreateQuad())
-            {
-                Shader = shader
-            };
-
-            sphere = new RaymarchGameObject(RaymarchShape.Sphere);
+            sphere = new GameObject(RaymarchShape.Sphere);
             sphere.Position = new Vector3(2, 2, 0);
-
-            Engine.CurrentScene.AddObject(plane);
         }
 
         private void CameraLook(float deltaTime)
@@ -91,17 +64,6 @@ namespace EconSim.Game
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
-
-            time += deltaTime;
-
-            raymarchShaderBuffer.cameraPosition = camera.Position;
-            raymarchShaderBuffer.aspectRatio = Engine.AspectRatio();
-            raymarchShaderBuffer.cameraDirection = camera.Forward;
-            raymarchShaderBuffer.time = time; // TODO reset time when it is too large
-
-            plane.Shader.SetConstantBuffer(plane, 1,
-                Shader.CreateSingleElementBuffer(ref raymarchShaderBuffer)
-            );
         }
 
         public override void End(int endTime)

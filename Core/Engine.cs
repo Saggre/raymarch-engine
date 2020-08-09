@@ -27,6 +27,7 @@ namespace EconSim.Core
         // The scene that is currently active
         private static Scene currentScene;
 
+        private static float elapsedTime;
         private Stopwatch stopwatch;
         private GameLogic gameLogic;
         private static RenderDevice renderDevice;
@@ -34,6 +35,11 @@ namespace EconSim.Core
         public static Scene CurrentScene => currentScene;
 
         public static RenderDevice RenderDevice => renderDevice;
+
+        /// <summary>
+        /// Time elapsed since starting the engine
+        /// </summary>
+        public static float ElapsedTime => elapsedTime;
 
         /// <summary>
         /// Get the program's frames per second
@@ -87,13 +93,14 @@ namespace EconSim.Core
                 renderForm.Show();
             }
 
-            renderDevice = new RenderDevice(renderForm);
-
             // Create main scene
             currentScene = new Scene();
 
             // Init main game logic script
             gameLogic = new GameLogic();
+
+            // It's important that render device is created after the scene
+            renderDevice = new RenderDevice(renderForm);
 
             // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();
@@ -108,7 +115,7 @@ namespace EconSim.Core
             StaticUpdater.ExecuteStartActions(unixTime);
 
             // Execute each scene object's updateables' Start method
-            foreach (BaseObject mainSceneObject in currentScene.Objects)
+            foreach (GameObject mainSceneObject in currentScene.GameObjects)
             {
                 foreach (IUpdateable updateable in mainSceneObject.Updateables)
                 {
@@ -144,17 +151,20 @@ namespace EconSim.Core
             StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
 
             // Render on each frame
-            renderDevice.Draw(lastDeltaTime, baseObject =>
+            renderDevice.Draw();
+
+            foreach (var currentSceneObject in currentScene.GameObjects)
             {
                 // Execute updates per-object
-                foreach (IUpdateable updateable in baseObject.Updateables)
+                foreach (IUpdateable updateable in currentSceneObject.Updateables)
                 {
                     updateable.Update(lastDeltaTime);
                 }
-            });
+            }
 
             stopwatch.Stop();
             lastDeltaTime = (float) stopwatch.Elapsed.TotalSeconds;
+            elapsedTime += lastDeltaTime;
         }
 
         /// <summary>
@@ -168,36 +178,15 @@ namespace EconSim.Core
             StaticUpdater.ExecuteEndActions(unixTime);
 
             // Execute each scene GameObject's end methods
-            foreach (BaseObject baseObject in CurrentScene.Objects)
+            foreach (GameObject gameObject in CurrentScene.GameObjects)
             {
-                foreach (IUpdateable updateable in baseObject.Updateables)
+                foreach (IUpdateable updateable in gameObject.Updateables)
                 {
                     updateable.End(unixTime);
                 }
             }
 
             renderForm.Dispose();
-
-            // Dispose of GameObjects' custom buffers and resource views
-            foreach (BaseObject baseObject in CurrentScene.Objects)
-            {
-                if (!(baseObject is GameObject))
-                {
-                    continue;
-                }
-
-                GameObject gameObject = (GameObject) baseObject;
-
-                foreach (Buffer buffer in gameObject.Shader.ConstantBuffers(gameObject).Values)
-                {
-                    buffer.Dispose();
-                }
-
-                foreach (ShaderResourceView shaderResource in gameObject.Shader.ShaderResourceViews(gameObject).Values)
-                {
-                    shaderResource.Dispose();
-                }
-            }
         }
     }
 }
