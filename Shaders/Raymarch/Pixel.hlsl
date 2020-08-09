@@ -6,13 +6,14 @@
 #define SURF_DIST 1e-2
 #define MAX_OBJECTS 64
 
-/*float raymarchObjectSd(RaymarchGameObjectBufferData shape, float3 p) {
+float raymarchObjectSd(RaymarchObject shape, float3 p) {
     float d = MAX_DIST;
     float3 np = p - shape.position;
 
     switch (shape.raymarchShape) {
         case 0:
-            d = sdSphere(np, shape.primitiveOptions.r);
+            //d = sdSphere(np, shape.primitiveOptions.r);
+            d = sdSphere(np, 1.0);
             break;
         case 1:
             d = sdBox(np, shape.primitiveOptions.rrr);
@@ -29,14 +30,23 @@
     }
 
     return d;
-}*/
+}
 
 float GetDist(float3 p) {
 
-	
-	float d = min(sdSphere(p-float3(0, 1, 6), 1), sdPlane(p-float3(0,1,0)));
+    float minDist = MAX_DIST;
 
-	return d;
+    for (uint i = 0; i < objectCount && i < MAX_OBJECTS; i++) {
+        RaymarchObject shape = raymarchObjects[i];
+        float curDist = raymarchObjectSd(shape, p);
+        //cd[i] = float4(shape.color.rgb, d);
+        //td += d;
+        minDist = min(minDist, curDist);
+    }
+    
+	//float d = min(sdSphere(p-float3(0, 1, 6), 1), sdPlane(p-float3(0,1,0)));
+
+	return minDist;
 }
 
 // 
