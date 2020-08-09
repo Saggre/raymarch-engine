@@ -32,6 +32,7 @@ namespace EconSim.Game
 
             sphere = new GameObject(RaymarchShape.Sphere);
             sphere.Position = new Vector3(2, 2, 0);
+            Engine.CurrentScene.AddGameObject(sphere);
         }
 
         private void CameraLook(float deltaTime)

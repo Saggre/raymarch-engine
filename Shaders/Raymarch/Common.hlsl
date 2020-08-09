@@ -4,7 +4,10 @@ struct RaymarchGameObjectBufferData
 	float3 position;
 	float3 eulerAngles;
 	float3 scale;
-	float2 blank;
+	
+	float3 primitiveOptions;
+	float4 color;
+	float3 materialOptions;
 };
 
 cbuffer ShaderBuffer : register(b0)
@@ -13,12 +16,12 @@ cbuffer ShaderBuffer : register(b0)
 	float3 cameraPosition;
 	float aspectRatio;
 	float time;
-	float3 blank0;
-	float4 blank1;
+	float3 blank1;
 	float4 blank2;
+	float4 blank3;
 };
 
-uniform RWStructuredBuffer<RaymarchGameObjectBufferData> raymarchObjects : register(u0);
+uniform RWStructuredBuffer<RaymarchGameObjectBufferData> raymarchObjects : register(u0); 
 
 struct VS_INPUT
 {

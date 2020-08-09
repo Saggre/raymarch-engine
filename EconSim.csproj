@@ -132,6 +132,7 @@
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\GameObject.cs" />
+    <Compile Include="Core\RaymarchObjectsBuffer.cs" />
     <Compile Include="Core\Rendering\ComputeDevice.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Rendering\RenderTarget.cs" />
