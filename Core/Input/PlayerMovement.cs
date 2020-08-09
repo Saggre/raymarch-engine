@@ -36,13 +36,13 @@ namespace EconSim.Core.Input
                 playerSpeed = 2f;
 
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_D))
-                movementInput -= Vector3.UnitX;
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_A))
                 movementInput += Vector3.UnitX;
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_A))
+                movementInput -= Vector3.UnitX;
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_W))
-                movementInput += Vector3.UnitZ;
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_S))
                 movementInput -= Vector3.UnitZ;
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_S))
+                movementInput += Vector3.UnitZ;
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.SPACE))
                 movementInput -= Vector3.UnitY;
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LCONTROL))

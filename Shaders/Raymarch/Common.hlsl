@@ -10,11 +10,12 @@ struct RaymarchGameObjectBufferData
 cbuffer ShaderBuffer : register(b0)
 {
     float4x4 viewMatrix;
-	float4x4 projectionMatrix;
 	float3 cameraPosition;
 	float aspectRatio;
-	float3 cameraDirection;
 	float time;
+	float3 blank0;
+	float4 blank1;
+	float4 blank2;
 };
 
 uniform RWStructuredBuffer<RaymarchGameObjectBufferData> raymarchObjects : register(u0);

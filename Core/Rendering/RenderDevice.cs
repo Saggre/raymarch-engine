@@ -1,8 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 05/11/2019
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
+using System.Numerics;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -11,9 +11,7 @@ using SharpDX.Windows;
 using Device11 = SharpDX.Direct3D11.Device;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Color = SharpDX.Color;
-using MapFlags = SharpDX.Direct3D11.MapFlags;
 using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
 
 namespace EconSim.Core.Rendering
 {
@@ -41,6 +39,7 @@ namespace EconSim.Core.Rendering
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
         private RaymarchShaderBuffer raymarchShaderBufferData; // Values to send to the raymarch shader
         private Buffer raymarchShaderBuffer;
+        private DataStream dataStream;
 
         struct RaymarchShaderBuffer
         {
@@ -52,32 +51,18 @@ namespace EconSim.Core.Rendering
             /// <summary>
             /// Camera position, rotation, scale
             /// </summary>
-            public Matrix viewMatrix;
+            public Matrix4x4 viewMatrix;
 
-            /// <summary>
-            /// Projection matrix
-            /// </summary>
-            public Matrix projectionMatrix;
-
-            Vector4 VTV(SharpDX.Vector4 m)
+            public Matrix4x4[] Get()
             {
-                return new Vector4(m.X, m.Y, m.Z, m.W);
-            }
-
-            public Vector4[] Get()
-            {
-                return new Vector4[]
+                return new Matrix4x4[]
                 {
-                    VTV(viewMatrix.Row1),
-                    VTV(viewMatrix.Row2),
-                    VTV(viewMatrix.Row3),
-                    VTV(viewMatrix.Row4),
-                    VTV(projectionMatrix.Row1),
-                    VTV(projectionMatrix.Row2),
-                    VTV(projectionMatrix.Row3),
-                    VTV(projectionMatrix.Row4),
-                    new Vector4(cameraPosition, aspectRatio),
-                    new Vector4(cameraDirection, time)
+                    viewMatrix,
+                    new Matrix4x4(
+                        cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time,
+                        cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time,
+                        cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time, 0.0f
+                    ),
                 };
             }
         }
@@ -115,13 +100,7 @@ namespace EconSim.Core.Rendering
                 CpuAccessFlags.None,
                 ResourceOptionFlags.None,
                 0);
-
-            /*raymarchRenderPlane.Shader.SetConstantBuffer(
-                raymarchRenderPlane,
-                1,
-                raymarchShaderBuffer
-            );*/
-
+            
             d3dDeviceContext.VertexShader.SetConstantBuffer(0, raymarchShaderBuffer);
             d3dDeviceContext.PixelShader.SetConstantBuffer(0, raymarchShaderBuffer);
 
@@ -308,15 +287,10 @@ namespace EconSim.Core.Rendering
             // Clear with a color
             Clear(Color.CornflowerBlue);
 
-
             // Set raymarch shader buffer data
             {
                 // These matrices are not per-object
                 raymarchShaderBufferData.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
-                raymarchShaderBufferData.viewMatrix.Transpose();
-
-                raymarchShaderBufferData.projectionMatrix = ProjectionMatrix();
-                raymarchShaderBufferData.projectionMatrix.Transpose();
 
                 raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
@@ -325,12 +299,6 @@ namespace EconSim.Core.Rendering
 
                 d3dDeviceContext.UpdateSubresource(raymarchShaderBufferData.Get(), raymarchShaderBuffer);
             }
-
-            // Get GameObject-specific buffers
-            // TODO update buffers
-
-            // Call Updates
-            // TODO updateCallbackAction(gameObject);
 
             // Draw raymarch plane
             raymarchRenderPlane.Draw();
@@ -351,16 +319,7 @@ namespace EconSim.Core.Rendering
 
         #endregion
 
-        Matrix ProjectionMatrix()
-        {
-            float aspectRatio = Engine.AspectRatio();
-            float fieldOfView = (float) Math.PI / 4.0f;
-            float nearClipPlane = 0.1f;
-            float farClipPlane = 200.0f;
-
-            return Matrix.PerspectiveFovLH(
-                fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
-        }
+       
 
         #region Resize
 
@@ -438,6 +397,7 @@ namespace EconSim.Core.Rendering
             d3dDeviceContext.Dispose();
             renderForm.Dispose();
             raymarchShaderBuffer.Dispose();
+            dataStream.Dispose();
         }
     }
 }
