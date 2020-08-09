@@ -2,6 +2,7 @@
 
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using SharpDX;
 using SharpDX.Direct3D;
@@ -39,7 +40,7 @@ namespace EconSim.Core.Rendering
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
         private RaymarchShaderBuffer raymarchShaderBufferData; // Values to send to the raymarch shader
         private Buffer raymarchShaderBuffer;
-        private DataStream dataStream;
+        private RaymarchObjectsBuffer<RaymarchGameObjectBufferData> raymarchObjectsBuffer;
 
         struct RaymarchShaderBuffer
         {
@@ -100,7 +101,7 @@ namespace EconSim.Core.Rendering
                 CpuAccessFlags.None,
                 ResourceOptionFlags.None,
                 0);
-            
+
             d3dDeviceContext.VertexShader.SetConstantBuffer(0, raymarchShaderBuffer);
             d3dDeviceContext.PixelShader.SetConstantBuffer(0, raymarchShaderBuffer);
 
@@ -109,6 +110,8 @@ namespace EconSim.Core.Rendering
             d3dDeviceContext.InputAssembler.InputLayout = raymarchShader.InputLayout;
             d3dDeviceContext.VertexShader.Set(raymarchShader.VertexShader);
             d3dDeviceContext.PixelShader.Set(raymarchShader.PixelShader);
+
+            raymarchObjectsBuffer = new RaymarchObjectsBuffer<RaymarchGameObjectBufferData>(d3dDevice);
         }
 
         #region Setup
@@ -298,6 +301,9 @@ namespace EconSim.Core.Rendering
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
                 d3dDeviceContext.UpdateSubresource(raymarchShaderBufferData.Get(), raymarchShaderBuffer);
+
+                raymarchObjectsBuffer.UpdateValue(Engine.CurrentScene.GameObjects
+                    .Select(gameObject => gameObject.GetBufferData()).ToArray());
             }
 
             // Draw raymarch plane
@@ -319,7 +325,6 @@ namespace EconSim.Core.Rendering
 
         #endregion
 
-       
 
         #region Resize
 
@@ -397,7 +402,6 @@ namespace EconSim.Core.Rendering
             d3dDeviceContext.Dispose();
             renderForm.Dispose();
             raymarchShaderBuffer.Dispose();
-            dataStream.Dispose();
         }
     }
 }

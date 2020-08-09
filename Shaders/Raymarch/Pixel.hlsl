@@ -6,9 +6,35 @@
 #define SURF_DIST 1e-2
 #define MAX_OBJECTS 64
 
+/*float raymarchObjectSd(RaymarchGameObjectBufferData shape, float3 p) {
+    float d = MAX_DIST;
+    float3 np = p - shape.position;
+
+    switch (shape.raymarchShape) {
+        case 0:
+            d = sdSphere(np, shape.primitiveOptions.r);
+            break;
+        case 1:
+            d = sdBox(np, shape.primitiveOptions.rrr);
+            break;
+        case 2:
+            d = sdPlane(np);
+            break;
+        case 3:
+            d = sdEllipsoid(np, shape.primitiveOptions.rgb);
+            break;
+        case 4:
+            d = sdTorus(np, shape.primitiveOptions.rg);
+            break;
+    }
+
+    return d;
+}*/
+
 float GetDist(float3 p) {
-	ray = p;
-	float d = min(sdSphere(float3(0, 0, 6), 1), sdPlane(-1));
+
+	
+	float d = min(sdSphere(p-float3(0, 1, 6), 1), sdPlane(p-float3(0,1,0)));
 
 	return d;
 }

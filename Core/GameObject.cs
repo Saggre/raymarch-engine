@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using EconSim.EMath;
 using SharpDX;
-using SharpDX.Direct3D11;
 using Quaternion = System.Numerics.Quaternion;
 using Vector3 = System.Numerics.Vector3;
 
@@ -51,8 +50,9 @@ namespace EconSim.Core
         public Vector3 eulerAngles;
         public Vector3 scale;
 
-        public Vector2 blank;
-        // TODO color
+        public Vector3 primitiveOptions;
+        public Vector4 color;
+        public Vector3 materialOptions;
 
         public RaymarchGameObjectBufferData(RaymarchShape raymarchShape, Vector3 position, Vector3 eulerAngles,
             Vector3 scale)
@@ -61,7 +61,9 @@ namespace EconSim.Core
             this.position = position;
             this.eulerAngles = eulerAngles;
             this.scale = scale;
-            blank = new Vector2();
+            primitiveOptions = Vector3.One;
+            color = Vector4.One;
+            materialOptions = Vector3.Zero;
         }
     }
 
