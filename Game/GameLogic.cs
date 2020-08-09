@@ -28,7 +28,7 @@ namespace EconSim.Game
             camera = Engine.CurrentScene.ActiveCamera;
             camera.Position = new Vector3(0, 2, 0);
 
-            lookVector = new Vector2(45 + 90, 180);
+            lookVector = new Vector2(180, 180);
 
             sphere = new GameObject(RaymarchShape.Sphere);
             sphere.Position = new Vector3(2, 2, 0);
@@ -44,7 +44,7 @@ namespace EconSim.Game
 
             // Rotate camera
             lookVector.X += InputDevice.Mouse.DeltaPosition.X * sensitivity;
-            lookVector.Y -= InputDevice.Mouse.DeltaPosition.Y * sensitivity;
+            lookVector.Y += InputDevice.Mouse.DeltaPosition.Y * sensitivity;
 
             // Clamp camera rotation
             if (lookVector.Y < 100)
@@ -64,6 +64,8 @@ namespace EconSim.Game
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
+            
+            
         }
 
         public override void End(int endTime)
