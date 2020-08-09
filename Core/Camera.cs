@@ -6,6 +6,9 @@ using System;
 
 namespace EconSim.Core
 {
+    /// <summary>
+    /// Class that is used to represent a camera
+    /// </summary>
     public class Camera : GameObject
     {
         public float nearClipPlane = 0.1f;

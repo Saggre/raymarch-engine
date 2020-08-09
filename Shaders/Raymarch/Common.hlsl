@@ -7,15 +7,10 @@ struct RaymarchGameObjectBufferData
 	float2 blank;
 };
 
-cbuffer MatrixBuffer : register(b0)
+cbuffer ShaderBuffer : register(b0)
 {
-	float4x4 worldMatrix;
-	float4x4 viewMatrix;
+    float4x4 viewMatrix;
 	float4x4 projectionMatrix;
-};
-
-cbuffer ShaderBuffer : register(b1)
-{
 	float3 cameraPosition;
 	float aspectRatio;
 	float3 cameraDirection;

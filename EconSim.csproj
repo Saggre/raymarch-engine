@@ -104,15 +104,6 @@
   <ItemGroup>
     <Content Include=".gitignore" />
     <Content Include="Icon.ico" />
-    <Content Include="Shaders\Clouds\Common.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Clouds\Pixel.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Clouds\Vertex.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Shaders\Raymarch\Common.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -128,90 +119,24 @@
     <Content Include="Shaders\Raymarch\Vertex.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\Diffuse\Common.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Diffuse\Pixel.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Diffuse\Vertex.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Noise\Voronoi.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Noise\DiamondSquare.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Noise\ClassicPerlinNoise.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Noise\PerlinNoise.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\GeometryTess\Common.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\GeometryTess\Geometry.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\GeometryTess\Pixel.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\GeometryTess\Vertex.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Test\Common.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Test\Pixel.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Test\Vertex.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Tessellation\Common.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Tessellation\Geometry.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Tessellation\Hull.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Tessellation\Domain.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Tessellation\Pixel.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\Tessellation\Vertex.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\Util.cs" />
     <Compile Include="Core\AutoUpdateable.cs" />
     <Compile Include="Core\Camera.cs" />
-    <Compile Include="Core\GameObject.cs" />
     <Compile Include="Core\Input\InputDevice.cs" />
     <Compile Include="Core\Input\Keyboard.cs" />
     <Compile Include="Core\Input\Mouse.cs" />
     <Compile Include="Core\Input\PlayerMovement.cs" />
-    <Compile Include="Core\IShader.cs" />
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
-    <Compile Include="Core\BaseObject.cs" />
-    <Compile Include="Core\RaymarchGameObject.cs" />
-    <Compile Include="Core\Rendering\TextureComputeDevice .cs" />
+    <Compile Include="Core\GameObject.cs" />
     <Compile Include="Core\Rendering\ComputeDevice.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Rendering\RenderTarget.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
-    <Compile Include="Core\SharedShader.cs" />
-    <Compile Include="Core\Rendering\Sharp2D.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
     <Compile Include="Core\Util.cs" />
     <Compile Include="Core\Engine.cs" />
@@ -219,12 +144,9 @@
     <Compile Include="EMath\Vector2Int.cs" />
     <Compile Include="Game\GameLogic.cs" />
     <Compile Include="Geometry\CardinalCollection.cs" />
-    <Compile Include="Geometry\Edge.cs" />
     <Compile Include="Geometry\Primitive.cs" />
     <Compile Include="Geometry\RenderVertex.cs" />
     <Compile Include="Geometry\SquareRect.cs" />
-    <Compile Include="Geometry\Tile.cs" />
-    <Compile Include="Geometry\Vertex.cs" />
     <Compile Include="EMath\BufferData.cs" />
     <Compile Include="EMath\ComputeBuffer.cs" />
     <Compile Include="EMath\ComputeShader.cs" />
@@ -233,11 +155,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\HLSLFileIncludeHandler.cs" />
-    <Compile Include="Terrain\TerrainChunk.cs" />
-    <Compile Include="Terrain\TerrainColor.cs" />
-    <Compile Include="Terrain\TerrainGenerator.cs" />
-    <Compile Include="Terrain\TerrainPlane.cs" />
-    <Compile Include="Terrain\Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".git\config" />
@@ -267,9 +184,6 @@
     <None Include="app.config" />
     <None Include="app.manifest" />
     <None Include="packages.config" />
-    <Content Include="Shaders\Noise\Simplex.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include=".git\objects\info\" />

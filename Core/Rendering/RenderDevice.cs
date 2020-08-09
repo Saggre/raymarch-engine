@@ -2,11 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using WindowsInput.Native;
-using EconSim.Core.Input;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -15,6 +11,9 @@ using SharpDX.Windows;
 using Device11 = SharpDX.Direct3D11.Device;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Color = SharpDX.Color;
+using MapFlags = SharpDX.Direct3D11.MapFlags;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace EconSim.Core.Rendering
 {
@@ -38,16 +37,17 @@ namespace EconSim.Core.Rendering
         public DeviceContext d3dDeviceContext;
         private SwapChain swapChain;
 
+        // Raymarch
+        private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
+        private RaymarchShaderBuffer raymarchShaderBufferData; // Values to send to the raymarch shader
+        private Buffer raymarchShaderBuffer;
 
-        /// <summary>
-        /// Data that is sent to every shaded object
-        /// </summary>
-        public struct FrameBufferData
+        struct RaymarchShaderBuffer
         {
-            /// <summary>
-            /// Object position, rotation, scale
-            /// </summary>
-            public Matrix modelMatrix;
+            public Vector3 cameraPosition;
+            public float aspectRatio;
+            public Vector3 cameraDirection;
+            public float time;
 
             /// <summary>
             /// Camera position, rotation, scale
@@ -58,21 +58,78 @@ namespace EconSim.Core.Rendering
             /// Projection matrix
             /// </summary>
             public Matrix projectionMatrix;
+
+            Vector4 VTV(SharpDX.Vector4 m)
+            {
+                return new Vector4(m.X, m.Y, m.Z, m.W);
+            }
+
+            public Vector4[] Get()
+            {
+                return new Vector4[]
+                {
+                    VTV(viewMatrix.Row1),
+                    VTV(viewMatrix.Row2),
+                    VTV(viewMatrix.Row3),
+                    VTV(viewMatrix.Row4),
+                    VTV(projectionMatrix.Row1),
+                    VTV(projectionMatrix.Row2),
+                    VTV(projectionMatrix.Row3),
+                    VTV(projectionMatrix.Row4),
+                    new Vector4(cameraPosition, aspectRatio),
+                    new Vector4(cameraDirection, time)
+                };
+            }
         }
 
-        /// <summary>
-        /// Data that is sent to every shaded object
-        /// </summary>
-        public FrameBufferData frameBufferData;
 
         /// <summary>
-        /// Set up the device for rendering
+        /// Set up the device for rendering.
+        /// D3DDevice is actually only properly set up when first frame has started rendering, and NOT when this class is created.
+        /// RenderDeviceStarted() is called when it is set up.
         /// </summary>
         /// <param name="renderForm">SharpDX RenderForm to render in</param>
         public RenderDevice(RenderForm renderForm)
         {
             this.renderForm = renderForm;
             InitializeDeviceResources();
+        }
+
+        private bool renderDeviceStarted;
+
+        /// <summary>
+        /// Called when the first frame rendering is started, and D3DDevice is properly started and functional
+        /// </summary>
+        private void RenderDeviceStarted()
+        {
+            // TODO pre-compile shader
+            Shader raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
+            raymarchRenderPlane = Mesh.CreateQuad();
+
+            //raymarchShaderBuffer = Shader.CreateSingleElementBuffer(ref raymarchShaderBufferData);
+            raymarchShaderBuffer = Buffer.Create(Engine.RenderDevice.d3dDevice,
+                BindFlags.ConstantBuffer,
+                ref raymarchShaderBufferData,
+                Utilities.SizeOf<RaymarchShaderBuffer>(),
+                ResourceUsage.Default,
+                CpuAccessFlags.None,
+                ResourceOptionFlags.None,
+                0);
+
+            /*raymarchRenderPlane.Shader.SetConstantBuffer(
+                raymarchRenderPlane,
+                1,
+                raymarchShaderBuffer
+            );*/
+
+            d3dDeviceContext.VertexShader.SetConstantBuffer(0, raymarchShaderBuffer);
+            d3dDeviceContext.PixelShader.SetConstantBuffer(0, raymarchShaderBuffer);
+
+            // Set as current shaders
+            // TODO what's inputlayout?
+            d3dDeviceContext.InputAssembler.InputLayout = raymarchShader.InputLayout;
+            d3dDeviceContext.VertexShader.Set(raymarchShader.VertexShader);
+            d3dDeviceContext.PixelShader.Set(raymarchShader.PixelShader);
         }
 
         #region Setup
@@ -240,81 +297,43 @@ namespace EconSim.Core.Rendering
         /// Main drawing method to be executed per-frame
         /// Draw vertices and call the callback between setting object-specific shaders and object-specific buffers.
         /// </summary>
-        /// <param name="deltaTime">Time elapsed in seconds since last frame</param>
-        /// <param name="updateCallbackAction">Object to call its Update method for</param>
-        public void Draw(float deltaTime, Action<BaseObject> updateCallbackAction)
+        public void Draw()
         {
+            if (!renderDeviceStarted)
+            {
+                renderDeviceStarted = true;
+                RenderDeviceStarted();
+            }
+
             // Clear with a color
             Clear(Color.CornflowerBlue);
 
-            // These matrices are not per-object
-            frameBufferData.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
-            frameBufferData.viewMatrix.Transpose();
 
-            frameBufferData.projectionMatrix = ProjectionMatrix();
-            frameBufferData.projectionMatrix.Transpose();
-
-            // Render all GameObjects in current scene
-            foreach (BaseObject baseObject in Engine.CurrentScene.Objects)
+            // Set raymarch shader buffer data
             {
-                // Don't render if the object is not active
-                if (!baseObject.Active)
-                {
-                    continue;
-                }
+                // These matrices are not per-object
+                raymarchShaderBufferData.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
+                raymarchShaderBufferData.viewMatrix.Transpose();
 
-                // If it's a 'normal' object
-                if (baseObject is GameObject)
-                {
-                    GameObject gameObject = (GameObject) baseObject;
+                raymarchShaderBufferData.projectionMatrix = ProjectionMatrix();
+                raymarchShaderBufferData.projectionMatrix.Transpose();
 
-                    if (gameObject.Shader == null)
-                    {
-                        throw new ArgumentNullException("gameObject", "A GameObject's shader is not set");
-                    }
-                    
-                    // This matrix is per-object
-                    frameBufferData.modelMatrix = gameObject.ModelMatrix();
-                    frameBufferData.modelMatrix.Transpose();
+                raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
+                raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
+                raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Forward;
+                raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
-                    Buffer frameBuffer = Shader.CreateSingleElementBuffer(ref frameBufferData);
-
-                    gameObject.Shader.SendBufferToShader(0, frameBuffer);
-
-                    // Set as current shaders
-                    // TODO what's inputlayout?
-                    d3dDeviceContext.InputAssembler.InputLayout = gameObject.Shader.InputLayout;
-                    d3dDeviceContext.VertexShader.Set(gameObject.Shader.VertexShader);
-                    d3dDeviceContext.HullShader.Set(gameObject.Shader.HullShader);
-                    d3dDeviceContext.DomainShader.Set(gameObject.Shader.DomainShader);
-                    d3dDeviceContext.GeometryShader.Set(gameObject.Shader.GeometryShader);
-                    d3dDeviceContext.PixelShader.Set(gameObject.Shader.PixelShader);
-
-                    // Get GameObject-specific buffers
-                    foreach (KeyValuePair<int, Buffer> buffer in gameObject.Shader.ConstantBuffers(gameObject))
-                    {
-                        // Updates buffer in all shader types at once
-                        gameObject.Shader.SendBufferToShader(buffer.Key, buffer.Value);
-                    }
-
-                    // Get GameObject-specific resource views
-                    foreach (KeyValuePair<int, ShaderResourceView> shaderResource in gameObject.Shader
-                        .ShaderResourceViews(
-                            gameObject))
-                    {
-                        gameObject.Shader.SendResourceViewToShader(shaderResource.Key, shaderResource.Value);
-                    }
-
-                    // Call Updates
-                    updateCallbackAction(gameObject);
-
-                    // Draw object through its Mesh class
-                    //gameObject.Mesh.DrawPatch(PrimitiveTopology.PatchListWith3ControlPoints); <-- THIS IS NEEDED FOR TESSELLATION SHADER
-                    gameObject.Mesh.Draw(); // <-- THIS IS NEEDED FOR NORMAL SHADER   
-
-                    frameBuffer.Dispose();
-                }
+                d3dDeviceContext.UpdateSubresource(raymarchShaderBufferData.Get(), raymarchShaderBuffer);
             }
+
+            // Get GameObject-specific buffers
+            // TODO update buffers
+
+            // Call Updates
+            // TODO updateCallbackAction(gameObject);
+
+            // Draw raymarch plane
+            raymarchRenderPlane.Draw();
 
             // Draw rendered scene to screen
             swapChain.Present(1, PresentFlags.None);
@@ -418,6 +437,7 @@ namespace EconSim.Core.Rendering
             d3dDevice.Dispose();
             d3dDeviceContext.Dispose();
             renderForm.Dispose();
+            raymarchShaderBuffer.Dispose();
         }
     }
 }
