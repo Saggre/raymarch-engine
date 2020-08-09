@@ -202,7 +202,7 @@
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
-    <Compile Include="Core\Object.cs" />
+    <Compile Include="Core\BaseObject.cs" />
     <Compile Include="Core\RaymarchGameObject.cs" />
     <Compile Include="Core\Rendering\TextureComputeDevice .cs" />
     <Compile Include="Core\Rendering\ComputeDevice.cs" />

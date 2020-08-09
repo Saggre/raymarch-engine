@@ -41,8 +41,10 @@ namespace EconSim.Game
             playerMovement = new PlayerMovement();
 
             // Set camera initial pos
-            camera = new Camera();
-            camera.Position = new Vector3(0, 2, 0);
+            camera = new Camera
+            {
+                Position = new Vector3(0, 2, 0)
+            };
             Engine.CurrentScene.ActiveCamera = camera; // TODO more elegantly
             lookVector = new Vector2(45 + 90, 180);
 
@@ -53,10 +55,10 @@ namespace EconSim.Game
                 Shader = shader
             };
 
-            sphere = new RaymarchGameObject(RaymarchShape.sphere);
+            sphere = new RaymarchGameObject(RaymarchShape.Sphere);
             sphere.Position = new Vector3(2, 2, 0);
 
-            Engine.CurrentScene.AddGameObject(plane);
+            Engine.CurrentScene.AddObject(plane);
         }
 
         private void CameraLook(float deltaTime)
@@ -64,7 +66,8 @@ namespace EconSim.Game
             float sensitivity = 0.03f;
 
             // Move camera
-            camera.Move(playerMovement.MovementInput.Multiply(Engine.CurrentScene.ActiveCamera.Rotation), deltaTime * 8f);
+            camera.Move(playerMovement.MovementInput.Multiply(Engine.CurrentScene.ActiveCamera.Rotation),
+                deltaTime * 8f);
 
             // Rotate camera
             lookVector.X += InputDevice.Mouse.DeltaPosition.X * sensitivity;
@@ -80,8 +83,8 @@ namespace EconSim.Game
                 lookVector.Y = 260;
             }
 
-            camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * EMath.Util.Deg2Rad) * Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
-
+            camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * EMath.Util.Deg2Rad) *
+                              Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
         }
 
         // TODO move raycast rendering plane out of game logic, it should be engine stuff
@@ -97,13 +100,12 @@ namespace EconSim.Game
             raymarchShaderBuffer.time = time; // TODO reset time when it is too large
 
             plane.Shader.SetConstantBuffer(plane, 1,
-                    Shader.CreateSingleElementBuffer(ref raymarchShaderBuffer)
-                );
+                Shader.CreateSingleElementBuffer(ref raymarchShaderBuffer)
+            );
         }
 
         public override void End(int endTime)
         {
-
         }
     }
 }

@@ -15,32 +15,32 @@ namespace EconSim.Core
         private Camera activeCamera = null;
 
         /// <summary>
-        /// List of GameObjects in the scene.
+        /// List of objects in the scene.
         /// May contain any subtype of GameObject, like RaymarchGameObject
         /// </summary>
-        private List<GameObject> gameObjects;
+        private List<BaseObject> objects;
 
         /// <summary>
         /// Initiates an empty scene
         /// </summary>
         public Scene()
         {
-            gameObjects = new List<GameObject>();
+            objects = new List<BaseObject>();
         }
 
         /// <summary>
         /// Adds a GameObject to the scene
         /// </summary>
-        /// <param name="gameObject"></param>
-        public void AddGameObject(GameObject gameObject)
+        /// <param name="baseObject"></param>
+        public void AddObject(BaseObject baseObject)
         {
-            gameObjects.Add(gameObject);
+            objects.Add(baseObject);
         }
 
         /// <summary>
         /// Gets the scene's GameObjects
         /// </summary>
-        public List<GameObject> GameObjects => gameObjects;
+        public List<BaseObject> Objects => objects;
 
         /// <summary>
         /// Sets or gets the active camera, currently used for rendering.
