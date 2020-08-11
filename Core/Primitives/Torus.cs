@@ -1,48 +1,47 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
 using System.Numerics;
-using EconSim.EMath;
 
 namespace EconSim.Core.Primitives
 {
     /// <summary>
-    /// A sphere. What about it?
+    /// An infinite plane.
     /// </summary>
-    public class Sphere : Primitive
+    public class Torus : Primitive
     {
-        private float radius;
+        private Vector2 dimensions;
 
         /// <summary>
-        /// The radius of this sphere.
+        /// 
         /// </summary>
-        public float Radius
+        public Vector2 Dimensions
         {
-            get => radius;
-            set => radius = value;
+            get => dimensions;
+            set => dimensions = value;
         }
 
         /// <inheritdoc />
-        public Sphere()
+        public Torus()
         {
-            radius = 1f;
+            dimensions = Vector2.One;
         }
 
         /// <inheritdoc />
-        public Sphere(Vector3 position, Quaternion rotation, float radius) : base(position, rotation, Vector3.One)
+        public Torus(Vector3 position, Quaternion rotation, Vector2 dimensions) : base(position, rotation, Vector3.One)
         {
-            this.radius = radius;
+            this.dimensions = dimensions;
         }
 
         /// <inheritdoc />
         public override PrimitiveShape GetShapeType()
         {
-            return PrimitiveShape.Sphere;
+            return PrimitiveShape.Torus;
         }
 
         /// <inheritdoc />
         public override Vector4 GetPrimitiveOptions()
         {
-            return new Vector4(radius, 0f, 0f, 0f);
+            return new Vector4(dimensions, 0f, 0f);
         }
     }
 }

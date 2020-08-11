@@ -1,12 +1,12 @@
 struct RaymarchObject
 {
 	int raymarchShape;
-	float3 primitiveOptions;
+	float4 primitiveOptions;
 	float3 position;
 	float3 eulerAngles;
 	float3 scale;
 	float4 color;
-	float3 materialOptions;
+	float2 materialOptions;
 };
 
 cbuffer ShaderBuffer : register(b0)

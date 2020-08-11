@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Numerics;
 using EconSim.Geometry;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using Buffer11 = SharpDX.Direct3D11.Buffer;
+using Buffer = SharpDX.Direct3D11.Buffer;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
@@ -19,16 +17,15 @@ namespace EconSim.Core
     /// </summary>
     public class Mesh : IDisposable
     {
-
         /// <summary>
         /// Vertex Buffer
         /// </summary>
-        public Buffer11 VertexBuffer { get; private set; }
+        public Buffer VertexBuffer { get; private set; }
 
         /// <summary>
         /// Index Buffer
         /// </summary>
-        public Buffer11 IndexBuffer { get; private set; }
+        public Buffer IndexBuffer { get; private set; }
 
         /// <summary>
         /// Vertex Size
@@ -51,10 +48,11 @@ namespace EconSim.Core
         /// </summary>
         public void Draw()
         {
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
-            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
+            Engine.RenderDevice.deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            Engine.RenderDevice.deviceContext.InputAssembler.SetVertexBuffers(0,
+                new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.deviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.deviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
         }
 
 
@@ -64,7 +62,7 @@ namespace EconSim.Core
         /// <param name="subset">Subsets</param>
         public void Draw(int subset)
         {
-            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(SubSets[subset].IndexCount, SubSets[subset].StartIndex, 0);
+            Engine.RenderDevice.deviceContext.DrawIndexed(SubSets[subset].IndexCount, SubSets[subset].StartIndex, 0);
         }
 
         /// <summary>
@@ -78,9 +76,9 @@ namespace EconSim.Core
         public static Mesh FromRenderVertices(RenderVertex[] vertices, int[] indices)
         {
             Mesh mesh = new Mesh();
-            mesh.VertexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.VertexBuffer, vertices);
-            mesh.IndexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.IndexBuffer, indices);
-            mesh.VertexSize = SharpDX.Utilities.SizeOf<RenderVertex>();
+            mesh.VertexBuffer = Buffer.Create(Engine.RenderDevice.device, BindFlags.VertexBuffer, vertices);
+            mesh.IndexBuffer = Buffer.Create(Engine.RenderDevice.device, BindFlags.IndexBuffer, indices);
+            mesh.VertexSize = Utilities.SizeOf<RenderVertex>();
             mesh.SubSets.Add(new Material()
             {
                 DiffuseColor = new Vector4(1, 1, 1, 1),
@@ -209,17 +207,18 @@ namespace EconSim.Core
         {
             RenderVertex[] vertices = new RenderVertex[]
             {
-                new RenderVertex(new Vector4(0, 0, 1,1), new Vector2(0,1)),
-                new RenderVertex(new Vector4(0, 0, 0,1), new Vector2(0,0)),
-                new RenderVertex(new Vector4(1, 0, 1,1), new Vector2(1,1)),
-                new RenderVertex(new Vector4(1, 0, 0,1), new Vector2(1,0))
+                new RenderVertex(new Vector4(0, 0, 1, 1), new Vector2(0, 1)),
+                new RenderVertex(new Vector4(0, 0, 0, 1), new Vector2(0, 0)),
+                new RenderVertex(new Vector4(1, 0, 1, 1), new Vector2(1, 1)),
+                new RenderVertex(new Vector4(1, 0, 0, 1), new Vector2(1, 0))
             };
 
-            int[] indices = new int[] { 0, 2, 1, 2, 3, 1 };
+            int[] indices = new int[] {0, 2, 1, 2, 3, 1};
 
             Mesh mesh = new Mesh();
-            mesh.VertexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
-            mesh.IndexBuffer = Buffer11.Create(Engine.RenderDevice.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
+            mesh.VertexBuffer =
+                Buffer.Create(Engine.RenderDevice.device, BindFlags.VertexBuffer, vertices.ToArray());
+            mesh.IndexBuffer = Buffer.Create(Engine.RenderDevice.device, BindFlags.IndexBuffer, indices.ToArray());
             mesh.VertexSize = Utilities.SizeOf<RenderVertex>();
 
             mesh.SubSets.Add(new Material()
@@ -236,9 +235,10 @@ namespace EconSim.Core
         /// </summary>
         public void Begin()
         {
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            Engine.RenderDevice.deviceContext.InputAssembler.SetVertexBuffers(0,
+                new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.deviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
         }
 
         /// <summary>
@@ -247,10 +247,11 @@ namespace EconSim.Core
         /// <param name="count"></param>
         public void DrawPoints(int count = int.MaxValue)
         {
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
-            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(Math.Min(count, SubSets[0].IndexCount), 0, 0);
+            Engine.RenderDevice.deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
+            Engine.RenderDevice.deviceContext.InputAssembler.SetVertexBuffers(0,
+                new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.deviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.deviceContext.DrawIndexed(Math.Min(count, SubSets[0].IndexCount), 0, 0);
         }
 
         /// <summary>
@@ -259,10 +260,11 @@ namespace EconSim.Core
         /// <param name="topology">Patch Topology type</param>
         public void DrawPatch(PrimitiveTopology topology)
         {
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.PrimitiveTopology = topology;
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, VertexSize, 0));
-            Engine.RenderDevice.d3dDeviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
-            Engine.RenderDevice.d3dDeviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
+            Engine.RenderDevice.deviceContext.InputAssembler.PrimitiveTopology = topology;
+            Engine.RenderDevice.deviceContext.InputAssembler.SetVertexBuffers(0,
+                new VertexBufferBinding(VertexBuffer, VertexSize, 0));
+            Engine.RenderDevice.deviceContext.InputAssembler.SetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+            Engine.RenderDevice.deviceContext.DrawIndexed(SubSets[0].IndexCount, 0, 0);
         }
 
         /// <summary>
@@ -272,13 +274,10 @@ namespace EconSim.Core
         {
             VertexBuffer.Dispose();
             IndexBuffer.Dispose();
-            foreach (var s in SubSets)
+            foreach (Material s in SubSets)
             {
-                if (s.DiffuseMap != null)
-                    s.DiffuseMap.Dispose();
-
-                if (s.NormalMap != null)
-                    s.NormalMap.Dispose();
+                s.DiffuseMap?.Dispose();
+                s.NormalMap?.Dispose();
             }
         }
     }

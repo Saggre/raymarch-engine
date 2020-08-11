@@ -19,7 +19,7 @@ namespace EconSim.Core
         /// <summary>
         /// List of objects in the scene.
         /// </summary>
-        private List<IPrimitive> gameObjects;
+        private List<Primitive> gameObjects;
 
         /// <summary>
         /// Initiates an empty scene.
@@ -32,14 +32,14 @@ namespace EconSim.Core
                 Position = new Vector3(0, 0, 0)
             };
 
-            gameObjects = new List<IPrimitive>();
+            gameObjects = new List<Primitive>();
         }
 
         /// <summary>
         /// Adds an object to the scene
         /// </summary>
         /// <param name="gameObject">The object to add</param>
-        public void AddGameObject(IPrimitive gameObject)
+        public void AddGameObject(Primitive gameObject)
         {
             gameObjects.Add(gameObject);
         }
@@ -47,7 +47,7 @@ namespace EconSim.Core
         /// <summary>
         /// Gets the scene's GameObjects
         /// </summary>
-        public List<IPrimitive> GameObjects => gameObjects;
+        public List<Primitive> GameObjects => gameObjects;
 
 
         /// <summary>

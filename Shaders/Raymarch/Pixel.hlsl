@@ -10,6 +10,7 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
     float d = MAX_DIST;
     float3 np = p - shape.position;
 
+    // TODO replace this with something, it's very slow
     switch (shape.raymarchShape) {
         case 0:
             d = sdSphere(np, shape.primitiveOptions.r); 
@@ -34,13 +35,11 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
 float GetDist(float3 p) {
     float minDist = MAX_DIST;
 
-    for(int i = 0; i<objectCount && i<MAX_OBJECTS && i<1; i++){
+    for(int i = 0; i<objectCount && i<MAX_OBJECTS; i++){
         float curDist = raymarchObjectSd(objects[i], p);
         minDist = min(minDist, curDist);
     }
     
-	//minDist = min(sdSphere(p - float3(0, 1, 6), 1), sdPlane(p - float3(0,1,0)));
-
 	return minDist;
 }
 
@@ -103,7 +102,7 @@ float4 main(PS_INPUT input) : SV_Target
 	float d = Raymarch(ro, rd);
 	
 	if (d > MAX_DIST) {
-	    //discard;
+	    discard;
 	}
 
 	float3 col = (0).xxx;
@@ -117,6 +116,5 @@ float4 main(PS_INPUT input) : SV_Target
 
 	col = pow(col, gamma.xxx); // Gamma correction
 
-    //return float4(objects[0].scale.r,0.0,0.0,1.0);
 	return float4(col, 1.0);
 }

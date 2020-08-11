@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
+
+using System;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;

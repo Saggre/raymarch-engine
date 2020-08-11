@@ -5,6 +5,7 @@ using EconSim.Core;
 using EconSim.Core.Input;
 using EconSim.Core.Primitives;
 using EconSim.EMath;
+using Plane = EconSim.Core.Primitives.Plane;
 
 namespace EconSim.Game
 {
@@ -29,17 +30,20 @@ namespace EconSim.Game
 
             Engine.CurrentScene.AddGameObject(new Sphere()
             {
-                Position = new Vector3(0.9f, 0, 0),
-                Scale = new Vector3(0.5f, 1f, 0.1f),
+                Position = new Vector3(2f, 0, 0),
                 Radius = 1f
             });
 
-            /*
-            Engine.CurrentScene.AddGameObject(new GameObject()
+            Engine.CurrentScene.AddGameObject(new Sphere()
+            {
+                Position = new Vector3(-2f, 0, 0),
+                Radius = 1f
+            });
+
+            Engine.CurrentScene.AddGameObject(new Plane()
             {
                 Position = new Vector3(0, -1, 0)
             });
-            */
         }
 
         private void CameraLook(float deltaTime)

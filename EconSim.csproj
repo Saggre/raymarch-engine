@@ -134,8 +134,14 @@
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\GameObject.cs" />
+    <Compile Include="Core\Primitives\Box.cs" />
+    <Compile Include="Core\Primitives\CappedTorus.cs" />
+    <Compile Include="Core\Primitives\Ellipsoid.cs" />
     <Compile Include="Core\Primitives\IPrimitive.cs" />
+    <Compile Include="Core\Primitives\Plane.cs" />
+    <Compile Include="Core\Primitives\Primitive.cs" />
     <Compile Include="Core\Primitives\Sphere.cs" />
+    <Compile Include="Core\Primitives\Torus.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
