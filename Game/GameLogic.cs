@@ -44,6 +44,12 @@ namespace RaymarchEngine.Game
             {
                 Position = new Vector3(0, -1, 0)
             });
+
+            Engine.CurrentScene.AddGameObject(new Torus()
+            {
+                Position = new Vector3(2, 4, 0),
+                Dimensions = new Vector2(0.4f, 0.1f)
+            });
         }
 
         private void CameraLook(float deltaTime)

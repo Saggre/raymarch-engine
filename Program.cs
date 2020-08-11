@@ -5,7 +5,6 @@ using RaymarchEngine.Core;
 
 namespace RaymarchEngine
 {
-    //#if WINDOWS || LINUX
     /// <summary>
     /// The main class.
     /// </summary>
@@ -15,10 +14,10 @@ namespace RaymarchEngine
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main() {
+        static void Main()
+        {
             using Engine gameEngine = new Engine();
             gameEngine.Run();
         }
     }
-//#endif
 }

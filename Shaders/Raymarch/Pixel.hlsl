@@ -27,6 +27,9 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
         case 4:
             d = sdTorus(np, shape.primitiveOptions.rg);
             break;
+        case 5:
+            d = sdCappedTorus(np, shape.primitiveOptions.rg, shape.primitiveOptions.b, shape.primitiveOptions.a);
+            break;
     }
 
     return d;
