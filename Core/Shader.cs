@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.IO;
 using EconSim.Geometry;
-using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
@@ -80,11 +79,11 @@ namespace EconSim.Core
         /// <param name="constantBuffer"></param>
         public void SendBufferToShader(int slot, Buffer constantBuffer)
         {
-            Engine.RenderDevice.d3dDeviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
-            Engine.RenderDevice.d3dDeviceContext.HullShader.SetConstantBuffer(slot, constantBuffer);
-            Engine.RenderDevice.d3dDeviceContext.DomainShader.SetConstantBuffer(slot, constantBuffer);
-            Engine.RenderDevice.d3dDeviceContext.GeometryShader.SetConstantBuffer(slot, constantBuffer);
-            Engine.RenderDevice.d3dDeviceContext.PixelShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.deviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.deviceContext.HullShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.deviceContext.DomainShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.deviceContext.GeometryShader.SetConstantBuffer(slot, constantBuffer);
+            Engine.RenderDevice.deviceContext.PixelShader.SetConstantBuffer(slot, constantBuffer);
         }
 
         /// <summary>
@@ -95,11 +94,11 @@ namespace EconSim.Core
         public void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
         {
             // TODO ability to send selectively to only certain stages
-            Engine.RenderDevice.d3dDeviceContext.VertexShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.d3dDeviceContext.HullShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.d3dDeviceContext.DomainShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.d3dDeviceContext.GeometryShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.d3dDeviceContext.PixelShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.deviceContext.VertexShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.deviceContext.HullShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.deviceContext.DomainShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.deviceContext.GeometryShader.SetShaderResource(slot, resourceView);
+            Engine.RenderDevice.deviceContext.PixelShader.SetShaderResource(slot, resourceView);
         }
 
         /// <summary>
@@ -131,10 +130,10 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "vs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    vertexShader = new VertexShader(Engine.RenderDevice.d3dDevice, byteCode);
+                    vertexShader = new VertexShader(Engine.RenderDevice.device, byteCode);
 
                     ShaderSignature inputSignature = ShaderSignature.GetInputSignature(byteCode);
-                    inputLayout = new InputLayout(Engine.RenderDevice.d3dDevice, inputSignature,
+                    inputLayout = new InputLayout(Engine.RenderDevice.device, inputSignature,
                         RenderVertex.InputElements);
                 }
                 else
@@ -151,7 +150,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "hs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    hullShader = new HullShader(Engine.RenderDevice.d3dDevice, byteCode);
+                    hullShader = new HullShader(Engine.RenderDevice.device, byteCode);
                 }
             }
 
@@ -163,7 +162,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ds_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    domainShader = new DomainShader(Engine.RenderDevice.d3dDevice, byteCode);
+                    domainShader = new DomainShader(Engine.RenderDevice.device, byteCode);
                 }
             }
 
@@ -175,7 +174,7 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "gs_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    geometryShader = new GeometryShader(Engine.RenderDevice.d3dDevice, byteCode);
+                    geometryShader = new GeometryShader(Engine.RenderDevice.device, byteCode);
                 }
             }
 
@@ -187,33 +186,11 @@ namespace EconSim.Core
                 {
                     CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ps_5_0", shaderFlags,
                         EffectFlags.None, null, includeHandler);
-                    pixelShader = new PixelShader(Engine.RenderDevice.d3dDevice, byteCode);
+                    pixelShader = new PixelShader(Engine.RenderDevice.device, byteCode);
                 }
             }
 
             return new Shader(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader);
         }
-
-        #region Helpers
-
-        /// <summary>
-        /// Creates a buffer containing a single instance if a struct
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="bufferData"></param>
-        /// <returns></returns>
-        public static Buffer CreateSingleElementBuffer<T>(ref T bufferData) where T : struct
-        {
-            return Buffer.Create(Engine.RenderDevice.d3dDevice,
-                BindFlags.ConstantBuffer,
-                ref bufferData,
-                Utilities.SizeOf<T>(),
-                ResourceUsage.Default,
-                CpuAccessFlags.None,
-                ResourceOptionFlags.None,
-                0);
-        }
-
-        #endregion
     }
 }

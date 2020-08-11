@@ -14,33 +14,32 @@
 // http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
 
 
-float sdPlane(float3 p)
+float sdPlane(float3 height)
 {
-    return p.y;
+    return height.y;
 }
 
-float sdSphere(float3 p, float s)
+float sdSphere(float3 position, float radius)
 {
-    return length(p) - s;
+    return length(position) - radius;
 }
 
-float sdBox(float3 p, float3 b)
+float sdBox(float3 position, float3 dimensions)
 {
-    float3 d = abs(p) - b;
+    float3 d = abs(position) - dimensions;
     return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
 }
 
-float sdEllipsoid(in float3 p, in float3 r) // approximated
+float sdEllipsoid(in float3 position, in float3 radii) // Approximated
 {
-    float k0 = length(p / r);
-    float k1 = length(p / (r * r));
+    float k0 = length(position / radii);
+    float k1 = length(position / (radii * radii));
     return k0 * (k0 - 1.0) / k1;
-    
 }
 
-float sdTorus(float3 p, float2 t)
+float sdTorus(float3 position, float2 dimensions)
 {
-    return length(float2(length(p.xz) - t.x, p.y)) - t.y;
+    return length(float2(length(position.xz) - dimensions.x, position.y)) - dimensions.y;
 }
 
 float sdCappedTorus(in float3 p, in float2 sc, in float ra, in float rb)

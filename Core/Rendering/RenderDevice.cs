@@ -287,6 +287,8 @@ namespace EconSim.Core.Rendering
                     .Select(gameObject => gameObject.GetBufferData()).ToArray());
             }
 
+            
+
             // Draw raymarch plane
             raymarchRenderPlane.Draw();
 
