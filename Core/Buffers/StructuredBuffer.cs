@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -14,28 +12,34 @@ namespace EconSim.Core.Buffers
     /// Structured buffer is a shader resource view and has a 't' flag.
     /// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-object-structuredbuffer
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">Type of buffer array</typeparam>
     public class StructuredBuffer<T> : IDisposable where T : struct
     {
         private readonly Device device;
+        private readonly DeviceContext deviceContext;
         private Buffer buffer;
         private ShaderResourceView shaderResource;
-        private int elementSize;
+        private readonly int elementSize;
         private int objectCount;
+        private readonly int slot;
 
-        private DataBox dataBox;
-
-        public StructuredBuffer(Device device)
+        /// <summary>
+        /// Create new StructuredBuffer
+        /// </summary>
+        /// <param name="device"></param>
+        /// <param name="slot"></param>
+        public StructuredBuffer(Device device, int slot = 0)
         {
+            this.slot = slot;
             this.device = device;
-
-            // If no specific marshalling is needed, can use
-            // SharpDX.Utilities.SizeOf<T>() for better performance.
-            elementSize = Marshal.SizeOf(typeof(T));
+            deviceContext = device.ImmediateContext;
+            elementSize = SharpDX.Utilities.SizeOf<T>();
         }
 
-        private DataStream d;
-
+        /// <summary>
+        /// Update the values of this buffer
+        /// </summary>
+        /// <param name="value"></param>
         public void UpdateValue(T[] value)
         {
             if (value.Length == 0)
@@ -43,12 +47,12 @@ namespace EconSim.Core.Buffers
                 return;
             }
 
+            // Create new buffer if elements were added or removed
             if (objectCount != value.Length)
             {
                 objectCount = value.Length;
 
                 buffer?.Dispose();
-
                 buffer = new Buffer(device, new BufferDescription
                 {
                     Usage = ResourceUsage.Default,
@@ -60,27 +64,26 @@ namespace EconSim.Core.Buffers
                 });
 
                 shaderResource?.Dispose();
-
                 shaderResource = new ShaderResourceView(device, buffer, new ShaderResourceViewDescription()
                 {
                     Format = Format.Unknown,
                     Dimension = ShaderResourceViewDimension.Buffer,
                     Buffer = new ShaderResourceViewDescription.BufferResource()
                     {
-                        ElementWidth = objectCount,
+                        ElementWidth = objectCount
                     }
                 });
 
-                device.ImmediateContext.VertexShader.SetShaderResource(0, shaderResource);
-                device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResource);
+                deviceContext.VertexShader.SetShaderResource(slot, shaderResource);
+                deviceContext.PixelShader.SetShaderResource(slot, shaderResource);
             }
 
-            if (buffer != null)
-            {
-                device.ImmediateContext.UpdateSubresource(value, buffer);
-            }
+            deviceContext.UpdateSubresource(value, buffer);
         }
 
+        /// <summary>
+        /// Clear resources used by this buffer
+        /// </summary>
         public void Dispose()
         {
             buffer?.Dispose();

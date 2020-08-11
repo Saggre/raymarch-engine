@@ -1,7 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 09/08/2020
 
 using System.Collections.Generic;
-using EconSim.Core.Primitives;
 using EconSim.EMath;
 using SharpDX;
 using Quaternion = System.Numerics.Quaternion;

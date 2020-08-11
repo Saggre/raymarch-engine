@@ -1,7 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
 using System.Numerics;
-using EconSim.EMath;
 
 namespace EconSim.Core.Primitives
 {
