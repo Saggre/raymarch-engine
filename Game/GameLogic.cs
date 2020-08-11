@@ -29,7 +29,8 @@ namespace EconSim.Game
 
             Engine.CurrentScene.AddGameObject(new Sphere()
             {
-                Position = new Vector3(0.5f, 0, 0),
+                Position = new Vector3(0.9f, 0, 0),
+                Scale = new Vector3(0.5f, 1f, 0.1f),
                 Radius = 1f
             });
 

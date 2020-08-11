@@ -54,28 +54,32 @@ namespace EconSim.Core.Primitives
     /// Data that is passed to the raymarch shader.
     /// Euler angles is passed instead of quaternion rotation, because the object can't be/shouldn't be rotated in the shader. Euler angle data will suffice for rendering the shape at different rotations.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    [StructLayout(LayoutKind.Sequential)]
     public struct RaymarchGameObjectBufferData
     {
         public int raymarchShape;
+        public Vector3 primitiveOptions;
         public Vector3 position;
         public Vector3 eulerAngles;
         public Vector3 scale;
-        public Vector3 primitiveOptions;
         public Vector4 color;
         public Vector3 materialOptions;
 
-        public RaymarchGameObjectBufferData(PrimitiveShape raymarchShape, Vector3 position, Vector3 eulerAngles,
-            Vector3 scale, Vector3 primitiveOptions)
+        public RaymarchGameObjectBufferData(
+            PrimitiveShape raymarchShape,
+            Vector3 primitiveOptions,
+            Vector3 position,
+            Vector3 eulerAngles,
+            Vector3 scale
+        )
         {
             this.raymarchShape = (int) raymarchShape;
+            this.primitiveOptions = primitiveOptions;
             this.position = position;
             this.eulerAngles = eulerAngles;
             this.scale = scale;
-            this.primitiveOptions = primitiveOptions;
             color = Vector4.One;
             materialOptions = Vector3.Zero;
         }
-
     }
 }

@@ -37,7 +37,12 @@ namespace EconSim.Core.Primitives
 
         public RaymarchGameObjectBufferData GetBufferData()
         {
-            return new RaymarchGameObjectBufferData(GetShapeType(), Position, Rotation.QuaternionToEuler(), Scale, GetPrimitiveOptions());
+            return new RaymarchGameObjectBufferData(
+                GetShapeType(),
+                GetPrimitiveOptions(),
+                Position,
+                new Vector3(0.5f, 1, 0.1f),
+                Scale);
         }
     }
 }

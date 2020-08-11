@@ -123,6 +123,7 @@
   <ItemGroup>
     <Compile Include="Collections\Util.cs" />
     <Compile Include="Core\AutoUpdateable.cs" />
+    <Compile Include="Core\Buffers\StructuredBuffer.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Input\InputDevice.cs" />
     <Compile Include="Core\Input\Keyboard.cs" />

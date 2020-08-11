@@ -1,6 +1,5 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
-using System;
 using SharpDX;
 using Quaternion = System.Numerics.Quaternion;
 using Vector2 = System.Numerics.Vector2;

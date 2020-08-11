@@ -1,10 +1,10 @@
 struct RaymarchObject
 {
 	int raymarchShape;
+	float3 primitiveOptions;
 	float3 position;
 	float3 eulerAngles;
 	float3 scale;
-	float3 primitiveOptions;
 	float4 color;
 	float3 materialOptions;
 };
@@ -21,17 +21,12 @@ cbuffer ShaderBuffer : register(b0)
 	float4 blank3;
 };
 
-cbuffer ObjectBuffer : register(b1)
-{
-    RaymarchObject objects[1];
-}
-//StructuredBuffer<RaymarchObject> objects : register(t0); 
+StructuredBuffer<RaymarchObject> objects : register(t0); 
 
 struct VS_INPUT
 {
 	float4 Position : POSITION;
 	float2 TexCoord : TEXCOORD;
-	float2 vI : SV_VERTEXID;
 };
 
 struct PS_INPUT

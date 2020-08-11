@@ -1,6 +1,4 @@
-﻿// Created by Sakri Koskimies (Github: Saggre) on 09/08/2020
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using SharpDX;
 using SharpDX.Direct3D;
@@ -9,10 +7,15 @@ using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 
-namespace EconSim.Core
+namespace EconSim.Core.Buffers
 {
-    class RaymarchObjectsBuffer<T> : IDisposable
-        where T : struct
+    /// <summary>
+    /// With this class you can effortlessly add a HLSL StructuredBuffer<T> and update its values.
+    /// Structured buffer is a shader resource view and has a 't' flag.
+    /// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-object-structuredbuffer
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class StructuredBuffer<T> : IDisposable where T : struct
     {
         private readonly Device device;
         private Buffer buffer;
@@ -22,7 +25,7 @@ namespace EconSim.Core
 
         private DataBox dataBox;
 
-        public RaymarchObjectsBuffer(Device device)
+        public StructuredBuffer(Device device)
         {
             this.device = device;
 
