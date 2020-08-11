@@ -38,7 +38,7 @@ using FN_DECIMAL = System.Single;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace EconSim.EMath
+namespace RaymarchEngine.EMath
 {
   using Math = System.Math;
 

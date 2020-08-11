@@ -1,9 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
 using System;
-using EconSim.Core;
+using RaymarchEngine.Core;
 
-namespace EconSim
+namespace RaymarchEngine
 {
     //#if WINDOWS || LINUX
     /// <summary>

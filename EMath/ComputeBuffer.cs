@@ -2,7 +2,7 @@
 
 using System;
 
-namespace EconSim.EMath
+namespace RaymarchEngine.EMath
 {
 
   public class ComputeBuffer

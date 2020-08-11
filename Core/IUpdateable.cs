@@ -2,7 +2,7 @@
 
 using System;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
 
     /// <summary>

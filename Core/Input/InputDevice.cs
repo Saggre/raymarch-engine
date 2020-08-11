@@ -2,7 +2,7 @@
 
 using SharpDX.Windows;
 
-namespace EconSim.Core.Input
+namespace RaymarchEngine.Core.Input
 {
     public static class InputDevice
     {

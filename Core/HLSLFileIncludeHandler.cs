@@ -30,7 +30,7 @@ using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.IO;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     /// <summary>
     /// Enables the usage of #include directive

@@ -3,7 +3,7 @@
 using System.Numerics;
 using SharpDX;
 
-namespace EconSim.Geometry
+namespace RaymarchEngine.Geometry
 {
 
     /// <summary>

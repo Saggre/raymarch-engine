@@ -2,7 +2,7 @@
 
 using System.Numerics;
 
-namespace EconSim.Core.Primitives
+namespace RaymarchEngine.Core.Primitives
 {
     /// <summary>
     /// Interface for raymarched primitive shapes.

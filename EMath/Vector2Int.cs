@@ -2,7 +2,7 @@
 
 using System;
 
-namespace EconSim.EMath
+namespace RaymarchEngine.EMath
 {
     public struct Vector2Int : IEquatable<Vector2Int>
     {

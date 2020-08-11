@@ -7,7 +7,7 @@ using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 
-namespace EconSim.Core.Buffers
+namespace RaymarchEngine.Core.Buffers
 {
     /// <summary>
     /// With this class you can effortlessly add a HLSL StructuredBuffer<T> and update its values.

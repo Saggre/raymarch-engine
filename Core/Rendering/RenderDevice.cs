@@ -5,8 +5,8 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using EconSim.Core.Buffers;
-using EconSim.Core.Primitives;
+using RaymarchEngine.Core.Buffers;
+using RaymarchEngine.Core.Primitives;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -18,7 +18,7 @@ using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
-namespace EconSim.Core.Rendering
+namespace RaymarchEngine.Core.Rendering
 {
     /// <summary>
     /// A class that handles rendering the visible

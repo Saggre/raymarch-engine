@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using EconSim.Core;
+using RaymarchEngine.Core;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
@@ -13,7 +13,7 @@ using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 
 // TODO all
-namespace EconSim.EMath
+namespace RaymarchEngine.EMath
 {
     public class ComputeShader
     {

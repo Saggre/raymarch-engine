@@ -1,12 +1,12 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 09/08/2020
 
 using System.Collections.Generic;
-using EconSim.EMath;
+using RaymarchEngine.EMath;
 using SharpDX;
 using Quaternion = System.Numerics.Quaternion;
 using Vector3 = System.Numerics.Vector3;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     
 

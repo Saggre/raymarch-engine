@@ -1,13 +1,13 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
 using System.Numerics;
-using EconSim.Core;
-using EconSim.Core.Input;
-using EconSim.Core.Primitives;
-using EconSim.EMath;
-using Plane = EconSim.Core.Primitives.Plane;
+using RaymarchEngine.Core;
+using RaymarchEngine.Core.Input;
+using RaymarchEngine.Core.Primitives;
+using RaymarchEngine.EMath;
+using Plane = RaymarchEngine.Core.Primitives.Plane;
 
-namespace EconSim.Game
+namespace RaymarchEngine.Game
 {
     /// <summary>
     /// Main class for the game logic separated from the engine itself

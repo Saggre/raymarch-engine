@@ -2,9 +2,9 @@
 
 using System.Collections.Generic;
 using System.Numerics;
-using EconSim.Core.Primitives;
+using RaymarchEngine.Core.Primitives;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     /// <summary>
     /// A class that represents the physical space where objects can exist

@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using Math = System.Math;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     public static class Util
     {

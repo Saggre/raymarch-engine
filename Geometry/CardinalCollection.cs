@@ -2,9 +2,9 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using EconSim.Geometry.CardinalCollection;
+using RaymarchEngine.Geometry.CardinalCollection;
 
-namespace EconSim.Geometry
+namespace RaymarchEngine.Geometry
 {
     public static class CardinalCollectionHelper
     {

@@ -1,9 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
 using System.Numerics;
-using EconSim.EMath;
+using RaymarchEngine.EMath;
 
-namespace EconSim.Core.Primitives
+namespace RaymarchEngine.Core.Primitives
 {
     /// <summary>
     /// A sphere. What about it?

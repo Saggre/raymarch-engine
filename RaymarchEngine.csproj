@@ -5,7 +5,7 @@
     <ProjectGuid>{243B2BE3-FDE7-4C4D-BF4D-63E70D2856F2}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>WindowsApplication</AssemblyName>
+    <AssemblyName>RaymarchEngine</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -38,7 +38,7 @@
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <RootNamespace>EconSim</RootNamespace>
+    <RootNamespace>RaymarchEngine</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -121,7 +121,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\Util.cs" />
     <Compile Include="Core\AutoUpdateable.cs" />
     <Compile Include="Core\Buffers\ConstantBuffer.cs" />
     <Compile Include="Core\Buffers\StructuredBuffer.cs" />

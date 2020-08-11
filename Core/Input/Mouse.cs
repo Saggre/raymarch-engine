@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Windows.Forms;
 using SharpDX.Windows;
 
-namespace EconSim.Core.Input
+namespace RaymarchEngine.Core.Input
 {
 
     public class Mouse : IUpdateable

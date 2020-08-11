@@ -3,7 +3,7 @@
 using WindowsInput;
 using WindowsInput.Native;
 
-namespace EconSim.Core.Input
+namespace RaymarchEngine.Core.Input
 {
     /// <summary>
     /// A wrapper for whatever keyboard manager is used

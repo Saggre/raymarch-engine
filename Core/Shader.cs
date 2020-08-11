@@ -2,11 +2,11 @@
 
 using System.Collections.Generic;
 using System.IO;
-using EconSim.Geometry;
+using RaymarchEngine.Geometry;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     /// <summary>
     /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.

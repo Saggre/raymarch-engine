@@ -4,7 +4,7 @@
 using System.Numerics;
 using SharpDX.Direct3D11;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     public class Material
     {

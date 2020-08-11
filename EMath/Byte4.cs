@@ -1,6 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 07/11/2019
 
-namespace EconSim.EMath
+namespace RaymarchEngine.EMath
 {
     public struct Byte4
     {

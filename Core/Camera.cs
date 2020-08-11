@@ -3,7 +3,7 @@
 using System.Numerics;
 using System;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     /// <summary>
     /// Class that is used to represent a camera

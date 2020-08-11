@@ -6,7 +6,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System.Numerics;
 
-namespace EconSim.Geometry
+namespace RaymarchEngine.Geometry
 {
   [StructLayout(LayoutKind.Sequential)]
   public struct RenderVertex

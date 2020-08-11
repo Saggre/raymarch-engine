@@ -6,14 +6,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using WindowsInput.Native;
-using EconSim.Core.Input;
-using EconSim.Core.Rendering;
-using EconSim.Game;
+using RaymarchEngine.Core.Input;
+using RaymarchEngine.Core.Rendering;
+using RaymarchEngine.Game;
 using SharpDX.Direct3D11;
 using SharpDX.Windows;
 using Buffer = SharpDX.Direct3D11.Buffer;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     /// <summary>
     /// A class that handles initating the rendering class (RenderDevice), rendering loop and input devices
@@ -80,7 +80,7 @@ namespace EconSim.Core
         {
             {
                 // Init window
-                renderForm = new RenderForm("EconSim");
+                renderForm = new RenderForm("RaymarchEngine");
                 renderForm.AutoSize = false;
                 renderForm.ClientSize = new Size(Screen.PrimaryScreen.WorkingArea.Width,
                     Screen.PrimaryScreen.WorkingArea.Height);

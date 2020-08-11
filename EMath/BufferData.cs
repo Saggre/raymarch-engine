@@ -3,7 +3,7 @@
 using System;
 using SharpDX.Direct3D11;
 
-namespace EconSim.EMath
+namespace RaymarchEngine.EMath
 {
 
   public class BufferData

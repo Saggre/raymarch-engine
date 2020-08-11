@@ -2,11 +2,11 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
-using EconSim.EMath;
+using RaymarchEngine.EMath;
 
-namespace EconSim.Core.Primitives
+namespace RaymarchEngine.Core.Primitives
 {
-    /// <inheritdoc cref="EconSim.Core.Primitives.IPrimitive" />
+    /// <inheritdoc cref="RaymarchEngine.Core.Primitives.IPrimitive" />
     public abstract class Primitive : GameObject, IPrimitive
     {
         /// <inheritdoc />

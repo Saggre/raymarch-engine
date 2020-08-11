@@ -5,7 +5,7 @@ using System.Numerics;
 using WindowsInput.Native;
 using SharpDX.Windows;
 
-namespace EconSim.Core.Input
+namespace RaymarchEngine.Core.Input
 {
     public class PlayerMovement : IUpdateable
     {

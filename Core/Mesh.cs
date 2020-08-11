@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using EconSim.Geometry;
+using RaymarchEngine.Geometry;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -10,7 +10,7 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
-namespace EconSim.Core
+namespace RaymarchEngine.Core
 {
     /// <summary>
     /// To Render Static Object
@@ -134,8 +134,8 @@ namespace EconSim.Core
                 icount += model.IndexData.Count;
             }
 
-            mesh.VertexBuffer = Buffer11.Create<StaticVertex>(EconSim.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
-            mesh.IndexBuffer = Buffer11.Create(EconSim.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
+            mesh.VertexBuffer = Buffer11.Create<StaticVertex>(RaymarchEngine.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
+            mesh.IndexBuffer = Buffer11.Create(RaymarchEngine.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
             mesh.VertexSize = SharpDX.Utilities.SizeOf<StaticVertex>();
 
             return mesh;
@@ -192,8 +192,8 @@ namespace EconSim.Core
                 icount += model.IndexData.Count;
             }
 
-            mesh.VertexBuffer = Buffer11.Create<TangentVertex>(EconSim.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
-            mesh.IndexBuffer = Buffer11.Create(EconSim.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
+            mesh.VertexBuffer = Buffer11.Create<TangentVertex>(RaymarchEngine.d3dDevice, BindFlags.VertexBuffer, vertices.ToArray());
+            mesh.IndexBuffer = Buffer11.Create(RaymarchEngine.d3dDevice, BindFlags.IndexBuffer, indices.ToArray());
             mesh.VertexSize = SharpDX.Utilities.SizeOf<TangentVertex>();
 
             return mesh;

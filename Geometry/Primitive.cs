@@ -3,7 +3,7 @@
 using System.Drawing;
 using System.Numerics;
 
-namespace EconSim.Geometry
+namespace RaymarchEngine.Geometry
 {
     // TODO return indices for all primitives
     public static class Primitive
