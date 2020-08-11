@@ -123,6 +123,7 @@
   <ItemGroup>
     <Compile Include="Collections\Util.cs" />
     <Compile Include="Core\AutoUpdateable.cs" />
+    <Compile Include="Core\Buffers\ConstantBuffer.cs" />
     <Compile Include="Core\Buffers\StructuredBuffer.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\Input\InputDevice.cs" />
@@ -135,7 +136,6 @@
     <Compile Include="Core\GameObject.cs" />
     <Compile Include="Core\Primitives\IPrimitive.cs" />
     <Compile Include="Core\Primitives\Sphere.cs" />
-    <Compile Include="Core\RaymarchObjectsBuffer.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />

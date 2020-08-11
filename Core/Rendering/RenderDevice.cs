@@ -5,14 +5,14 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using EconSim.Core.Buffers;
 using EconSim.Core.Primitives;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Windows;
-using Device11 = SharpDX.Direct3D11.Device;
-using Buffer = SharpDX.Direct3D11.Buffer;
+using Device = SharpDX.Direct3D11.Device;
 using Color = SharpDX.Color;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
@@ -36,19 +36,18 @@ namespace EconSim.Core.Rendering
 
         private RenderForm renderForm;
 
-        public Device11 d3dDevice;
-        public DeviceContext d3dDeviceContext;
+        public Device device;
+        public DeviceContext deviceContext;
         private SwapChain swapChain;
 
         // Raymarch
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
-        private RaymarchShaderBuffer raymarchShaderBufferData; // Values to send to the raymarch shader
-        private Buffer raymarchShaderBuffer;
-        private RaymarchObjectsBuffer<RaymarchGameObjectBufferData> raymarchObjectsBuffer;
-        
-        
+        private RaymarchShaderBufferData raymarchShaderBufferData; // Values to send to the raymarch shader
+        private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
+        private StructuredBuffer<RaymarchGameObjectBufferData> raymarchObjectsBuffer;
+
         [StructLayout(LayoutKind.Sequential)]
-        struct RaymarchShaderBuffer
+        struct RaymarchShaderBufferData
         {
             /// <summary>
             /// Camera position, rotation, scale
@@ -62,21 +61,7 @@ namespace EconSim.Core.Rendering
             public Vector2 blank;
             public Vector4 blank1;
             public Vector4 blank2;
-
-            public Matrix4x4[] Get()
-            {
-                return new Matrix4x4[]
-                {
-                    viewMatrix,
-                    new Matrix4x4(
-                        cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time,
-                        objectCount,
-                        1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f
-                    ),
-                };
-            }
         }
-
 
         /// <summary>
         /// Set up the device for rendering.
@@ -101,25 +86,14 @@ namespace EconSim.Core.Rendering
             Shader raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
             raymarchRenderPlane = Mesh.CreateQuad();
 
-            raymarchShaderBuffer = Buffer.Create(Engine.RenderDevice.d3dDevice,
-                BindFlags.ConstantBuffer,
-                ref raymarchShaderBufferData,
-                128,
-                ResourceUsage.Default,
-                CpuAccessFlags.None,
-                ResourceOptionFlags.None,
-                0);
-
-            d3dDeviceContext.VertexShader.SetConstantBuffer(0, raymarchShaderBuffer);
-            d3dDeviceContext.PixelShader.SetConstantBuffer(0, raymarchShaderBuffer);
-
             // Set as current shaders
             // TODO what's inputlayout?
-            d3dDeviceContext.InputAssembler.InputLayout = raymarchShader.InputLayout;
-            d3dDeviceContext.VertexShader.Set(raymarchShader.VertexShader);
-            d3dDeviceContext.PixelShader.Set(raymarchShader.PixelShader);
+            deviceContext.InputAssembler.InputLayout = raymarchShader.InputLayout;
+            deviceContext.VertexShader.Set(raymarchShader.VertexShader);
+            deviceContext.PixelShader.Set(raymarchShader.PixelShader);
 
-            raymarchObjectsBuffer = new RaymarchObjectsBuffer<RaymarchGameObjectBufferData>(d3dDevice);
+            raymarchShaderBuffer = new ConstantBuffer<RaymarchShaderBufferData>(device);
+            raymarchObjectsBuffer = new StructuredBuffer<RaymarchGameObjectBufferData>(device);
         }
 
         #region Setup
@@ -165,16 +139,16 @@ namespace EconSim.Core.Rendering
                 FeatureLevel.Level_11_0,
             };
 
-            Device11.CreateWithSwapChain(
+            Device.CreateWithSwapChain(
                 DriverType.Hardware,
                 DeviceCreationFlags.DisableGpuTimeout,
                 levels,
                 swapChainDesc,
-                out d3dDevice,
+                out device,
                 out swapChain
             );
 
-            d3dDeviceContext = d3dDevice.ImmediateContext;
+            deviceContext = device.ImmediateContext;
 
             // TODO what is this vvvvvvv
 
@@ -208,7 +182,7 @@ namespace EconSim.Core.Rendering
             description.FillMode = isWireframe ? FillMode.Wireframe : FillMode.Solid;
             description.IsMultisampleEnabled = true;
 
-            rasterState = new RasterizerState(d3dDevice, description);
+            rasterState = new RasterizerState(device, description);
         }
 
         /// <summary>
@@ -224,7 +198,7 @@ namespace EconSim.Core.Rendering
             description.RenderTarget[0].DestinationBlend = BlendOption.InverseDestinationAlpha;
             description.RenderTarget[0].IsBlendEnabled = true;
 
-            blendState = new BlendState(d3dDevice, description);
+            blendState = new BlendState(device, description);
         }
 
         /// <summary>
@@ -238,7 +212,7 @@ namespace EconSim.Core.Rendering
             description.DepthComparison = Comparison.LessEqual;
             description.IsDepthEnabled = true;
 
-            depthState = new DepthStencilState(d3dDevice, description);
+            depthState = new DepthStencilState(device, description);
         }
 
         /// <summary>
@@ -259,7 +233,7 @@ namespace EconSim.Core.Rendering
             description.MinimumLod = -float.MaxValue;
             description.MaximumLod = float.MaxValue;
 
-            samplerState = new SamplerState(d3dDevice, description);
+            samplerState = new SamplerState(device, description);
         }
 
         /// <summary>
@@ -267,13 +241,13 @@ namespace EconSim.Core.Rendering
         /// </summary>
         void ApplyStates()
         {
-            d3dDeviceContext.Rasterizer.State = rasterState;
-            d3dDeviceContext.OutputMerger.SetBlendState(blendState);
-            d3dDeviceContext.OutputMerger.SetDepthStencilState(depthState);
+            deviceContext.Rasterizer.State = rasterState;
+            deviceContext.OutputMerger.SetBlendState(blendState);
+            deviceContext.OutputMerger.SetDepthStencilState(depthState);
 
             // TODO only slot 0?
-            d3dDeviceContext.PixelShader.SetSampler(0, samplerState);
-            d3dDeviceContext.DomainShader.SetSampler(0, samplerState);
+            deviceContext.PixelShader.SetSampler(0, samplerState);
+            deviceContext.DomainShader.SetSampler(0, samplerState);
             // TODO set sampler state to other types of shaders as well
 
             // TODO make states changeable
@@ -307,9 +281,8 @@ namespace EconSim.Core.Rendering
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
                 raymarchShaderBufferData.objectCount = Engine.CurrentScene.GameObjects.Count * 1.0f;
 
-                d3dDeviceContext.UpdateSubresource(raymarchShaderBufferData.Get(), raymarchShaderBuffer);
+                raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
-                // TODO don't do this every frame, but only when needed
                 raymarchObjectsBuffer.UpdateValue(Engine.CurrentScene.GameObjects
                     .Select(gameObject => gameObject.GetBufferData()).ToArray());
             }
@@ -327,8 +300,8 @@ namespace EconSim.Core.Rendering
         /// <param name="color">Background color</param>
         void Clear(Color4 color)
         {
-            d3dDeviceContext.ClearRenderTargetView(backbufferView, color);
-            d3dDeviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0F, 0);
+            deviceContext.ClearRenderTargetView(backbufferView, color);
+            deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0F, 0);
         }
 
         #endregion
@@ -347,7 +320,6 @@ namespace EconSim.Core.Rendering
             int height = 720; //renderForm.ClientSize.Height;
 
             // Dispose all previous allocated resources
-            //font.Release();
             Utilities.Dispose(ref backbufferView);
             Utilities.Dispose(ref depthView);
 
@@ -370,11 +342,11 @@ namespace EconSim.Core.Rendering
             Texture2D backBufferTexture = swapChain.GetBackBuffer<Texture2D>(0);
 
             // Create new render target for backbuffer
-            backbufferView = new RenderTargetView(d3dDevice, backBufferTexture);
+            backbufferView = new RenderTargetView(device, backBufferTexture);
             backBufferTexture.Dispose();
 
             // Depth buffer
-            Texture2D depthTexture = new Texture2D(d3dDevice, new Texture2DDescription()
+            Texture2D depthTexture = new Texture2D(device, new Texture2DDescription()
             {
                 Format = Format.D16_UNorm,
                 ArraySize = 1,
@@ -389,12 +361,12 @@ namespace EconSim.Core.Rendering
             });
 
             // Create the depth buffer view
-            depthView = new DepthStencilView(d3dDevice, depthTexture);
+            depthView = new DepthStencilView(device, depthTexture);
             depthTexture.Dispose();
 
             // Setup targets and viewport for rendering
-            d3dDeviceContext.Rasterizer.SetViewport(0, 0, width, height);
-            d3dDeviceContext.OutputMerger.SetTargets(depthView, backbufferView);
+            deviceContext.Rasterizer.SetViewport(0, 0, width, height);
+            deviceContext.OutputMerger.SetTargets(depthView, backbufferView);
         }
 
         #endregion
@@ -406,8 +378,8 @@ namespace EconSim.Core.Rendering
         public void Dispose()
         {
             swapChain.Dispose();
-            d3dDevice.Dispose();
-            d3dDeviceContext.Dispose();
+            device.Dispose();
+            deviceContext.Dispose();
             renderForm.Dispose();
             raymarchShaderBuffer.Dispose();
             raymarchObjectsBuffer.Dispose();
