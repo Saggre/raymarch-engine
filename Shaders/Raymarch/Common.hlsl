@@ -15,13 +15,17 @@ cbuffer ShaderBuffer : register(b0)
 	float3 cameraPosition;
 	float aspectRatio;
 	float time;
-	int objectCount;
+	float objectCount;
 	float2 blank1;
 	float4 blank2;
 	float4 blank3;
 };
 
-uniform RWStructuredBuffer<RaymarchObject> raymarchObjects : register(u1); 
+cbuffer ObjectBuffer : register(b1)
+{
+    RaymarchObject objects[1];
+}
+//StructuredBuffer<RaymarchObject> objects : register(t0); 
 
 struct VS_INPUT
 {

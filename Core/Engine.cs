@@ -153,7 +153,7 @@ namespace EconSim.Core
             // Render on each frame
             renderDevice.Draw();
 
-            foreach (var currentSceneObject in currentScene.GameObjects)
+            foreach (GameObject currentSceneObject in currentScene.GameObjects)
             {
                 // Execute updates per-object
                 foreach (IUpdateable updateable in currentSceneObject.Updateables)

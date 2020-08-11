@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Created by Sakri Koskimies (Github: Saggre) on 09/08/2020
+
+using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using SharpDX;
 using SharpDX.Direct3D11;
@@ -11,8 +14,10 @@ namespace EconSim.Core
     {
         private readonly Device device;
         private Buffer buffer;
-        private readonly DataStream dataStream;
         private int elementSize;
+        private int objectCount;
+
+        private DataBox dataBox;
 
         public Buffer Buffer
         {
@@ -26,8 +31,6 @@ namespace EconSim.Core
             // If no specific marshalling is needed, can use
             // SharpDX.Utilities.SizeOf<T>() for better performance.
             elementSize = Marshal.SizeOf(typeof(T));
-
-            dataStream = new DataStream(elementSize, true, true);
         }
 
         public void UpdateValue(T[] value)
@@ -37,45 +40,45 @@ namespace EconSim.Core
                 return;
             }
 
-            buffer = new Buffer(device, new BufferDescription
+            if (objectCount != value.Length)
             {
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.ConstantBuffer,
-                SizeInBytes = elementSize * value.Length,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                StructureByteStride = 0
-            });
+                objectCount = value.Length;
 
-            // If no specific marshalling is needed, can use 
-            // dataStream.Write(value) for better performance.
-            //Marshal.StructureToPtr(value, dataStream.DataPointer, false);
+                buffer?.Dispose();
 
-            GCHandle handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-            try
-            {
-                IntPtr pointer = handle.AddrOfPinnedObject();
-                var dataBox = new DataBox(pointer);
-                device.ImmediateContext.UpdateSubresource(dataBox, buffer, 0);
-            }
-            finally
-            {
-                if (handle.IsAllocated)
+                buffer = new Buffer(device, new BufferDescription
                 {
-                    handle.Free();
-                }
+                    Usage = ResourceUsage.Dynamic,
+                    BindFlags = BindFlags.ConstantBuffer,
+                    SizeInBytes = elementSize * objectCount,
+                    CpuAccessFlags = CpuAccessFlags.Write,
+                    OptionFlags = ResourceOptionFlags.None
+                });
+
+                device.ImmediateContext.PixelShader.SetConstantBuffer(1, buffer);
+                device.ImmediateContext.VertexShader.SetConstantBuffer(1, buffer);
             }
 
-            device.ImmediateContext.PixelShader.SetConstantBuffer(1, buffer);
-            device.ImmediateContext.VertexShader.SetConstantBuffer(1, buffer);
+            if (buffer != null)
+            {
+                // TODO do on start?
+                dataBox = device.ImmediateContext.MapSubresource(buffer, 0, MapMode.WriteDiscard, MapFlags.None);
+
+                IntPtr dataPointer = dataBox.DataPointer;
+                //Utilities.Write(dataPointer, value,0,objectCount);
+
+                for (int i = 0; i < objectCount; i++)
+                {
+                    dataPointer = Utilities.WriteAndPosition(dataPointer, ref value[i]);
+                }
+
+                device.ImmediateContext.UnmapSubresource(buffer, 0);
+            }
         }
 
         public void Dispose()
         {
-            if (dataStream != null)
-                dataStream.Dispose();
-            if (buffer != null)
-                buffer.Dispose();
+            buffer?.Dispose();
         }
     }
 }

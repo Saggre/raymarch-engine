@@ -12,8 +12,7 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
 
     switch (shape.raymarchShape) {
         case 0:
-            //d = sdSphere(np, shape.primitiveOptions.r);
-            d = sdSphere(np, 1.0);
+            d = sdSphere(np, shape.primitiveOptions.b); // TODO should be red channel, buffer is offset
             break;
         case 1:
             d = sdBox(np, shape.primitiveOptions.rrr);
@@ -33,18 +32,14 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
 }
 
 float GetDist(float3 p) {
-
     float minDist = MAX_DIST;
 
-    for (uint i = 0; i < objectCount && i < MAX_OBJECTS; i++) {
-        RaymarchObject shape = raymarchObjects[i];
-        float curDist = raymarchObjectSd(shape, p);
-        //cd[i] = float4(shape.color.rgb, d);
-        //td += d;
+    for(int i = 0; i<objectCount && i<MAX_OBJECTS && i<1; i++){
+        float curDist = raymarchObjectSd(objects[i], p);
         minDist = min(minDist, curDist);
     }
     
-	//float d = min(sdSphere(p-float3(0, 1, 6), 1), sdPlane(p-float3(0,1,0)));
+	//minDist = min(sdSphere(p - float3(0, 1, 6), 1), sdPlane(p - float3(0,1,0)));
 
 	return minDist;
 }
@@ -100,15 +95,16 @@ float GetLight(in float3 p) {
 
 float4 main(PS_INPUT input) : SV_Target
 {
-
 	float2 uv = input.TexCoord - (0.5).xx;
 	uv.x *= aspectRatio;
-	//uv *= 0.5;
 	float3 ro = cameraPosition; // TODO position from model matrices
 	float3 rd = normalize(mul(viewMatrix, float4(uv.xy, 1.0, 0.0))).xyz; // FOV comes from uv coords
-	//rd.x *= aspectRatio;
 
 	float d = Raymarch(ro, rd);
+	
+	if (d > MAX_DIST) {
+	    //discard;
+	}
 
 	float3 col = (0).xxx;
 
@@ -121,5 +117,6 @@ float4 main(PS_INPUT input) : SV_Target
 
 	col = pow(col, gamma.xxx); // Gamma correction
 
+    //return float4(objects[0].primitiveOptions.rgb,1.0);
 	return float4(col, 1.0);
 }

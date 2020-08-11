@@ -4,6 +4,8 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
+using EconSim.Core.Primitives;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -12,7 +14,9 @@ using SharpDX.Windows;
 using Device11 = SharpDX.Direct3D11.Device;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Color = SharpDX.Color;
+using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace EconSim.Core.Rendering
 {
@@ -41,18 +45,22 @@ namespace EconSim.Core.Rendering
         private RaymarchShaderBuffer raymarchShaderBufferData; // Values to send to the raymarch shader
         private Buffer raymarchShaderBuffer;
         private RaymarchObjectsBuffer<RaymarchGameObjectBufferData> raymarchObjectsBuffer;
-
+        
+        
         struct RaymarchShaderBuffer
         {
-            public Vector3 cameraPosition;
-            public float aspectRatio;
-            public float time;
-            public int objectCount;
-
             /// <summary>
             /// Camera position, rotation, scale
             /// </summary>
             public Matrix4x4 viewMatrix;
+
+            public Vector3 cameraPosition;
+            public float aspectRatio;
+            public float time;
+            public float objectCount;
+            public Vector2 blank;
+            public Vector4 blank1;
+            public Vector4 blank2;
 
             public Matrix4x4[] Get()
             {
@@ -61,7 +69,7 @@ namespace EconSim.Core.Rendering
                     viewMatrix,
                     new Matrix4x4(
                         cameraPosition.X, cameraPosition.Y, cameraPosition.Z, aspectRatio, time,
-                        Engine.CurrentScene.GameObjects.Count,
+                        objectCount,
                         1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f
                     ),
                 };
@@ -287,7 +295,7 @@ namespace EconSim.Core.Rendering
             }
 
             // Clear with a color
-            Clear(Color.CornflowerBlue);
+            Clear(Color.Black);
 
             // Set raymarch shader buffer data
             {
@@ -296,6 +304,7 @@ namespace EconSim.Core.Rendering
                 raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
+                raymarchShaderBufferData.objectCount = Engine.CurrentScene.GameObjects.Count * 1.0f;
 
                 d3dDeviceContext.UpdateSubresource(raymarchShaderBufferData.Get(), raymarchShaderBuffer);
 

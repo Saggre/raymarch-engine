@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Numerics;
+using EconSim.Core.Primitives;
 
 namespace EconSim.Core
 {
@@ -18,7 +19,7 @@ namespace EconSim.Core
         /// <summary>
         /// List of objects in the scene.
         /// </summary>
-        private List<GameObject> gameObjects;
+        private List<IPrimitive> gameObjects;
 
         /// <summary>
         /// Initiates an empty scene.
@@ -31,14 +32,14 @@ namespace EconSim.Core
                 Position = new Vector3(0, 0, 0)
             };
 
-            gameObjects = new List<GameObject>();
+            gameObjects = new List<IPrimitive>();
         }
 
         /// <summary>
         /// Adds an object to the scene
         /// </summary>
         /// <param name="gameObject">The object to add</param>
-        public void AddGameObject(GameObject gameObject)
+        public void AddGameObject(IPrimitive gameObject)
         {
             gameObjects.Add(gameObject);
         }
@@ -46,7 +47,7 @@ namespace EconSim.Core
         /// <summary>
         /// Gets the scene's GameObjects
         /// </summary>
-        public List<GameObject> GameObjects => gameObjects;
+        public List<IPrimitive> GameObjects => gameObjects;
 
 
         /// <summary>
