@@ -47,6 +47,7 @@ namespace EconSim.Core.Rendering
         private RaymarchObjectsBuffer<RaymarchGameObjectBufferData> raymarchObjectsBuffer;
         
         
+        [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBuffer
         {
             /// <summary>
@@ -409,6 +410,7 @@ namespace EconSim.Core.Rendering
             d3dDeviceContext.Dispose();
             renderForm.Dispose();
             raymarchShaderBuffer.Dispose();
+            raymarchObjectsBuffer.Dispose();
         }
     }
 }

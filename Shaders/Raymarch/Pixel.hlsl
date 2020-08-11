@@ -12,7 +12,7 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
 
     switch (shape.raymarchShape) {
         case 0:
-            d = sdSphere(np, shape.primitiveOptions.b); // TODO should be red channel, buffer is offset
+            d = sdSphere(np, shape.primitiveOptions.r); 
             break;
         case 1:
             d = sdBox(np, shape.primitiveOptions.rrr);
@@ -117,6 +117,6 @@ float4 main(PS_INPUT input) : SV_Target
 
 	col = pow(col, gamma.xxx); // Gamma correction
 
-    //return float4(objects[0].primitiveOptions.rgb,1.0);
+    //return float4(objects[0].scale.r,0.0,0.0,1.0);
 	return float4(col, 1.0);
 }
