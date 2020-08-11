@@ -1,10 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
-using System;
-using System.Diagnostics;
 using System.Numerics;
 using EconSim.Core;
 using EconSim.Core.Input;
+using EconSim.Core.Primitives;
 using EconSim.EMath;
 
 namespace EconSim.Game
@@ -18,8 +17,6 @@ namespace EconSim.Game
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
 
-        private GameObject sphere;
-
         public override void Start(int startTime)
         {
             // Init movement manager
@@ -30,13 +27,18 @@ namespace EconSim.Game
 
             lookVector = new Vector2(180, 180);
 
-            sphere = new GameObject(RaymarchShape.Sphere);
-            sphere.Position = new Vector3(2, 2, 0);
-            Engine.CurrentScene.AddGameObject(sphere);
+            Engine.CurrentScene.AddGameObject(new Sphere()
+            {
+                Position = new Vector3(0.5f, 0, 0),
+                Radius = 1f
+            });
 
-            GameObject plane = new GameObject(RaymarchShape.Plane);
-            plane.Position = new Vector3(0, -1, 0);
-            Engine.CurrentScene.AddGameObject(plane);
+            /*
+            Engine.CurrentScene.AddGameObject(new GameObject()
+            {
+                Position = new Vector3(0, -1, 0)
+            });
+            */
         }
 
         private void CameraLook(float deltaTime)

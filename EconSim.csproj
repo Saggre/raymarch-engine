@@ -132,10 +132,10 @@
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\GameObject.cs" />
+    <Compile Include="Core\Primitives\IPrimitive.cs" />
+    <Compile Include="Core\Primitives\Sphere.cs" />
     <Compile Include="Core\RaymarchObjectsBuffer.cs" />
-    <Compile Include="Core\Rendering\ComputeDevice.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
-    <Compile Include="Core\Rendering\RenderTarget.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
