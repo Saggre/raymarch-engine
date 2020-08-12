@@ -13,17 +13,21 @@ namespace RaymarchEngine.Physics
     /// </summary>
     public class PrimitivePhysics : IUpdateable
     {
-        private float mass;
+        private readonly float mass;
         private BodyHandle bodyHandle;
+        private StaticHandle staticHandle;
         private GameObject parent;
+        private readonly bool isStatic;
 
         /// <summary>
         /// Create from Bepuphysics shape and mass
         /// </summary>
         /// <param name="mass"></param>
-        public PrimitivePhysics(float mass)
+        /// <param name="isStatic"></param>
+        public PrimitivePhysics(float mass, bool isStatic = false)
         {
             this.mass = mass;
+            this.isStatic = isStatic;
         }
 
         /// <inheritdoc />
@@ -49,20 +53,35 @@ namespace RaymarchEngine.Physics
         private void AddBody<T>(Primitive primitive) where T : unmanaged, IConvexShape
         {
             T colliderShape = (T) primitive.GetColliderShape();
-            colliderShape.ComputeInertia(1, out BodyInertia inertia);
+            colliderShape.ComputeInertia(mass, out BodyInertia inertia);
             TypedIndex t = PhysicsHandler.Simulation.Shapes.Add(colliderShape);
 
-            bodyHandle = PhysicsHandler.Simulation.Bodies.Add(
-                BodyDescription.CreateDynamic(
-                    primitive.Position,
-                    inertia,
-                    new CollidableDescription(
-                        t,
-                        0.1f
-                    ),
-                    new BodyActivityDescription(0.01f)
-                )
-            );
+            if (isStatic)
+            {
+                staticHandle = PhysicsHandler.Simulation.Statics.Add(
+                    new StaticDescription(
+                        primitive.Position,
+                        new CollidableDescription(
+                            PhysicsHandler.Simulation.Shapes.Add(colliderShape),
+                            0.1f
+                        )
+                    )
+                );
+            }
+            else
+            {
+                bodyHandle = PhysicsHandler.Simulation.Bodies.Add(
+                    BodyDescription.CreateDynamic(
+                        primitive.Position,
+                        inertia,
+                        new CollidableDescription(
+                            t,
+                            0.1f
+                        ),
+                        new BodyActivityDescription(0.01f)
+                    )
+                );
+            }
         }
 
         /// <inheritdoc />
@@ -73,7 +92,14 @@ namespace RaymarchEngine.Physics
         /// <inheritdoc />
         public void Update(float deltaTime)
         {
-            parent.Position = PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).Pose.Position;
+            if (isStatic)
+            {
+                parent.Position = PhysicsHandler.Simulation.Statics.GetStaticReference(staticHandle).Pose.Position;
+            }
+            else
+            {
+                parent.Position = PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).Pose.Position;
+            }
         }
 
         /// <inheritdoc />

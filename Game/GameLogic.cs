@@ -44,7 +44,7 @@ namespace RaymarchEngine.Game
                 Position = new Vector3(0, -1, 0)
             };
             plane.AddToScene(Engine.CurrentScene);
-            plane.AddUpdateable(new PrimitivePhysics(1.0f));
+            plane.AddUpdateable(new PrimitivePhysics(1.0f, true));
 
             Primitive sphere = new Sphere
             {
