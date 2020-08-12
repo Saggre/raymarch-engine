@@ -105,7 +105,7 @@ namespace RaymarchEngine.Core
             // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();
             stopwatch.Start();
-
+            
             // Init input device
             InputDevice.Init(renderForm);
 
@@ -122,6 +122,9 @@ namespace RaymarchEngine.Core
                     updateable.Start(unixTime);
                 }
             }
+            
+            Physics.Physics.Run();
+
         }
 
         /// <summary>
@@ -129,6 +132,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         public void Run()
         {
+
             RenderLoop.Run(renderForm, GameLoop);
         }
 

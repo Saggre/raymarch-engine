@@ -13,46 +13,68 @@ float random(float2 co)
   return frac(sin(dot(co.xy, float2(12.9898, 78.233))) * 43758.5453);
 }
 
+float checkers(float2 p)
+{
+    float2 w = fwidth(p) + 0.001;
+    float2 i = 2.0*(abs(frac((p-0.5*w)*0.5)-0.5)-abs(frac((p+0.5*w)*0.5)-0.5))/w;
+    return 0.5 - 0.5*i.x*i.y;
+}
+
 // Get distance to an object depending on its shape parameter
-float raymarchObjectSd(RaymarchObject shape, float3 p) {
-    float d = MAX_DIST;
-    float3 np = p - shape.position;
+float raymarchObjectSd(RaymarchObject shape, float3 pos, out float3 color) {
+    float dist = MAX_DIST;
+    float3 newPos = pos - shape.position;
+
+    color = float3(1.0, 1.0, 1.0);
 
     // TODO replace this with something, it's very slow
     switch (shape.raymarchShape) {
         case 0:
-            d = sdSphere(np, shape.primitiveOptions.r); 
+            dist = sdSphere(newPos, shape.primitiveOptions.r); 
+            color = float3(1.0, 0.0, 0.0);
             break;
         case 1:
-            d = sdBox(np, shape.primitiveOptions.rrr);
+            dist = sdBox(newPos, shape.primitiveOptions.rrr);
             break;
         case 2:
-            d = sdPlane(np);
+            dist = sdPlane(newPos);
             break;
         case 3:
-            d = sdEllipsoid(np, shape.primitiveOptions.rgb);
+            dist = sdEllipsoid(newPos, shape.primitiveOptions.rgb);
             break;
         case 4:
-            d = sdTorus(np, shape.primitiveOptions.rg);
+            dist = sdTorus(newPos, shape.primitiveOptions.rg);
             break;
         case 5:
-            d = sdCappedTorus(np, shape.primitiveOptions.rg, shape.primitiveOptions.b, shape.primitiveOptions.a);
+            dist = sdCappedTorus(newPos, shape.primitiveOptions.rg, shape.primitiveOptions.b, shape.primitiveOptions.a);
             break;
     }
 
-    return d;
+    return dist;
 }
 
 // Returns distance from position to the closest point in scene geometry
-float getDist(float3 pos) {
+float getDist(float3 pos, out float3 color) {
     float minDist = MAX_DIST;
 
     for(int i = 0; i<objectCount && i<MAX_OBJECTS; i++){
-        float curDist = raymarchObjectSd(objects[i], pos);
+        float3 objectColor;
+        float curDist = raymarchObjectSd(objects[i], pos, objectColor);
+        
+        if(curDist < minDist){
+            color = objectColor;    
+        }
+        
         minDist = min(minDist, curDist);
     }
     
 	return minDist;
+}
+
+// Colorless version
+float getDist(float3 pos) {
+    float3 col;
+    return getDist(pos, col);
 }
 
 // Calculate surface normal at position
@@ -68,19 +90,27 @@ float3 getNormal(in float3 pos) {
 }
 
 // Returns distance from rayOrigin to an object in the GetDist() scene, in ray direction rayDir
-float raymarch(in float3 rayOrigin, in float3 rayDir) {
+float raymarch(in float3 rayOrigin, in float3 rayDir, out float3 color) {
 	float totalDist = 0.0;
 
 	for (int i = 0; i < MAX_STEPS; i++) {
 		float3 marchPos = rayOrigin + totalDist * rayDir;
-		float curDist = getDist(marchPos);
+		float curDist = getDist(marchPos, color);
 		totalDist += curDist;
 		if (curDist < SURF_DIST || totalDist > MAX_DIST) {
 			break;
 		}
 	}
 
+    color = float3(checkers((rayOrigin + rayDir * totalDist).xz), 0.0, 0.0); 
+
 	return totalDist;
+}
+
+// Colorless version
+float raymarch(in float3 rayOrigin, in float3 rayDir) {
+    float3 col;
+    return raymarch(rayOrigin, rayDir, col);
 }
 
 // Get shadow at position
@@ -133,18 +163,19 @@ float4 main(PS_INPUT input) : SV_Target
 	float3 rayOrigin = cameraPosition; // TODO position from model matrices
 	float3 rayDir = normalize(mul(viewMatrix, float4(uv.xy, 1.0, 0.0))).xyz; // FOV comes from uv coords
 
-	float dist = raymarch(rayOrigin, rayDir);
+    float3 objectColor;
+	float dist = raymarch(rayOrigin, rayDir, objectColor);
 	
 	if (dist > MAX_DIST) {
 	    discard;
 	}
 
-	float3 color = (0).xxx;
+	float3 color;
 
 	float3 hitPos = rayOrigin + rayDir * dist;
 
 	float diffuse = getLight(hitPos);
-	color = diffuse.xxx;
+	color = diffuse.xxx * objectColor;
 
 	float gamma = 0.4545;
 

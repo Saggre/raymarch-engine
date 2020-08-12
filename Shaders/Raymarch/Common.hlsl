@@ -21,7 +21,7 @@ cbuffer ShaderBuffer : register(b0)
 	float4 blank3;
 };
 
-StructuredBuffer<RaymarchObject> objects : register(t0); 
+uniform StructuredBuffer<RaymarchObject> objects : register(t0); 
 
 struct VS_INPUT
 {
