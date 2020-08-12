@@ -3,9 +3,17 @@
 
 #define MAX_STEPS 500
 #define MAX_DIST 500
+#define SHADOW_MAX_DIST 200
 #define SURF_DIST 1e-2
 #define MAX_OBJECTS 64
 
+// Get pseudo-random number in the range [0, 1).
+float random(float2 co)
+{
+  return frac(sin(dot(co.xy, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+// Get distance to an object depending on its shape parameter
 float raymarchObjectSd(RaymarchObject shape, float3 p) {
     float d = MAX_DIST;
     float3 np = p - shape.position;
@@ -35,62 +43,85 @@ float raymarchObjectSd(RaymarchObject shape, float3 p) {
     return d;
 }
 
-float GetDist(float3 p) {
+// Returns distance from position to the closest point in scene geometry
+float getDist(float3 pos) {
     float minDist = MAX_DIST;
 
     for(int i = 0; i<objectCount && i<MAX_OBJECTS; i++){
-        float curDist = raymarchObjectSd(objects[i], p);
+        float curDist = raymarchObjectSd(objects[i], pos);
         minDist = min(minDist, curDist);
     }
     
 	return minDist;
 }
 
-// 
-float3 GetNormal(in float3 p) {
+// Calculate surface normal at position
+float3 getNormal(in float3 pos) {
 	float2 e = float2(0.01, 0);
-	float3 n = GetDist(p) - float3(
-		GetDist(p - e.xyy),
-		GetDist(p - e.yxy),
-		GetDist(p - e.yyx)
-		);
+	float3 n = getDist(pos) - float3(
+		getDist(pos - e.xyy),
+		getDist(pos - e.yxy),
+		getDist(pos - e.yyx)
+	);
 
 	return normalize(n);
 }
 
-// Return distance from ro to object in ray direction rd
-float Raymarch(in float3 ro, in float3 rd) {
-	float dO = 0.0;
+// Returns distance from rayOrigin to an object in the GetDist() scene, in ray direction rayDir
+float raymarch(in float3 rayOrigin, in float3 rayDir) {
+	float totalDist = 0.0;
 
 	for (int i = 0; i < MAX_STEPS; i++) {
-		float3 p = ro + dO * rd;
-		float dS = GetDist(p);
-		dO += dS;
-		if (dS < SURF_DIST || dO > MAX_DIST) {
+		float3 marchPos = rayOrigin + totalDist * rayDir;
+		float curDist = getDist(marchPos);
+		totalDist += curDist;
+		if (curDist < SURF_DIST || totalDist > MAX_DIST) {
 			break;
 		}
 	}
 
-	return dO;
+	return totalDist;
 }
 
-float GetLight(in float3 p) {
+// Get shadow at position
+// lightDir is direction from object surface to light source
+float getShadow(in float3 pos, in float3 lightDir, float shadowHardness = 64, float shadowIntensity = 0.995)
+{
+    float res = 1.0;
+    float3 rayOrigin = pos;
+    float mint = SURF_DIST * 2.0;
+    float ph = 1e20;
+    
+    // t = distance from object surface towards light source
+    for(float t = mint; t < SHADOW_MAX_DIST;)
+    {
+        float h = getDist(rayOrigin + lightDir * t);
+        if(h<0.001){
+            res = 0;
+            break;
+        }
+        float y = h * h / (2.0 * ph);
+        float d = sqrt(h * h - y * y);
+        res = min(res, shadowHardness * d / max(0.0, t - y));
+        ph = h;
+        t += h;
+    }
+    
+    return lerp(1.0 - shadowIntensity, 1.0, res);
+}
 
+// Get light at position
+float getLight(in float3 pos) {
 	float3 lightPos = float3(0, 5, 6);
 
 	// Move light
-	lightPos.xz += float2(sin(time), cos(time)) * 2.;
+	lightPos.xz += float2(sin(time), cos(time)) * 2.0;
 
-	float3 l = normalize(lightPos - p);
-	float3 n = GetNormal(p);
+	float3 lightDir = normalize(lightPos - pos);
+	float3 normal = getNormal(pos);
 
-	float dif = clamp(dot(n, l), 0., 1.);
-
-	// Calcualte hard shadow
-	float d = Raymarch(p + n * SURF_DIST * 2., l);
-	if (d < length(lightPos - p)) {
-		dif *= .1;
-	}
+	float dif = clamp(dot(normal, lightDir), 0.0, 1.0);
+    dif *= getShadow(pos, lightDir);
 
 	return dif;
 }
@@ -99,25 +130,26 @@ float4 main(PS_INPUT input) : SV_Target
 {
 	float2 uv = input.TexCoord - (0.5).xx;
 	uv.x *= aspectRatio;
-	float3 ro = cameraPosition; // TODO position from model matrices
-	float3 rd = normalize(mul(viewMatrix, float4(uv.xy, 1.0, 0.0))).xyz; // FOV comes from uv coords
+	float3 rayOrigin = cameraPosition; // TODO position from model matrices
+	float3 rayDir = normalize(mul(viewMatrix, float4(uv.xy, 1.0, 0.0))).xyz; // FOV comes from uv coords
 
-	float d = Raymarch(ro, rd);
+	float dist = raymarch(rayOrigin, rayDir);
 	
-	if (d > MAX_DIST) {
+	if (dist > MAX_DIST) {
 	    discard;
 	}
 
-	float3 col = (0).xxx;
+	float3 color = (0).xxx;
 
-	float3 p = ro + rd * d;
+	float3 hitPos = rayOrigin + rayDir * dist;
 
-	float dif = GetLight(p);
-	col = dif.xxx;
+	float diffuse = getLight(hitPos);
+	color = diffuse.xxx;
 
 	float gamma = 0.4545;
 
-	col = pow(col, gamma.xxx); // Gamma correction
+    // Gamma correction
+	color = pow(color, gamma.xxx); 
 
-	return float4(col, 1.0);
+	return float4(color, 1.0);
 }

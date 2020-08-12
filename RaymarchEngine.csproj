@@ -103,7 +103,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-    <Content Include="Icon.ico" />
     <Content Include="Shaders\Raymarch\Common.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
