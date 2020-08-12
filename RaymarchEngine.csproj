@@ -179,7 +179,8 @@
     <Compile Include="EMath\ComputeShader.cs" />
     <Compile Include="EMath\FastNoise.cs" />
     <Compile Include="EMath\Util.cs" />
-    <Compile Include="Physics\Physics.cs" />
+    <Compile Include="Physics\PhysicsHandler.cs" />
+    <Compile Include="Physics\PrimitivePhysics.cs" />
     <Compile Include="Physics\SimpleThreadDispatcher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

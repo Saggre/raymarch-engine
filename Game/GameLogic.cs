@@ -8,6 +8,7 @@ using RaymarchEngine.Core;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.Core.Primitives;
 using RaymarchEngine.EMath;
+using RaymarchEngine.Physics;
 using Plane = RaymarchEngine.Core.Primitives.Plane;
 using Sphere = RaymarchEngine.Core.Primitives.Sphere;
 
@@ -22,9 +23,6 @@ namespace RaymarchEngine.Game
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
 
-        private Sphere visualSphere;
-        private BodyHandle sphereHandle;
-        
         public override void Start(int startTime)
         {
             // Init movement manager
@@ -35,50 +33,28 @@ namespace RaymarchEngine.Game
 
             lookVector = new Vector2(180, 180);
 
-            /*Engine.CurrentScene.AddGameObject(new Sphere()
-            {
-                Position = new Vector3(-2f, 0, 0),
-                Radius = 1f
-            });*/
-
-            Engine.CurrentScene.AddGameObject(new Plane()
-            {
-                Position = new Vector3(0, -1, 0)
-            });
-
-            Engine.CurrentScene.AddGameObject(new Torus()
+            Engine.CurrentScene.AddGameObject(new Torus
             {
                 Position = new Vector3(2, 3, 0),
                 Dimensions = new Vector2(0.5f, 0.2f)
             });
 
-            Physics.Physics.SetCallback(PhysicsStart);
+            Primitive plane = new Plane
+            {
+                Position = new Vector3(0, -1, 0)
+            };
+            plane.AddToScene(Engine.CurrentScene);
+            plane.AddUpdateable(new PrimitivePhysics(1.0f));
 
-            Debug.WriteLine("START");
-        }
-
-        private void PhysicsStart()
-        {
-            
-            visualSphere = new Sphere()
+            Primitive sphere = new Sphere
             {
                 Position = new Vector3(0, 5, 0),
                 Radius = 1f
             };
-            Engine.CurrentScene.AddGameObject(visualSphere);
-
-            var sphere = new BepuPhysics.Collidables.Sphere(visualSphere.Radius);
-
-            sphere.ComputeInertia(1, out var sphereInertia);
-
-            var sphereDescription = BodyDescription.CreateDynamic(visualSphere.Position, sphereInertia,
-                new CollidableDescription(Physics.Physics.simulation.Shapes.Add(sphere), 0.1f),
-                new BodyActivityDescription(0.01f));
-
-            sphereHandle = Physics.Physics.simulation.Bodies.Add(sphereDescription);
-
-            //sphereDescription.Velocity = new BodyVelocity(new Vector3(0, -1, 0));
+            sphere.AddToScene(Engine.CurrentScene);
+            sphere.AddUpdateable(new PrimitivePhysics(1.0f));
         }
+
 
         private void CameraLook(float deltaTime)
         {
@@ -111,15 +87,7 @@ namespace RaymarchEngine.Game
         {
             CameraLook(deltaTime);
 
-            if (visualSphere != null)
-            {
-                visualSphere.Position = Physics.Physics.simulation.Bodies.GetBodyReference(sphereHandle).Pose.Position;
-                Debug.WriteLine(Physics.Physics.simulation.Bodies.GetBodyReference(sphereHandle).Pose.Position.ToString());
-
-            }
-
-
-            Physics.Physics.simulation.Timestep(deltaTime);
+            PhysicsHandler.Simulation.Timestep(deltaTime);
         }
 
         public override void End(int endTime)

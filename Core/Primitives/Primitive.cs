@@ -1,7 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
+using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using BepuPhysics.Collidables;
 using RaymarchEngine.EMath;
 
 namespace RaymarchEngine.Core.Primitives
@@ -26,6 +28,9 @@ namespace RaymarchEngine.Core.Primitives
         public abstract PrimitiveShape GetShapeType();
 
         /// <inheritdoc />
+        public abstract IConvexShape GetColliderShape();
+
+        /// <inheritdoc />
         public RaymarchGameObjectBufferData GetBufferData()
         {
             return new RaymarchGameObjectBufferData(
@@ -34,6 +39,16 @@ namespace RaymarchEngine.Core.Primitives
                 Position,
                 Rotation.QuaternionToEuler(),
                 Scale);
+        }
+
+        /// <summary>
+        /// Adds this primitive to a scene.
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <returns>Returns this object for chaining</returns>
+        public void AddToScene(Scene scene)
+        {
+            scene.AddGameObject(this);
         }
     }
 

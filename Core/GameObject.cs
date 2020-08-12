@@ -8,8 +8,6 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace RaymarchEngine.Core
 {
-    
-
     /// <summary>
     /// A class that represents a physical, visible object in the scene
     /// Must be extended to represent an object with a mesh (GameObject) or a raymarched object (RaymarchGameObject) or something else
@@ -22,7 +20,7 @@ namespace RaymarchEngine.Core
 
         private bool active;
 
-        private List<IUpdateable> updateables;
+        private readonly List<IUpdateable> updateables;
 
         public GameObject()
         {
@@ -32,7 +30,7 @@ namespace RaymarchEngine.Core
             scale = Vector3.One;
             updateables = new List<IUpdateable>();
         }
-        
+
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             active = true;
@@ -42,6 +40,9 @@ namespace RaymarchEngine.Core
             updateables = new List<IUpdateable>();
         }
 
+        /// <summary>
+        /// Enable or disable the object
+        /// </summary>
         public bool Active
         {
             get => active;
@@ -51,15 +52,17 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Get the Updateables of this object
         /// </summary>
-        public List<IUpdateable> Updateables => updateables;
+        public IEnumerable<IUpdateable> Updateables => updateables.ToArray();
 
         /// <summary>
         /// Add a Updateable to this object
         /// </summary>
         /// <param name="updateable"></param>
+        /// <returns>Return this gameobject for chaining</returns>
         public void AddUpdateable(IUpdateable updateable)
         {
             updateables.Add(updateable);
+            updateable.OnAddedToGameObject(this);
         }
 
         /// <summary>
@@ -126,10 +129,19 @@ namespace RaymarchEngine.Core
             Rotate(new Vector3(x, y, x));
         }
 
+        /// <summary>
+        /// Unit x-vector relative the object
+        /// </summary>
         public Vector3 Right => rotation.Multiply(Vector3.UnitX);
 
+        /// <summary>
+        /// Unit y-vector relative the object
+        /// </summary>
         public Vector3 Up => rotation.Multiply(Vector3.UnitY);
 
+        /// <summary>
+        /// Unit z-vector relative the object
+        /// </summary>
         public Vector3 Forward => rotation.Multiply(Vector3.UnitZ);
     }
 }

@@ -1,6 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
 using System.Numerics;
+using BepuPhysics.Collidables;
+using ColliderShape = BepuPhysics.Collidables.Box;
 
 namespace RaymarchEngine.Core.Primitives
 {
@@ -23,6 +25,12 @@ namespace RaymarchEngine.Core.Primitives
         public override PrimitiveShape GetShapeType()
         {
             return PrimitiveShape.Plane;
+        }
+
+        /// <inheritdoc />
+        public override IConvexShape GetColliderShape()
+        {
+            return new ColliderShape(1000, 0.1f, 1000); // TODO there is no plane...
         }
 
         /// <inheritdoc />

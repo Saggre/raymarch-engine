@@ -19,7 +19,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// List of objects in the scene.
         /// </summary>
-        private List<Primitive> gameObjects;
+        private readonly List<Primitive> gameObjects;
 
         /// <summary>
         /// Initiates an empty scene.
@@ -47,8 +47,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Gets the scene's GameObjects
         /// </summary>
-        public List<Primitive> GameObjects => gameObjects;
-
+        public IEnumerable<Primitive> GameObjects => gameObjects.ToArray();
 
         /// <summary>
         /// Sets or gets the active camera, currently used for rendering.

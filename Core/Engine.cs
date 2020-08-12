@@ -1,7 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
@@ -9,9 +8,8 @@ using WindowsInput.Native;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.Core.Rendering;
 using RaymarchEngine.Game;
-using SharpDX.Direct3D11;
+using RaymarchEngine.Physics;
 using SharpDX.Windows;
-using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace RaymarchEngine.Core
 {
@@ -31,7 +29,8 @@ namespace RaymarchEngine.Core
         private Stopwatch stopwatch;
         private GameLogic gameLogic;
         private static RenderDevice renderDevice;
-
+        private static PhysicsHandler physics;
+        
         public static Scene CurrentScene => currentScene;
 
         public static RenderDevice RenderDevice => renderDevice;
@@ -102,6 +101,9 @@ namespace RaymarchEngine.Core
             // It's important that render device is created after the scene
             renderDevice = new RenderDevice(renderForm);
 
+            // Start physics library
+            physics = new PhysicsHandler(PhysicsReady);
+            
             // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -122,9 +124,11 @@ namespace RaymarchEngine.Core
                     updateable.Start(unixTime);
                 }
             }
-            
-            Physics.Physics.Run();
+        }
 
+        private void PhysicsReady()
+        {
+            
         }
 
         /// <summary>
@@ -132,7 +136,6 @@ namespace RaymarchEngine.Core
         /// </summary>
         public void Run()
         {
-
             RenderLoop.Run(renderForm, GameLoop);
         }
 

@@ -1,6 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
+using System;
 using System.Numerics;
+using BepuPhysics.Collidables;
+using ColliderShape = BepuPhysics.Collidables.Sphere;
 
 namespace RaymarchEngine.Core.Primitives
 {
@@ -23,6 +26,12 @@ namespace RaymarchEngine.Core.Primitives
         public override PrimitiveShape GetShapeType()
         {
             return PrimitiveShape.Ellipsoid;
+        }
+
+        /// <inheritdoc />
+        public override IConvexShape GetColliderShape()
+        {
+            return new ColliderShape(Math.Max(Math.Max(Scale.X, Scale.Y), Scale.Z)); // TODO collider not exact
         }
 
         /// <inheritdoc />

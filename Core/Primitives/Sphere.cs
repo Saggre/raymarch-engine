@@ -1,7 +1,9 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
+using System;
 using System.Numerics;
-using RaymarchEngine.EMath;
+using BepuPhysics.Collidables;
+using ColliderShape = BepuPhysics.Collidables.Sphere;
 
 namespace RaymarchEngine.Core.Primitives
 {
@@ -18,7 +20,7 @@ namespace RaymarchEngine.Core.Primitives
         public float Radius
         {
             get => radius;
-            set => radius = value;
+            set => radius = value; // TODO update also collider radius?
         }
 
         /// <inheritdoc />
@@ -37,6 +39,12 @@ namespace RaymarchEngine.Core.Primitives
         public override PrimitiveShape GetShapeType()
         {
             return PrimitiveShape.Sphere;
+        }
+
+        /// <inheritdoc />
+        public override IConvexShape GetColliderShape()
+        {
+            return new ColliderShape(radius);
         }
 
         /// <inheritdoc />

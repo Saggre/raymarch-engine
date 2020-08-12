@@ -1,6 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
 using System.Numerics;
+using BepuPhysics.Collidables;
+using ColliderShape = BepuPhysics.Collidables.Cylinder;
 
 namespace RaymarchEngine.Core.Primitives
 {
@@ -36,6 +38,12 @@ namespace RaymarchEngine.Core.Primitives
         public override PrimitiveShape GetShapeType()
         {
             return PrimitiveShape.Torus;
+        }
+
+        /// <inheritdoc />
+        public override IConvexShape GetColliderShape()
+        {
+            return new ColliderShape(dimensions.X, dimensions.Y); // TODO these values are probably wrong
         }
 
         /// <inheritdoc />

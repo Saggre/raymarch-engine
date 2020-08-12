@@ -7,22 +7,24 @@ using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Constraints;
 using BepuUtilities.Memory;
-using RaymarchEngine.Core;
 
 namespace RaymarchEngine.Physics
 {
     /// <summary>
     /// Shows a completely isolated usage of the engine without using any of the other demo types.
     /// </summary>
-    public static class Physics
+    public class PhysicsHandler : IDisposable
     {
+        private BufferPool bufferPool;
         private static Action onInitialize;
-        public static Simulation simulation;
-        public static BodyHandle bh;
+        private static Simulation simulation;
 
-        public static void SetCallback(Action callback)
+        public static Simulation Simulation => simulation;
+
+        public PhysicsHandler(Action callback)
         {
             onInitialize = callback;
+            Run();
         }
 
         //The simulation has a variety of extension points that must be defined. 
@@ -30,7 +32,7 @@ namespace RaymarchEngine.Physics
         //If you're wondering why the callbacks are interface implementing structs rather than classes or events, it's because 
         //the compiler can specialize the implementation using the compile time type information. That avoids dispatch overhead associated
         //with delegates or virtual dispatch and allows inlining, which is valuable for extremely high frequency logic like contact callbacks.
-        unsafe struct NarrowPhaseCallbacks : INarrowPhaseCallbacks
+        struct NarrowPhaseCallbacks : INarrowPhaseCallbacks
         {
             /// <summary>
             /// Performs any required initialization logic after the Simulation instance has been constructed.
@@ -38,10 +40,8 @@ namespace RaymarchEngine.Physics
             /// <param name="simulation">Simulation that owns these callbacks.</param>
             public void Initialize(Simulation simulation)
             {
-                Physics.simulation = simulation;
+                PhysicsHandler.simulation = simulation;
                 onInitialize();
-                //Often, the callbacks type is created before the simulation instance is fully constructed, so the simulation will call this function when it's ready.
-                //Any logic which depends on the simulation existing can be put here.
             }
 
             /// <summary>
@@ -176,17 +176,15 @@ namespace RaymarchEngine.Physics
                 //Note that we avoid accelerating kinematics. Kinematics are any body with an inverse mass of zero (so a mass of ~infinity). No force can move them.
                 if (localInertia.InverseMass > 0)
                 {
-                    //Debug.WriteLine("SOLVE: " + gravityDt);
                     velocity.Linear = velocity.Linear + gravityDt;
-                    Debug.WriteLine("Timestep");
                 }
             }
         }
 
-        public static void Run()
+        public void Run()
         {
             //The buffer pool is a source of raw memory blobs for the engine to use.
-            var bufferPool = new BufferPool();
+            bufferPool = new BufferPool();
             //Note that you can also control the order of internal stage execution using a different ITimestepper implementation.
             //The PositionFirstTimestepper is the simplest timestepping mode in a technical sense, but since it integrates velocity into position at the start of the frame, 
             //directly modified velocities outside of the timestep will be integrated before collision detection or the solver has a chance to intervene.
@@ -196,21 +194,10 @@ namespace RaymarchEngine.Physics
             Simulation simulation = Simulation.Create(bufferPool, new NarrowPhaseCallbacks(),
                 new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new PositionLastTimestepper());
 
-            //Drop a ball on a big static box.
-            var sphere = new Sphere(1);
-
-            sphere.ComputeInertia(1, out var sphereInertia);
-            var sphereDescription = BodyDescription.CreateDynamic(new Vector3(4, 5, 0), sphereInertia,
-                new CollidableDescription(simulation.Shapes.Add(sphere), 0.1f), new BodyActivityDescription(0.01f));
-            bh = simulation.Bodies.Add(sphereDescription);
-
-            simulation.Statics.Add(new StaticDescription(new Vector3(0, 0, 0),
+            /*simulation.Statics.Add(new StaticDescription(new Vector3(0, 0, 0),
                 new CollidableDescription(simulation.Shapes.Add(new Box(500, 1, 500)), 0.1f)));
-            
-
+*/
             //var threadDispatcher = new SimpleThreadDispatcher(Environment.ProcessorCount);
-            Debug.WriteLine("SIMULATION ->");
-   
 
             //If you intend to reuse the BufferPool, disposing the simulation is a good idea- it returns all the buffers to the pool for reuse.
             //Here, we dispose it, but it's not really required; we immediately thereafter clear the BufferPool of all held memory.
@@ -218,6 +205,13 @@ namespace RaymarchEngine.Physics
             //simulation.Dispose();
             //threadDispatcher.Dispose();
             //bufferPool.Clear();
+        }
+
+        public void Dispose()
+        {
+            simulation.Dispose();
+            //threadDispatcher.Dispose();
+            bufferPool.Clear();
         }
     }
 }

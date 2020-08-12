@@ -279,7 +279,7 @@ namespace RaymarchEngine.Core.Rendering
                 raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
-                raymarchShaderBufferData.objectCount = Engine.CurrentScene.GameObjects.Count * 1.0f;
+                raymarchShaderBufferData.objectCount = Engine.CurrentScene.GameObjects.Count() * 1.0f;
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 

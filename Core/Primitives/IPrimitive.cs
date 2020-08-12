@@ -1,6 +1,8 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
+using System;
 using System.Numerics;
+using BepuPhysics.Collidables;
 
 namespace RaymarchEngine.Core.Primitives
 {
@@ -21,6 +23,12 @@ namespace RaymarchEngine.Core.Primitives
         /// </summary>
         /// <returns></returns>
         public PrimitiveShape GetShapeType();
+
+        /// <summary>
+        /// Gets the type of Bepuphysics collider shape
+        /// </summary>
+        /// <returns></returns>
+        public IConvexShape GetColliderShape();
 
         // TODO move out of class
         /// <summary>

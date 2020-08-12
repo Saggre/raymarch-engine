@@ -1,33 +1,26 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 24/10/2019
 
-using System;
 using System.Numerics;
 using WindowsInput.Native;
-using SharpDX.Windows;
 
 namespace RaymarchEngine.Core.Input
 {
-    public class PlayerMovement : IUpdateable
+    public class PlayerMovement : AutoUpdateable
     {
         private Vector3 movementInput;
-        //private Keyboard keyboard;
-
-        public PlayerMovement()
-        {
-            //keyboard = new Keyboard();
-            StaticUpdater.Add(this);
-        }
 
         /// <summary>
         /// Player movement input in X, Y, Z directions
         /// </summary>
         public Vector3 MovementInput => movementInput;
-
-        public void Start(int startTime)
+        
+        /// <inheritdoc />
+        public override void Start(int startTime)
         {
         }
 
-        public void Update(float deltaTime)
+        /// <inheritdoc />
+        public override void Update(float deltaTime)
         {
             movementInput = Vector3.Zero;
 
@@ -51,7 +44,8 @@ namespace RaymarchEngine.Core.Input
                 movementInput += Vector3.UnitY * playerSpeed;
         }
 
-        public void End(int endTime)
+        /// <inheritdoc />
+        public override void End(int endTime)
         {
         }
     }

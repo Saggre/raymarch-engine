@@ -1,6 +1,5 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
 
-using System;
 using System.Drawing;
 using System.Numerics;
 using System.Windows.Forms;
@@ -8,8 +7,7 @@ using SharpDX.Windows;
 
 namespace RaymarchEngine.Core.Input
 {
-
-    public class Mouse : IUpdateable
+    public class Mouse : AutoUpdateable // TODO this class is a mess
     {
         /// <summary>
         /// FPS or menu mouse
@@ -44,8 +42,6 @@ namespace RaymarchEngine.Core.Input
 
             SetCursorCenter();
             Update(0); // Do first update manually to prevent mouse jump at start
-
-            StaticUpdater.Add(this);
         }
 
         public void HideCursor()
@@ -82,26 +78,24 @@ namespace RaymarchEngine.Core.Input
         /// <param name="y"></param>
         public void SetCursorPositionRelative(float x, float y)
         {
-            Cursor.Position = new Point((int)(screenX * x), (int)(screenY * y));
+            Cursor.Position = new Point((int) (screenX * x), (int) (screenY * y));
         }
 
         /// <summary>
         /// Sets cursor to the center of the game viewport
         /// </summary>
-        public void SetCursorCenter()
+        private void SetCursorCenter()
         {
             SetCursorPosition(renderForm.Left + screenHalfX, renderForm.Top + screenHalfY);
         }
 
-        public void Start(int startTime)
+        /// <inheritdoc />
+        public override void Start(int startTime)
         {
-
         }
 
-        /// <summary>
-        /// IUpdateable Update
-        /// </summary>
-        public void Update(float deltaTime)
+        /// <inheritdoc />
+        public override void Update(float deltaTime)
         {
             Point cursorPosition = Cursor.Position;
 
@@ -120,9 +114,9 @@ namespace RaymarchEngine.Core.Input
             lastCursorPosition = Cursor.Position;
         }
 
-        public void End(int endTime)
+        /// <inheritdoc />
+        public override void End(int endTime)
         {
-
         }
     }
 }
