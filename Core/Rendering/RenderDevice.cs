@@ -1,6 +1,7 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 05/11/2019
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
@@ -44,7 +45,7 @@ namespace RaymarchEngine.Core.Rendering
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
         private RaymarchShaderBufferData raymarchShaderBufferData; // Values to send to the raymarch shader
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
-        private StructuredBuffer<RaymarchGameObjectBufferData> raymarchObjectsBuffer;
+        private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
 
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
@@ -53,11 +54,10 @@ namespace RaymarchEngine.Core.Rendering
             /// Camera position, rotation, scale
             /// </summary>
             public Vector3 cameraPosition;
+
             public float aspectRatio;
             public Vector3 cameraDirection;
             public float time;
-            public float objectCount;
-            public Vector3 blank;
         }
 
         /// <summary>
@@ -90,7 +90,13 @@ namespace RaymarchEngine.Core.Rendering
             deviceContext.PixelShader.Set(raymarchShader.PixelShader);
 
             raymarchShaderBuffer = new ConstantBuffer<RaymarchShaderBufferData>(device);
-            raymarchObjectsBuffer = new StructuredBuffer<RaymarchGameObjectBufferData>(device);
+
+            // Create buffers for different types of shapes. Combine later?
+            primitivesBuffer = new StructuredBuffer<PrimitiveBufferData>[8];
+            for (int i = 0; i < primitivesBuffer.Length; i++)
+            {
+                primitivesBuffer[i] = new StructuredBuffer<PrimitiveBufferData>(device, i);
+            }
         }
 
         #region Setup
@@ -275,12 +281,38 @@ namespace RaymarchEngine.Core.Rendering
                 raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Forward;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
-                raymarchShaderBufferData.objectCount = Engine.CurrentScene.GameObjects.Count() * 1.0f;
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
-                raymarchObjectsBuffer.UpdateValue(Engine.CurrentScene.GameObjects
-                    .Select(gameObject => gameObject.GetBufferData()).ToArray());
+                primitivesBuffer[0].UpdateValue(
+                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Sphere>()
+                        .Select(primitive => primitive.GetBufferData()).ToArray()
+                );
+
+                primitivesBuffer[1].UpdateValue(
+                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Box>()
+                        .Select(primitive => primitive.GetBufferData()).ToArray()
+                );
+
+                primitivesBuffer[2].UpdateValue(
+                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Primitives.Plane>()
+                        .Select(primitive => primitive.GetBufferData()).ToArray()
+                );
+
+                primitivesBuffer[3].UpdateValue(
+                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Ellipsoid>()
+                        .Select(primitive => primitive.GetBufferData()).ToArray()
+                );
+
+                primitivesBuffer[4].UpdateValue(
+                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Torus>()
+                        .Select(primitive => primitive.GetBufferData()).ToArray()
+                );
+
+                primitivesBuffer[5].UpdateValue(
+                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<CappedTorus>()
+                        .Select(primitive => primitive.GetBufferData()).ToArray()
+                );
             }
 
             // Draw raymarch plane
@@ -378,7 +410,10 @@ namespace RaymarchEngine.Core.Rendering
             deviceContext.Dispose();
             renderForm.Dispose();
             raymarchShaderBuffer.Dispose();
-            raymarchObjectsBuffer.Dispose();
+            foreach (var buffer in primitivesBuffer)
+            {
+                buffer.Dispose();
+            }
         }
     }
 }

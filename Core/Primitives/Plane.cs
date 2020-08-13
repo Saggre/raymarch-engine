@@ -22,12 +22,6 @@ namespace RaymarchEngine.Core.Primitives
         }
 
         /// <inheritdoc />
-        public override PrimitiveShape GetShapeType()
-        {
-            return PrimitiveShape.Plane;
-        }
-
-        /// <inheritdoc />
         public override IConvexShape GetColliderShape()
         {
             return new ColliderShape(1000, 0.1f, 1000); // TODO there is no plane...

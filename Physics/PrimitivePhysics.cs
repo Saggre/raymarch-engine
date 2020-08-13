@@ -36,17 +36,17 @@ namespace RaymarchEngine.Physics
             this.parent = parent;
             Primitive primitive = (Primitive) parent;
 
-            switch (primitive.GetShapeType())
+            if (primitive is RaymarchEngine.Core.Primitives.Sphere)
             {
-                case PrimitiveShape.Sphere:
-                    AddBody<Sphere>(primitive);
-                    break;
-                case PrimitiveShape.Plane:
-                    AddBody<Box>(primitive);
-                    break;
-                case PrimitiveShape.Box:
-                    AddBody<Box>(primitive);
-                    break;
+                AddBody<Sphere>(primitive);
+            }
+            else if (primitive is RaymarchEngine.Core.Primitives.Plane)
+            {
+                AddBody<Box>(primitive);
+            }
+            else if (primitive is RaymarchEngine.Core.Primitives.Box)
+            {
+                AddBody<Box>(primitive);
             }
         }
 

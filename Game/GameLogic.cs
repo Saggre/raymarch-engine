@@ -45,7 +45,7 @@ namespace RaymarchEngine.Game
 
             Primitive sphere = new Sphere
             {
-                Position = new Vector3(0, 5, 0),
+                Position = new Vector3(2, 5, 0),
                 Radius = 1f
             };
             sphere.AddToScene(Engine.CurrentScene);

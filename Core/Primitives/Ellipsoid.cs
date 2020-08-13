@@ -23,12 +23,6 @@ namespace RaymarchEngine.Core.Primitives
         }
 
         /// <inheritdoc />
-        public override PrimitiveShape GetShapeType()
-        {
-            return PrimitiveShape.Ellipsoid;
-        }
-
-        /// <inheritdoc />
         public override IConvexShape GetColliderShape()
         {
             return new ColliderShape(Math.Max(Math.Max(Scale.X, Scale.Y), Scale.Z)); // TODO collider not exact

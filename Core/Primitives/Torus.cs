@@ -33,13 +33,7 @@ namespace RaymarchEngine.Core.Primitives
         {
             this.dimensions = dimensions;
         }
-
-        /// <inheritdoc />
-        public override PrimitiveShape GetShapeType()
-        {
-            return PrimitiveShape.Torus;
-        }
-
+        
         /// <inheritdoc />
         public override IConvexShape GetColliderShape()
         {

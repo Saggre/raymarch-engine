@@ -24,7 +24,7 @@ namespace RaymarchEngine.Core.Primitives
         }
 
         /// <inheritdoc />
-        public Sphere()
+        public Sphere() : base()
         {
             radius = 1f;
         }
@@ -33,12 +33,6 @@ namespace RaymarchEngine.Core.Primitives
         public Sphere(Vector3 position, Quaternion rotation, float radius) : base(position, rotation, Vector3.One)
         {
             this.radius = radius;
-        }
-
-        /// <inheritdoc />
-        public override PrimitiveShape GetShapeType()
-        {
-            return PrimitiveShape.Sphere;
         }
 
         /// <inheritdoc />

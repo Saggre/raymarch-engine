@@ -19,22 +19,15 @@ namespace RaymarchEngine.Core.Primitives
         public Vector4 GetPrimitiveOptions();
 
         /// <summary>
-        /// Get this shape's type
-        /// </summary>
-        /// <returns></returns>
-        public PrimitiveShape GetShapeType();
-
-        /// <summary>
         /// Gets the type of Bepuphysics collider shape
         /// </summary>
         /// <returns></returns>
         public IConvexShape GetColliderShape();
 
-        // TODO move out of class
         /// <summary>
         /// Get data that can be sent to the raymarch shader to represent this object.
         /// </summary>
         /// <returns></returns>
-        public RaymarchGameObjectBufferData GetBufferData();
+        public PrimitiveBufferData GetBufferData();
     }
 }

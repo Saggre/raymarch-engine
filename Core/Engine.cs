@@ -1,11 +1,13 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using WindowsInput.Native;
 using RaymarchEngine.Core.Input;
+using RaymarchEngine.Core.Primitives;
 using RaymarchEngine.Core.Rendering;
 using RaymarchEngine.Game;
 using RaymarchEngine.Physics;
@@ -13,8 +15,9 @@ using SharpDX.Windows;
 
 namespace RaymarchEngine.Core
 {
+
     /// <summary>
-    /// A class that handles initating the rendering class (RenderDevice), rendering loop and input devices
+    /// A class that handles initiating the rendering class (RenderDevice), rendering loop and input devices
     /// </summary>
     public class Engine : IDisposable
     {
@@ -34,6 +37,21 @@ namespace RaymarchEngine.Core
         public static Scene CurrentScene => currentScene;
 
         public static RenderDevice RenderDevice => renderDevice;
+
+        /// <summary>
+        /// How many primitives are allowed in the game
+        /// </summary>
+        private static Dictionary<Type, int> primitiveCounts;
+
+        /// <summary>
+        /// Get the number of primitives by type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static int PrimitiveCount<T>() where T : Primitive
+        {
+            return primitiveCounts[typeof(T)];
+        }
 
         /// <summary>
         /// Time elapsed since starting the engine
@@ -92,6 +110,16 @@ namespace RaymarchEngine.Core
                 renderForm.Show();
             }
 
+            primitiveCounts = new Dictionary<Type, int>
+            {
+                {typeof(Sphere), 2},
+                {typeof(Box), 2},
+                {typeof(Plane), 1},
+                {typeof(Ellipsoid), 32},
+                {typeof(Torus), 32},
+                {typeof(CappedTorus), 32}
+            };
+
             // Create main scene
             currentScene = new Scene();
 
@@ -117,7 +145,8 @@ namespace RaymarchEngine.Core
             StaticUpdater.ExecuteStartActions(unixTime);
 
             // Execute each scene object's updateables' Start method
-            foreach (GameObject mainSceneObject in currentScene.GameObjects)
+            foreach (Primitive mainSceneObject in CurrentScene.GroupedPrimitives.GetAllPrimitives()
+            )
             {
                 foreach (IUpdateable updateable in mainSceneObject.Updateables)
                 {
@@ -159,7 +188,8 @@ namespace RaymarchEngine.Core
             // Render on each frame
             renderDevice.Draw();
 
-            foreach (GameObject currentSceneObject in currentScene.GameObjects)
+            foreach (Primitive currentSceneObject in CurrentScene.GroupedPrimitives.GetAllPrimitives()
+            )
             {
                 // Execute updates per-object
                 foreach (IUpdateable updateable in currentSceneObject.Updateables)
@@ -187,7 +217,7 @@ namespace RaymarchEngine.Core
             StaticUpdater.ExecuteEndActions(unixTime);
 
             // Execute each scene GameObject's end methods
-            foreach (GameObject gameObject in CurrentScene.GameObjects)
+            foreach (Primitive gameObject in CurrentScene.GroupedPrimitives.GetAllPrimitives())
             {
                 foreach (IUpdateable updateable in gameObject.Updateables)
                 {

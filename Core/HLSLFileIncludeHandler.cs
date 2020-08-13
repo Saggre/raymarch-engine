@@ -27,9 +27,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
+using RaymarchEngine.Core.Primitives;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.IO;
+using Plane = RaymarchEngine.Core.Primitives.Plane;
 
 namespace RaymarchEngine.Core
 {
@@ -54,10 +57,19 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Creates and returns a file stream with constants such as baked array lengths
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Stream with HLSL code</returns>
         private Stream GetShaderConstantsStream()
         {
-            return null;
+            string hlslString = $"static const int sphereCount = {Engine.PrimitiveCount<Sphere>()};" +
+                                $"static const int boxCount = {Engine.PrimitiveCount<Box>()};" +
+                                $"static const int planeCount = {Engine.PrimitiveCount<Plane>()};" +
+                                $"static const int ellipsoidCount = {Engine.PrimitiveCount<Ellipsoid>()};" +
+                                $"static const int torusCount = {Engine.PrimitiveCount<Torus>()};" +
+                                $"static const int cappedTorusCount = {Engine.PrimitiveCount<CappedTorus>()};";
+
+            Debug.WriteLine(hlslString);
+            byte[] byteArray = Encoding.ASCII.GetBytes(hlslString);
+            return new MemoryStream(byteArray);
         }
 
         public Stream Open(IncludeType type, string fileName, Stream parentStream)
@@ -110,7 +122,10 @@ namespace RaymarchEngine.Core
         public void Close(Stream stream)
         {
             stream.Dispose();
-            CurrentDirectory.Pop();
+            if (stream.GetType() != typeof(MemoryStream))
+            {
+                CurrentDirectory.Pop();
+            }
         }
 
         #endregion

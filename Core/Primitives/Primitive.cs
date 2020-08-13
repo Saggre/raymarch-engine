@@ -12,7 +12,7 @@ namespace RaymarchEngine.Core.Primitives
     public abstract class Primitive : GameObject, IPrimitive
     {
         /// <inheritdoc />
-        protected Primitive()
+        protected Primitive() : base()
         {
         }
 
@@ -25,15 +25,12 @@ namespace RaymarchEngine.Core.Primitives
         public abstract Vector4 GetPrimitiveOptions();
 
         /// <inheritdoc />
-        public abstract PrimitiveShape GetShapeType();
-
-        /// <inheritdoc />
         public abstract IConvexShape GetColliderShape();
 
         /// <inheritdoc />
-        public RaymarchGameObjectBufferData GetBufferData()
+        public PrimitiveBufferData GetBufferData()
         {
-            return new RaymarchGameObjectBufferData(
+            return new PrimitiveBufferData(
                 GetPrimitiveOptions(),
                 Position,
                 Rotation.QuaternionToEuler(),
@@ -56,9 +53,8 @@ namespace RaymarchEngine.Core.Primitives
     /// Euler angles is passed instead of quaternion rotation, because the object can't be/shouldn't be rotated in the shader. Euler angle data will suffice for rendering the shape at different rotations.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct RaymarchGameObjectBufferData
+    public struct PrimitiveBufferData
     {
-        //public int raymarchShape;
         public Vector4 primitiveOptions;
         public Vector3 position;
         public Vector3 eulerAngles;
@@ -66,14 +62,13 @@ namespace RaymarchEngine.Core.Primitives
         public Vector4 color;
         public Vector2 materialOptions;
 
-        public RaymarchGameObjectBufferData(
+        public PrimitiveBufferData(
             Vector4 primitiveOptions,
             Vector3 position,
             Vector3 eulerAngles,
             Vector3 scale
         )
         {
-            //this.raymarchShape = (int) raymarchShape;
             this.primitiveOptions = primitiveOptions;
             this.position = position;
             this.eulerAngles = eulerAngles;
@@ -81,41 +76,5 @@ namespace RaymarchEngine.Core.Primitives
             color = Vector4.One;
             materialOptions = Vector2.Zero;
         }
-    }
-
-    /// <summary>
-    /// The shape that this object is rendered as.
-    /// </summary>
-    public enum PrimitiveShape
-    {
-        /// <summary>
-        /// A sphere
-        /// </summary>
-        Sphere,
-
-        /// <summary>
-        /// A box
-        /// </summary>
-        Box,
-
-        /// <summary>
-        /// An infinite plane
-        /// </summary>
-        Plane,
-
-        /// <summary>
-        /// An ellipsoid
-        /// </summary>
-        Ellipsoid,
-
-        /// <summary>
-        /// A torus ;)
-        /// </summary>
-        Torus,
-
-        /// <summary>
-        /// A torus with open ends
-        /// </summary>
-        CappedTorus
     }
 }

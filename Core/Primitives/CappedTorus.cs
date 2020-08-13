@@ -36,12 +36,6 @@ namespace RaymarchEngine.Core.Primitives
         }
 
         /// <inheritdoc />
-        public override PrimitiveShape GetShapeType()
-        {
-            return PrimitiveShape.CappedTorus;
-        }
-
-        /// <inheritdoc />
         public override IConvexShape GetColliderShape()
         {
             return new ColliderShape(attributes.X, attributes.Y); // TODO these values are probably wrong

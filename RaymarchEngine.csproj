@@ -162,6 +162,7 @@
     <Compile Include="Core\Primitives\Sphere.cs" />
     <Compile Include="Core\Primitives\Torus.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
+    <Compile Include="Core\Rendering\Resolution.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
     <Compile Include="Core\StaticUpdater.cs" />

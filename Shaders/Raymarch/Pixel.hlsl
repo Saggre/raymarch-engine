@@ -4,7 +4,6 @@
 #define MAX_DIST 400
 #define SHADOW_MAX_DIST 200
 #define SURF_DIST 1e-2
-#define MAX_OBJECTS 64
 
 // Get pseudo-random number in the range [0, 1).
 float random(float2 co)
@@ -15,61 +14,46 @@ float random(float2 co)
 float checkers(float2 p)
 {
     float2 w = fwidth(p) + 0.001;
-    float2 i = 2.0*(abs(frac((p-0.5*w)*0.5)-0.5)-abs(frac((p+0.5*w)*0.5)-0.5))/w;
-    return 0.5 - 0.5*i.x*i.y;
-}
-
-// Get distance to an object depending on its shape parameter
-float raymarchObjectSd(cSphere shape, float3 pos, out float3 color) {
-
-    float dist = MAX_DIST;
-    //float3 newPos = pos - shape.position;
-
-    color = float3(1.0, 1.0, 1.0);
-
-    // TODO replace this with something, it's very slow
-    /*switch (shape.raymarchShape) {
-        case 0:
-            dist = sdSphere(newPos, shape.primitiveOptions.r); 
-            color = float3(1.0, 0.0, 0.0);
-            break;
-        case 1:
-            dist = sdBox(newPos, shape.primitiveOptions.rrr);
-            break;
-        case 2:
-            dist = sdPlane(newPos);
-            break;
-        case 3:
-            dist = sdEllipsoid(newPos, shape.primitiveOptions.rgb);
-            break;
-        case 4:
-            dist = sdTorus(newPos, shape.primitiveOptions.rg);
-            break;
-        case 5:
-            dist = sdCappedTorus(newPos, shape.primitiveOptions.rg, shape.primitiveOptions.b, shape.primitiveOptions.a);
-            break;
-    }*/
-    
-    dist = shape.ExecSDF(pos); 
-
-    return dist;
+    float2 i = 2.0 * (abs(frac((p - 0.5 * w) * 0.5) - 0.5)-abs(frac((p + 0.5 * w) * 0.5) - 0.5)) / w;
+    return 0.5 - 0.5 * i.x * i.y;
 }
 
 // Returns distance from position to the closest point in scene geometry
 float getDist(float3 pos, out float3 color) {
     float minDist = MAX_DIST;
 
-    for(int i = 0; i<objectCount && i<MAX_OBJECTS; i++){
+    // TODO [unroll(sphereCount)] 
+    for(int i = 0; i < sphereCount; i++){
         float3 objectColor;
-        float curDist = raymarchObjectSd(spheres[i], pos, objectColor);
+        float curDist = spheres[i].ExecSDF(pos);
         
         if(curDist < minDist){
-            color = objectColor;    
+            color = objectColor;
+            minDist = curDist; 
         }
-        
-        minDist = min(minDist, curDist);
     }
     
+    for(int i = 0; i < planeCount; i++){
+        float3 objectColor;
+        float curDist = planes[i].ExecSDF(pos);
+        
+        if(curDist < minDist){
+            color = objectColor;
+            minDist = curDist; 
+        }
+    }
+    
+    for(int i = 0; i < boxCount; i++){
+        float3 objectColor;
+        float curDist = boxes[i].ExecSDF(pos);
+        
+        if(curDist < minDist){
+            color = objectColor;
+            minDist = curDist; 
+        }
+    }
+    
+    color = float3(0, 0, 0);
 	return minDist;
 }
 

@@ -22,12 +22,6 @@ namespace RaymarchEngine.Core.Primitives
         }
 
         /// <inheritdoc />
-        public override PrimitiveShape GetShapeType()
-        {
-            return PrimitiveShape.Box;
-        }
-
-        /// <inheritdoc />
         public override IConvexShape GetColliderShape()
         {
             return new ColliderShape(Scale.X, Scale.Y, Scale.Z);
