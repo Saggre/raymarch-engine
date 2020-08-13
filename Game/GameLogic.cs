@@ -1,9 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
-using System.Diagnostics;
 using System.Numerics;
-using BepuPhysics;
-using BepuPhysics.Collidables;
 using RaymarchEngine.Core;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.Core.Primitives;
@@ -61,12 +58,13 @@ namespace RaymarchEngine.Game
             float sensitivity = 0.03f;
 
             // Move camera
-            camera.Move(playerMovement.MovementInput.Multiply(Engine.CurrentScene.ActiveCamera.Rotation),
-                deltaTime * 8f);
+            Vector3 xzInput = new Vector3(playerMovement.MovementInput.X, 0, playerMovement.MovementInput.Z);
+            camera.Move(xzInput.Multiply(Engine.CurrentScene.ActiveCamera.Rotation), deltaTime * 8f);
+            camera.Move(Vector3.UnitY * playerMovement.MovementInput.Y, deltaTime * 8f);
 
             // Rotate camera
             lookVector.X += InputDevice.Mouse.DeltaPosition.X * sensitivity;
-            lookVector.Y += InputDevice.Mouse.DeltaPosition.Y * sensitivity;
+            lookVector.Y -= InputDevice.Mouse.DeltaPosition.Y * sensitivity;
 
             // Clamp camera rotation
             if (lookVector.Y < 100)
@@ -86,8 +84,6 @@ namespace RaymarchEngine.Game
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
-
-            PhysicsHandler.Simulation.Timestep(deltaTime);
         }
 
         public override void End(int endTime)

@@ -52,15 +52,12 @@ namespace RaymarchEngine.Core.Rendering
             /// <summary>
             /// Camera position, rotation, scale
             /// </summary>
-            public Matrix4x4 viewMatrix;
-
             public Vector3 cameraPosition;
             public float aspectRatio;
+            public Vector3 cameraDirection;
             public float time;
             public float objectCount;
-            public Vector2 blank;
-            public Vector4 blank1;
-            public Vector4 blank2;
+            public Vector3 blank;
         }
 
         /// <summary>
@@ -274,9 +271,8 @@ namespace RaymarchEngine.Core.Rendering
 
             // Set raymarch shader buffer data
             {
-                // These matrices are not per-object
-                raymarchShaderBufferData.viewMatrix = Engine.CurrentScene.ActiveCamera.ViewMatrix();
                 raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
+                raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Forward;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
                 raymarchShaderBufferData.objectCount = Engine.CurrentScene.GameObjects.Count() * 1.0f;
@@ -286,8 +282,6 @@ namespace RaymarchEngine.Core.Rendering
                 raymarchObjectsBuffer.UpdateValue(Engine.CurrentScene.GameObjects
                     .Select(gameObject => gameObject.GetBufferData()).ToArray());
             }
-
-            
 
             // Draw raymarch plane
             raymarchRenderPlane.Draw();

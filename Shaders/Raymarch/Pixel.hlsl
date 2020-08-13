@@ -1,8 +1,8 @@
 #include "Common.hlsl"
 #include "Primitives.hlsl"
 
-#define MAX_STEPS 500
-#define MAX_DIST 500
+#define MAX_STEPS 700
+#define MAX_DIST 400
 #define SHADOW_MAX_DIST 200
 #define SURF_DIST 1e-2
 #define MAX_OBJECTS 64
@@ -22,6 +22,7 @@ float checkers(float2 p)
 
 // Get distance to an object depending on its shape parameter
 float raymarchObjectSd(RaymarchObject shape, float3 pos, out float3 color) {
+
     float dist = MAX_DIST;
     float3 newPos = pos - shape.position;
 
@@ -156,18 +157,31 @@ float getLight(in float3 pos) {
 	return dif;
 }
 
+float3 getCameraRayDir(float2 uv, float fov)
+{
+    float3 camForward = cameraDirection;
+    float3 camRight = normalize(cross(float3(0.0, 1.0, 0.0), camForward));
+    float3 camUp = normalize(cross(camForward, camRight));
+     
+    return normalize(uv.x * camRight + uv.y * camUp + camForward * fov);
+ }
+
 float4 main(PS_INPUT input) : SV_Target
 {
+    float3 FOG_COLOR = float3(0.2, 0.2, 0.3);
+
 	float2 uv = input.TexCoord - (0.5).xx;
 	uv.x *= aspectRatio;
+	
 	float3 rayOrigin = cameraPosition; // TODO position from model matrices
-	float3 rayDir = normalize(mul(viewMatrix, float4(uv.xy, 1.0, 0.0))).xyz; // FOV comes from uv coords
+	float3 rayDir = getCameraRayDir(uv, 1.0);
 
     float3 objectColor;
 	float dist = raymarch(rayOrigin, rayDir, objectColor);
 	
 	if (dist > MAX_DIST) {
-	    discard;
+	    return float4(FOG_COLOR, 1);
+	    //discard;
 	}
 
 	float3 color;
@@ -182,5 +196,8 @@ float4 main(PS_INPUT input) : SV_Target
     // Gamma correction
 	color = pow(color, gamma.xxx); 
 
-	return float4(color, 1.0);
+    // Fog
+    color = lerp(color, FOG_COLOR, dist / MAX_DIST);
+
+	return float4(color, 1);
 }

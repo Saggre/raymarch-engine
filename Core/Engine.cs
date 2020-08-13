@@ -30,7 +30,7 @@ namespace RaymarchEngine.Core
         private GameLogic gameLogic;
         private static RenderDevice renderDevice;
         private static PhysicsHandler physics;
-        
+
         public static Scene CurrentScene => currentScene;
 
         public static RenderDevice RenderDevice => renderDevice;
@@ -103,11 +103,11 @@ namespace RaymarchEngine.Core
 
             // Start physics library
             physics = new PhysicsHandler(PhysicsReady);
-            
+
             // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();
             stopwatch.Start();
-            
+
             // Init input device
             InputDevice.Init(renderForm);
 
@@ -128,7 +128,6 @@ namespace RaymarchEngine.Core
 
         private void PhysicsReady()
         {
-            
         }
 
         /// <summary>
@@ -168,6 +167,9 @@ namespace RaymarchEngine.Core
                     updateable.Update(lastDeltaTime);
                 }
             }
+
+            // TODO create separate physics loop
+            PhysicsHandler.Simulation.Timestep(lastDeltaTime);
 
             stopwatch.Stop();
             lastDeltaTime = (float) stopwatch.Elapsed.TotalSeconds;

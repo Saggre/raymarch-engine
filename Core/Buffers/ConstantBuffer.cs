@@ -1,6 +1,7 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 11/08/2020
 
 using System;
+using System.Diagnostics;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
@@ -32,6 +33,7 @@ namespace RaymarchEngine.Core.Buffers
             this.device = device;
             deviceContext = device.ImmediateContext;
             elementSize = SharpDX.Utilities.SizeOf<T>();
+            Debug.WriteLine(elementSize);
             CreateBuffer();
         }
 

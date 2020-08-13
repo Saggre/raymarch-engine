@@ -31,17 +31,17 @@ namespace RaymarchEngine.Core.Input
             }
 
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_D))
-                movementInput += Vector3.UnitX * playerSpeed;
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_A))
                 movementInput -= Vector3.UnitX * playerSpeed;
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_A))
+                movementInput += Vector3.UnitX * playerSpeed;
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_W))
-                movementInput -= Vector3.UnitZ * playerSpeed;
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_S))
                 movementInput += Vector3.UnitZ * playerSpeed;
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.VK_S))
+                movementInput -= Vector3.UnitZ * playerSpeed;
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.SPACE))
-                movementInput -= Vector3.UnitY * playerSpeed;
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LCONTROL))
                 movementInput += Vector3.UnitY * playerSpeed;
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LCONTROL))
+                movementInput -= Vector3.UnitY * playerSpeed;
         }
 
         /// <inheritdoc />
