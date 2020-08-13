@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using SharpDX;
 using SharpDX.D3DCompiler;
@@ -50,25 +51,44 @@ namespace RaymarchEngine.Core
 
         #region Include Members
 
+        /// <summary>
+        /// Creates and returns a file stream with constants such as baked array lengths
+        /// </summary>
+        /// <returns></returns>
+        private Stream GetShaderConstantsStream()
+        {
+            return null;
+        }
+
         public Stream Open(IncludeType type, string fileName, Stream parentStream)
         {
-            var currentDirectory = CurrentDirectory.Peek();
+            Debug.WriteLine(fileName);
+
+            // Include dynamic (:D) constants
+            if (fileName.ToLower().Equals("raymarchengine"))
+            {
+                return GetShaderConstantsStream();
+            }
+
+            string currentDirectory = CurrentDirectory.Peek();
             if (currentDirectory == null)
+            {
 #if NETFX_CORE
                 currentDirectory = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
 #else
                 currentDirectory = Environment.CurrentDirectory;
 #endif
+            }
 
-            var filePath = fileName;
+            string filePath = fileName;
 
             if (!Path.IsPathRooted(filePath))
             {
-                var directoryToSearch = new List<string> { currentDirectory };
+                var directoryToSearch = new List<string> {currentDirectory};
                 directoryToSearch.AddRange(IncludeDirectories);
-                foreach (var dirPath in directoryToSearch)
+                foreach (string dirPath in directoryToSearch)
                 {
-                    var selectedFile = Path.GetFullPath(Path.Combine(dirPath, fileName));
+                    string selectedFile = Path.GetFullPath(Path.Combine(dirPath, fileName));
                     if (NativeFile.Exists(selectedFile))
                     {
                         filePath = selectedFile;

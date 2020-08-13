@@ -1,5 +1,4 @@
 #include "Common.hlsl"
-#include "Primitives.hlsl"
 
 #define MAX_STEPS 700
 #define MAX_DIST 400
@@ -21,15 +20,15 @@ float checkers(float2 p)
 }
 
 // Get distance to an object depending on its shape parameter
-float raymarchObjectSd(RaymarchObject shape, float3 pos, out float3 color) {
+float raymarchObjectSd(cSphere shape, float3 pos, out float3 color) {
 
     float dist = MAX_DIST;
-    float3 newPos = pos - shape.position;
+    //float3 newPos = pos - shape.position;
 
     color = float3(1.0, 1.0, 1.0);
 
     // TODO replace this with something, it's very slow
-    switch (shape.raymarchShape) {
+    /*switch (shape.raymarchShape) {
         case 0:
             dist = sdSphere(newPos, shape.primitiveOptions.r); 
             color = float3(1.0, 0.0, 0.0);
@@ -49,7 +48,9 @@ float raymarchObjectSd(RaymarchObject shape, float3 pos, out float3 color) {
         case 5:
             dist = sdCappedTorus(newPos, shape.primitiveOptions.rg, shape.primitiveOptions.b, shape.primitiveOptions.a);
             break;
-    }
+    }*/
+    
+    dist = shape.ExecSDF(pos); 
 
     return dist;
 }
@@ -60,7 +61,7 @@ float getDist(float3 pos, out float3 color) {
 
     for(int i = 0; i<objectCount && i<MAX_OBJECTS; i++){
         float3 objectColor;
-        float curDist = raymarchObjectSd(objects[i], pos, objectColor);
+        float curDist = raymarchObjectSd(spheres[i], pos, objectColor);
         
         if(curDist < minDist){
             color = objectColor;    
@@ -94,7 +95,7 @@ float3 getNormal(in float3 pos) {
 float raymarch(in float3 rayOrigin, in float3 rayDir, out float3 color) {
 	float totalDist = 0.0;
 
-	for (int i = 0; i < MAX_STEPS; i++) {
+	[loop] for (int i = 0; i < MAX_STEPS; i++) {
 		float3 marchPos = rayOrigin + totalDist * rayDir;
 		float curDist = getDist(marchPos, color);
 		totalDist += curDist;
@@ -124,7 +125,7 @@ float getShadow(in float3 pos, in float3 lightDir, float shadowHardness = 64, fl
     float ph = 1e20;
     
     // t = distance from object surface towards light source
-    for(float t = mint; t < SHADOW_MAX_DIST;)
+    [loop] for(float t = mint; t < SHADOW_MAX_DIST;)
     {
         float h = getDist(rayOrigin + lightDir * t);
         if(h<0.001){
@@ -164,7 +165,7 @@ float3 getCameraRayDir(float2 uv, float fov)
     float3 camUp = normalize(cross(camForward, camRight));
      
     return normalize(uv.x * camRight + uv.y * camUp + camForward * fov);
- }
+}
 
 float4 main(PS_INPUT input) : SV_Target
 {

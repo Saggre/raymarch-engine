@@ -34,7 +34,6 @@ namespace RaymarchEngine.Core.Primitives
         public RaymarchGameObjectBufferData GetBufferData()
         {
             return new RaymarchGameObjectBufferData(
-                GetShapeType(),
                 GetPrimitiveOptions(),
                 Position,
                 Rotation.QuaternionToEuler(),
@@ -59,7 +58,7 @@ namespace RaymarchEngine.Core.Primitives
     [StructLayout(LayoutKind.Sequential)]
     public struct RaymarchGameObjectBufferData
     {
-        public int raymarchShape;
+        //public int raymarchShape;
         public Vector4 primitiveOptions;
         public Vector3 position;
         public Vector3 eulerAngles;
@@ -68,14 +67,13 @@ namespace RaymarchEngine.Core.Primitives
         public Vector2 materialOptions;
 
         public RaymarchGameObjectBufferData(
-            PrimitiveShape raymarchShape,
             Vector4 primitiveOptions,
             Vector3 position,
             Vector3 eulerAngles,
             Vector3 scale
         )
         {
-            this.raymarchShape = (int) raymarchShape;
+            //this.raymarchShape = (int) raymarchShape;
             this.primitiveOptions = primitiveOptions;
             this.position = position;
             this.eulerAngles = eulerAngles;
