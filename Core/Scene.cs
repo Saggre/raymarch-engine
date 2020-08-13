@@ -124,10 +124,9 @@ namespace RaymarchEngine.Core
         {
             gameObjects = new List<GameObject>();
 
-            activeCamera = new Camera
-            {
-                Position = new Vector3(0, 0, 0)
-            };
+            activeCamera = new Camera();
+
+            AddGameObject(activeCamera);
         }
 
         /// <summary>

@@ -15,11 +15,12 @@ namespace RaymarchEngine.Core
     /// </summary>
     public class GameObject
     {
-        private Vector3 position;
-        private Quaternion rotation;
-        private Vector3 scale;
+        private readonly List<GameObject> children;
+        private GameObject parent;
 
         private bool active;
+
+        private readonly Movement movement;
 
         private readonly List<IComponent> components;
 
@@ -28,11 +29,25 @@ namespace RaymarchEngine.Core
         /// </summary>
         public GameObject()
         {
-            active = true;
-            position = Vector3.Zero;
-            rotation = Quaternion.Identity;
-            scale = Vector3.One;
             components = new List<IComponent>();
+            movement = new Movement();
+            AddComponent(movement);
+            
+            active = true;
+            children = new List<GameObject>();
+        }
+
+        /// <summary>
+        /// Create new GameObject at position
+        /// </summary>
+        public GameObject(Vector3 position)
+        {
+            components = new List<IComponent>();
+            movement = new Movement(position, Quaternion.Identity, Vector3.One);
+            AddComponent(movement);
+            
+            active = true;
+            children = new List<GameObject>();
         }
 
         /// <summary>
@@ -40,11 +55,29 @@ namespace RaymarchEngine.Core
         /// </summary>
         public GameObject(params IComponent[] components)
         {
-            active = true;
-            position = Vector3.Zero;
-            rotation = Quaternion.Identity;
-            scale = Vector3.One;
             this.components = components.ToList();
+            movement = new Movement();
+            AddComponent(movement);
+            
+            active = true;
+            children = new List<GameObject>();
+            foreach (IComponent component in this.components)
+            {
+                component.OnAddedToGameObject(this);
+            }
+        }
+
+        /// <summary>
+        /// Create new GameObject with components at position
+        /// </summary>
+        public GameObject(Vector3 position, params IComponent[] components)
+        {
+            this.components = components.ToList();
+            movement = new Movement(position, Quaternion.Identity, Vector3.One);
+            AddComponent(movement);
+            
+            active = true;
+            children = new List<GameObject>();
             foreach (IComponent component in this.components)
             {
                 component.OnAddedToGameObject(this);
@@ -56,15 +89,88 @@ namespace RaymarchEngine.Core
         /// </summary>
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            active = true;
-            this.position = position;
-            this.rotation = rotation;
-            this.scale = scale;
             components = new List<IComponent>();
+            movement = new Movement(position, rotation, scale);
+            AddComponent(movement);
+            
+            active = true;
+            children = new List<GameObject>();
         }
 
         /// <summary>
-        /// Enable or disable the object
+        /// Gets the Movement component
+        /// </summary>
+        public Movement Movement => movement;
+
+        /// <summary>
+        /// Get this GameObject's children
+        /// </summary>
+        public IEnumerable<GameObject> Children => children.ToArray();
+
+        /// <summary>
+        /// Get this GameObject's parent
+        /// </summary>
+        public GameObject Parent => parent;
+
+        /// <summary>
+        /// Called by child GameObject when it sets this as its parent
+        /// </summary>
+        /// <param name="child"></param>
+        private void OnSetParent(GameObject child)
+        {
+            children.Add(child);
+        }
+
+        /// <summary>
+        /// Called by parent GameObject when it sets this as its child
+        /// </summary>
+        /// <param name="parent"></param>
+        private void OnAddedChild(GameObject parent)
+        {
+            this.parent = parent;
+        }
+
+        /// <summary>
+        /// Called by parent GameObject when it removes this as its child
+        /// </summary>
+        /// <param name="parent"></param>
+        private void OnRemovedChild(GameObject parent)
+        {
+            this.parent = null;
+        }
+
+        /// <summary>
+        /// Set this GameObject's parent
+        /// </summary>
+        /// <param name="parent"></param>
+        public void SetParent(GameObject parent)
+        {
+            this.parent = parent;
+            parent.OnSetParent(this);
+        }
+
+        /// <summary>
+        /// Remove this GameObject's child
+        /// </summary>
+        /// <param name="child"></param>
+        public void RemoveChild(GameObject child)
+        {
+            children.Remove(child);
+            child.OnRemovedChild(this);
+        }
+
+        /// <summary>
+        /// Adds a child GameObject
+        /// </summary>
+        /// <param name="child"></param>
+        public void AddChild(GameObject child)
+        {
+            children.Add(child);
+            child.OnAddedChild(this);
+        }
+
+        /// <summary>
+        /// Enable or disable the GameObject
         /// </summary>
         public bool Active
         {
@@ -73,12 +179,30 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Get this gameobject's components
+        /// Get this GameObject's components
         /// </summary>
         public IEnumerable<IComponent> Components => components.ToArray();
 
         /// <summary>
-        /// Add a component to this object
+        /// Gets a component T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetComponent<T>()
+        {
+            foreach (IComponent component in components)
+            {
+                if (component is T)
+                {
+                    return (T) component;
+                }
+            }
+
+            throw new System.InvalidOperationException($"No component {typeof(T).Name} in GameObject");
+        }
+
+        /// <summary>
+        /// Add a component to this GameObject
         /// </summary>
         /// <param name="component">Component to add</param>
         public void AddComponent(IComponent component)
@@ -86,84 +210,5 @@ namespace RaymarchEngine.Core
             components.Add(component);
             component.OnAddedToGameObject(this);
         }
-
-        /// <summary>
-        /// Creates this object's model matrix
-        /// </summary>
-        /// <returns></returns>
-        public Matrix ModelMatrix()
-        {
-            return EMath.Util.AffineTransformation(scale, rotation, position);
-        }
-
-        /// <summary>
-        /// Get or set the object's position
-        /// </summary>
-        public Vector3 Position
-        {
-            get => position;
-            set => position = value;
-        }
-
-        /// <summary>
-        /// Get or set the object's scale
-        /// </summary>
-        public Vector3 Scale
-        {
-            get => scale;
-            set => scale = value;
-        }
-
-        /// <summary>
-        /// Moves the object
-        /// </summary>
-        /// <param name="direction"></param>
-        /// <param name="speed"></param>
-        public void Move(Vector3 direction, float speed)
-        {
-            position += direction * speed;
-        }
-
-        /// <summary>
-        /// The GameObject's rotation in world space
-        /// </summary>
-        public Quaternion Rotation
-        {
-            get => rotation;
-            set => rotation = value;
-        }
-
-        /// <summary>
-        /// Add eulerAngles to the current rotation
-        /// </summary>
-        /// <param name="eulerAngles"></param>
-        public void Rotate(Vector3 eulerAngles)
-        {
-            Quaternion eulerRot = eulerAngles.EulerToQuaternion();
-            rotation *= eulerRot;
-        }
-
-        /// <summary>
-        /// Add eulerAngles to the current rotation
-        /// </summary>
-        public void Rotate(float x, float y, float z)
-        {
-            Rotate(new Vector3(x, y, x));
-        }
-
-        /// <summary>
-        /// Unit x-vector relative the object
-        /// </summary>
-        public Vector3 Right => rotation.Multiply(Vector3.UnitX);
-
-        /// <summary>
-        /// Unit y-vector relative the object
-        /// </summary>
-        public Vector3 Up => rotation.Multiply(Vector3.UnitY);
-
-        /// <summary>
-        /// Unit z-vector relative the object
-        /// </summary>
-        public Vector3 Forward => rotation.Multiply(Vector3.UnitZ);
     }
 }

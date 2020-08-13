@@ -293,8 +293,8 @@ namespace RaymarchEngine.Core.Rendering
 
             // Set raymarch shader buffer data
             {
-                raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Position;
-                raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Forward;
+                raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Movement.Position;
+                raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Movement.Forward;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 

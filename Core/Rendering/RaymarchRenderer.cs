@@ -85,7 +85,7 @@ namespace RaymarchEngine.Core.Rendering
 
         private Vector4 GetOptions()
         {
-            return new Vector4(parent.Scale.MinComponent(), 0f, 0f, 0f);
+            return new Vector4(parent.Movement.Scale.MinComponent(), 0f, 0f, 0f);
             return Vector4.Zero;
         }
 
@@ -97,9 +97,9 @@ namespace RaymarchEngine.Core.Rendering
         {
             return new PrimitiveBufferData(
                 GetOptions(),
-                parent.Position,
-                parent.Rotation.QuaternionToEuler(),
-                parent.Scale
+                parent.Movement.Position,
+                parent.Movement.Rotation.QuaternionToEuler(),
+                parent.Movement.Scale
             );
         }
 

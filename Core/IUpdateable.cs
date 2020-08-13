@@ -12,8 +12,8 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Called when this updateable is added to a gameobject
         /// </summary>
-        /// <param name="parent"></param>
-        void OnAddedToGameObject(GameObject parent);
+        /// <param name="gameObject"></param>
+        void OnAddedToGameObject(GameObject gameObject);
 
         /// <summary>
         /// Called on engine start

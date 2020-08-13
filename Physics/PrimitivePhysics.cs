@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using RaymarchEngine.Core;
@@ -47,6 +48,32 @@ namespace RaymarchEngine.Physics
             }
         }
 
+        /// <summary>
+        /// Moves the physics object
+        /// </summary>
+        public void AddForce(Vector3 force)
+        {
+            if (isStatic)
+            {
+                return;
+            }
+
+            PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).ApplyLinearImpulse(force);
+        }
+
+        /// <summary>
+        /// Rotates the physics object
+        /// </summary>
+        public void AddAngularForce(Vector3 angularForce)
+        {
+            if (isStatic)
+            {
+                return;
+            }
+
+            PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).ApplyAngularImpulse(angularForce);
+        }
+
         private void AddBody<T>() where T : unmanaged, IConvexShape
         {
             T withType = (T) colliderShape;
@@ -56,7 +83,7 @@ namespace RaymarchEngine.Physics
             {
                 staticHandle = PhysicsHandler.Simulation.Statics.Add(
                     new StaticDescription(
-                        parent.Position,
+                        parent.Movement.Position,
                         new CollidableDescription(
                             PhysicsHandler.Simulation.Shapes.Add(withType),
                             0.1f
@@ -68,7 +95,7 @@ namespace RaymarchEngine.Physics
             {
                 bodyHandle = PhysicsHandler.Simulation.Bodies.Add(
                     BodyDescription.CreateDynamic(
-                        parent.Position,
+                        parent.Movement.Position,
                         inertia,
                         new CollidableDescription(
                             PhysicsHandler.Simulation.Shapes.Add(withType),
@@ -90,11 +117,12 @@ namespace RaymarchEngine.Physics
         {
             if (isStatic)
             {
-                parent.Position = PhysicsHandler.Simulation.Statics.GetStaticReference(staticHandle).Pose.Position;
+                parent.Movement.Position =
+                    PhysicsHandler.Simulation.Statics.GetStaticReference(staticHandle).Pose.Position;
             }
             else
             {
-                parent.Position = PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).Pose.Position;
+                parent.Movement.Position = PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).Pose.Position;
             }
         }
 

@@ -145,6 +145,7 @@
     <Compile Include="Core\Buffers\ConstantBuffer.cs" />
     <Compile Include="Core\Buffers\StructuredBuffer.cs" />
     <Compile Include="Core\Camera.cs" />
+    <Compile Include="Core\CharacterController.cs" />
     <Compile Include="Core\IComponent.cs" />
     <Compile Include="Core\Input\InputDevice.cs" />
     <Compile Include="Core\Input\Keyboard.cs" />
@@ -154,6 +155,7 @@
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\GameObject.cs" />
+    <Compile Include="Core\Movement.cs" />
     <Compile Include="Core\Primitives\Box.cs" />
     <Compile Include="Core\Primitives\IPrimitive.cs" />
     <Compile Include="Core\Primitives\Plane.cs" />

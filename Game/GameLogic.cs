@@ -22,26 +22,28 @@ namespace RaymarchEngine.Game
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
 
+        private GameObject sphere;
+
         public override void Start(int startTime)
         {
             // Init movement manager
             playerMovement = new PlayerMovement();
 
             camera = Engine.CurrentScene.ActiveCamera;
-            camera.Position = new Vector3(0, 2, 0);
+            camera.Movement.Position = new Vector3(0, 2, 0);
 
             lookVector = new Vector2(180, 180);
 
-            GameObject plane = new GameObject(new RaymarchRenderer<Plane>(),
-                new PrimitivePhysics(new BepuPhysics.Collidables.Box(1000f, 0.1f, 1000f), 1, true))
-            {
-                Position = new Vector3(0, -1, 0)
-            };
+            GameObject plane = new GameObject(
+                new Vector3(0, -1, 0),
+                new RaymarchRenderer<Plane>(),
+                new PrimitivePhysics(new BepuPhysics.Collidables.Box(1000f, 0.1f, 1000f), 1, true)
+            );
 
-            GameObject sphere = new GameObject(new RaymarchRenderer<Sphere>())
-            {
-                Position = new Vector3(0, 5, 0)
-            };
+            sphere = new GameObject(
+                new Vector3(2, 5, 0),
+                new RaymarchRenderer<Sphere>()
+            );
             sphere.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
 
             Engine.CurrentScene.AddGameObject(plane);
@@ -50,6 +52,16 @@ namespace RaymarchEngine.Game
             //camera.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
         }
 
+        public override void Update(float deltaTime)
+        {
+            CameraLook(deltaTime);
+            
+            sphere.GetComponent<PrimitivePhysics>().AddForce(Vector3.UnitX * 0.05f);
+        }
+
+        public override void End(int endTime)
+        {
+        }
 
         private void CameraLook(float deltaTime)
         {
@@ -57,8 +69,8 @@ namespace RaymarchEngine.Game
 
             // Move camera
             Vector3 xzInput = new Vector3(playerMovement.MovementInput.X, 0, playerMovement.MovementInput.Z);
-            camera.Move(xzInput.Multiply(Engine.CurrentScene.ActiveCamera.Rotation), deltaTime * 8f);
-            camera.Move(Vector3.UnitY * playerMovement.MovementInput.Y, deltaTime * 8f);
+            camera.Movement.Move(xzInput.Multiply(Engine.CurrentScene.ActiveCamera.Movement.Rotation), deltaTime * 8f);
+            camera.Movement.Move(Vector3.UnitY * playerMovement.MovementInput.Y, deltaTime * 8f);
 
             // Rotate camera
             lookVector.X += InputDevice.Mouse.DeltaPosition.X * sensitivity;
@@ -74,17 +86,9 @@ namespace RaymarchEngine.Game
                 lookVector.Y = 260;
             }
 
-            camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * EMath.Util.Deg2Rad) *
-                              Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
-        }
-
-        public override void Update(float deltaTime)
-        {
-            CameraLook(deltaTime);
-        }
-
-        public override void End(int endTime)
-        {
+            camera.Movement.Rotation =
+                Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * EMath.Util.Deg2Rad) *
+                Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
         }
     }
 }
