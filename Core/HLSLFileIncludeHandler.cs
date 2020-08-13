@@ -29,6 +29,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using RaymarchEngine.Core.Primitives;
+using RaymarchEngine.Core.Rendering;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.IO;
@@ -60,12 +61,9 @@ namespace RaymarchEngine.Core
         /// <returns>Stream with HLSL code</returns>
         private Stream GetShaderConstantsStream()
         {
-            string hlslString = $"static const int sphereCount = {Engine.PrimitiveCount<Sphere>()};" +
-                                $"static const int boxCount = {Engine.PrimitiveCount<Box>()};" +
-                                $"static const int planeCount = {Engine.PrimitiveCount<Plane>()};" +
-                                $"static const int ellipsoidCount = {Engine.PrimitiveCount<Ellipsoid>()};" +
-                                $"static const int torusCount = {Engine.PrimitiveCount<Torus>()};" +
-                                $"static const int cappedTorusCount = {Engine.PrimitiveCount<CappedTorus>()};";
+            string hlslString = $"static const int sphereCount = {RaymarchRenderer.PrimitiveCount<Sphere>()};" +
+                                $"static const int boxCount = {RaymarchRenderer.PrimitiveCount<Box>()};" +
+                                $"static const int planeCount = {RaymarchRenderer.PrimitiveCount<Plane>()};";
 
             Debug.WriteLine(hlslString);
             byte[] byteArray = Encoding.ASCII.GetBytes(hlslString);

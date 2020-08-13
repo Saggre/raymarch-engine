@@ -158,7 +158,7 @@ float4 main(PS_INPUT input) : SV_Target
 	float2 uv = input.TexCoord - (0.5).xx;
 	uv.x *= aspectRatio;
 	
-	float3 rayOrigin = cameraPosition; // TODO position from model matrices
+	float3 rayOrigin = cameraPosition;
 	float3 rayDir = getCameraRayDir(uv, 1.0);
 
     float3 objectColor;

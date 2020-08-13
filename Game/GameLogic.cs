@@ -1,9 +1,11 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
 using System.Numerics;
+using BepuPhysics.Collidables;
 using RaymarchEngine.Core;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.Core.Primitives;
+using RaymarchEngine.Core.Rendering;
 using RaymarchEngine.EMath;
 using RaymarchEngine.Physics;
 using Plane = RaymarchEngine.Core.Primitives.Plane;
@@ -14,7 +16,7 @@ namespace RaymarchEngine.Game
     /// <summary>
     /// Main class for the game logic separated from the engine itself
     /// </summary>
-    public class GameLogic : AutoUpdateable
+    public class GameLogic : AutoUpdateable // TODO separate autoupdateable and iupdateable
     {
         private Camera camera;
         private Vector2 lookVector;
@@ -30,26 +32,22 @@ namespace RaymarchEngine.Game
 
             lookVector = new Vector2(180, 180);
 
-            Engine.CurrentScene.AddGameObject(new Torus
-            {
-                Position = new Vector3(2, 3, 0),
-                Dimensions = new Vector2(0.5f, 0.2f)
-            });
-
-            Primitive plane = new Plane
+            GameObject plane = new GameObject(new RaymarchRenderer<Plane>(),
+                new PrimitivePhysics(new BepuPhysics.Collidables.Box(1000f, 0.1f, 1000f), 1, true))
             {
                 Position = new Vector3(0, -1, 0)
             };
-            plane.AddToScene(Engine.CurrentScene);
-            plane.AddUpdateable(new PrimitivePhysics(1.0f, true));
 
-            Primitive sphere = new Sphere
+            GameObject sphere = new GameObject(new RaymarchRenderer<Sphere>())
             {
-                Position = new Vector3(2, 5, 0),
-                Radius = 1f
+                Position = new Vector3(0, 5, 0)
             };
-            sphere.AddToScene(Engine.CurrentScene);
-            sphere.AddUpdateable(new PrimitivePhysics(1.0f));
+            sphere.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
+
+            Engine.CurrentScene.AddGameObject(plane);
+            Engine.CurrentScene.AddGameObject(sphere);
+
+            //camera.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
         }
 
 
@@ -80,7 +78,6 @@ namespace RaymarchEngine.Game
                               Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
         }
 
-        // TODO move raycast rendering plane out of game logic, it should be engine stuff
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);

@@ -11,21 +11,23 @@ namespace RaymarchEngine.Physics
     /// <summary>
     /// Enables physics for a raymarch primitive
     /// </summary>
-    public class PrimitivePhysics : IUpdateable
+    public class PrimitivePhysics : IComponent
     {
         private readonly float mass;
         private BodyHandle bodyHandle;
         private StaticHandle staticHandle;
         private GameObject parent;
         private readonly bool isStatic;
+        private IConvexShape colliderShape;
 
         /// <summary>
         /// Create from Bepuphysics shape and mass
         /// </summary>
         /// <param name="mass"></param>
         /// <param name="isStatic"></param>
-        public PrimitivePhysics(float mass, bool isStatic = false)
+        public PrimitivePhysics(IConvexShape colliderShape, float mass, bool isStatic = false)
         {
+            this.colliderShape = colliderShape;
             this.mass = mass;
             this.isStatic = isStatic;
         }
@@ -34,35 +36,29 @@ namespace RaymarchEngine.Physics
         public void OnAddedToGameObject(GameObject parent)
         {
             this.parent = parent;
-            Primitive primitive = (Primitive) parent;
 
-            if (primitive is RaymarchEngine.Core.Primitives.Sphere)
+            if (colliderShape is Sphere)
             {
-                AddBody<Sphere>(primitive);
+                AddBody<Sphere>();
             }
-            else if (primitive is RaymarchEngine.Core.Primitives.Plane)
+            else if (colliderShape is Box)
             {
-                AddBody<Box>(primitive);
-            }
-            else if (primitive is RaymarchEngine.Core.Primitives.Box)
-            {
-                AddBody<Box>(primitive);
+                AddBody<Box>();
             }
         }
 
-        private void AddBody<T>(Primitive primitive) where T : unmanaged, IConvexShape
+        private void AddBody<T>() where T : unmanaged, IConvexShape
         {
-            T colliderShape = (T) primitive.GetColliderShape();
+            T withType = (T) colliderShape;
             colliderShape.ComputeInertia(mass, out BodyInertia inertia);
-            TypedIndex t = PhysicsHandler.Simulation.Shapes.Add(colliderShape);
 
             if (isStatic)
             {
                 staticHandle = PhysicsHandler.Simulation.Statics.Add(
                     new StaticDescription(
-                        primitive.Position,
+                        parent.Position,
                         new CollidableDescription(
-                            PhysicsHandler.Simulation.Shapes.Add(colliderShape),
+                            PhysicsHandler.Simulation.Shapes.Add(withType),
                             0.1f
                         )
                     )
@@ -72,10 +68,10 @@ namespace RaymarchEngine.Physics
             {
                 bodyHandle = PhysicsHandler.Simulation.Bodies.Add(
                     BodyDescription.CreateDynamic(
-                        primitive.Position,
+                        parent.Position,
                         inertia,
                         new CollidableDescription(
-                            t,
+                            PhysicsHandler.Simulation.Shapes.Add(withType),
                             0.1f
                         ),
                         new BodyActivityDescription(0.01f)

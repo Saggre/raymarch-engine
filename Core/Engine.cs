@@ -15,7 +15,6 @@ using SharpDX.Windows;
 
 namespace RaymarchEngine.Core
 {
-
     /// <summary>
     /// A class that handles initiating the rendering class (RenderDevice), rendering loop and input devices
     /// </summary>
@@ -37,21 +36,6 @@ namespace RaymarchEngine.Core
         public static Scene CurrentScene => currentScene;
 
         public static RenderDevice RenderDevice => renderDevice;
-
-        /// <summary>
-        /// How many primitives are allowed in the game
-        /// </summary>
-        private static Dictionary<Type, int> primitiveCounts;
-
-        /// <summary>
-        /// Get the number of primitives by type
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static int PrimitiveCount<T>() where T : Primitive
-        {
-            return primitiveCounts[typeof(T)];
-        }
 
         /// <summary>
         /// Time elapsed since starting the engine
@@ -110,15 +94,7 @@ namespace RaymarchEngine.Core
                 renderForm.Show();
             }
 
-            primitiveCounts = new Dictionary<Type, int>
-            {
-                {typeof(Sphere), 2},
-                {typeof(Box), 2},
-                {typeof(Plane), 1},
-                {typeof(Ellipsoid), 32},
-                {typeof(Torus), 32},
-                {typeof(CappedTorus), 32}
-            };
+            RaymarchRenderer.Init();
 
             // Create main scene
             currentScene = new Scene();
@@ -126,15 +102,8 @@ namespace RaymarchEngine.Core
             // Init main game logic script
             gameLogic = new GameLogic();
 
-            // It's important that render device is created after the scene
-            renderDevice = new RenderDevice(renderForm);
-
             // Start physics library
             physics = new PhysicsHandler(PhysicsReady);
-
-            // Start stopwatch for deltaTime
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
 
             // Init input device
             InputDevice.Init(renderForm);
@@ -144,15 +113,21 @@ namespace RaymarchEngine.Core
             // Execute all start methods
             StaticUpdater.ExecuteStartActions(unixTime);
 
-            // Execute each scene object's updateables' Start method
-            foreach (Primitive mainSceneObject in CurrentScene.GroupedPrimitives.GetAllPrimitives()
-            )
+            // Execute each scene object's components' Start method
+            foreach (GameObject gameObject in currentScene.GameObjects)
             {
-                foreach (IUpdateable updateable in mainSceneObject.Updateables)
+                foreach (IComponent component in gameObject.Components)
                 {
-                    updateable.Start(unixTime);
+                    component.Start(unixTime);
                 }
             }
+
+            // It's important that render device is created after scene and game logic start
+            renderDevice = new RenderDevice(renderForm, new Resolution(1920, 1080));
+
+            // Start stopwatch for deltaTime
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
         }
 
         private void PhysicsReady()
@@ -188,13 +163,12 @@ namespace RaymarchEngine.Core
             // Render on each frame
             renderDevice.Draw();
 
-            foreach (Primitive currentSceneObject in CurrentScene.GroupedPrimitives.GetAllPrimitives()
-            )
+            foreach (GameObject gameObject in currentScene.GameObjects)
             {
                 // Execute updates per-object
-                foreach (IUpdateable updateable in currentSceneObject.Updateables)
+                foreach (IComponent component in gameObject.Components)
                 {
-                    updateable.Update(lastDeltaTime);
+                    component.Update(lastDeltaTime);
                 }
             }
 
@@ -217,11 +191,11 @@ namespace RaymarchEngine.Core
             StaticUpdater.ExecuteEndActions(unixTime);
 
             // Execute each scene GameObject's end methods
-            foreach (Primitive gameObject in CurrentScene.GroupedPrimitives.GetAllPrimitives())
+            foreach (GameObject gameObject in currentScene.GameObjects)
             {
-                foreach (IUpdateable updateable in gameObject.Updateables)
+                foreach (IComponent component in gameObject.Components)
                 {
-                    updateable.End(unixTime);
+                    component.End(unixTime);
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 29/09/2019
 
+using System;
 using SharpDX;
 using Quaternion = System.Numerics.Quaternion;
 using Vector2 = System.Numerics.Vector2;
@@ -11,6 +12,26 @@ namespace RaymarchEngine.EMath
 {
     public static class Util
     {
+        public static float MinComponent(this Vector3 vec)
+        {
+            return Math.Min(Math.Min(vec.X, vec.Y), vec.Z);
+        }
+
+        public static float MaxComponent(this Vector3 vec)
+        {
+            return Math.Max(Math.Max(vec.X, vec.Y), vec.Z);
+        }
+
+        public static Vector4 ToVector4(this Vector3 xyz, float w)
+        {
+            return new Vector4(xyz.X, xyz.Y, xyz.Z, w);
+        }
+
+        public static Vector4 ToVector4(this Vector2 xy, float z, float w)
+        {
+            return new Vector4(xy.X, xy.Y, z, w);
+        }
+
 
         #region Inter-namespace
 
@@ -22,7 +43,8 @@ namespace RaymarchEngine.EMath
         /// <param name="translation">The translation factor of the transformation.</param>
         public static Matrix AffineTransformation(Vector3 scaling, Quaternion rotation, Vector3 translation)
         {
-            return Matrix.Scaling(scaling.X, scaling.Y, scaling.Z) * RotationQuaternion(rotation) * Matrix.Translation(translation.X, translation.Y, translation.Z);
+            return Matrix.Scaling(scaling.X, scaling.Y, scaling.Z) * RotationQuaternion(rotation) *
+                   Matrix.Translation(translation.X, translation.Y, translation.Z);
         }
 
         /// <summary>
@@ -107,14 +129,14 @@ namespace RaymarchEngine.EMath
         {
             eulerAngles *= Deg2Rad;
             double yawOver2 = eulerAngles.X * 0.5f;
-            float cosYawOver2 = (float)System.Math.Cos(yawOver2);
-            float sinYawOver2 = (float)System.Math.Sin(yawOver2);
+            float cosYawOver2 = (float) System.Math.Cos(yawOver2);
+            float sinYawOver2 = (float) System.Math.Sin(yawOver2);
             double pitchOver2 = eulerAngles.Y * 0.5f;
-            float cosPitchOver2 = (float)System.Math.Cos(pitchOver2);
-            float sinPitchOver2 = (float)System.Math.Sin(pitchOver2);
+            float cosPitchOver2 = (float) System.Math.Cos(pitchOver2);
+            float sinPitchOver2 = (float) System.Math.Sin(pitchOver2);
             double rollOver2 = eulerAngles.Z * 0.5f;
-            float cosRollOver2 = (float)System.Math.Cos(rollOver2);
-            float sinRollOver2 = (float)System.Math.Sin(rollOver2);
+            float cosRollOver2 = (float) System.Math.Cos(rollOver2);
+            float sinRollOver2 = (float) System.Math.Sin(rollOver2);
             Quaternion result;
             result.W = cosYawOver2 * cosPitchOver2 * cosRollOver2 + sinYawOver2 * sinPitchOver2 * sinRollOver2;
             result.X = sinYawOver2 * cosPitchOver2 * cosRollOver2 + cosYawOver2 * sinPitchOver2 * sinRollOver2;
@@ -142,20 +164,20 @@ namespace RaymarchEngine.EMath
             if (test > 0.4995f * unit) // singularitY at north pole
             {
                 euler.X = PI / 2;
-                euler.Y = 2f * (float)System.Math.Atan2(q.Y, q.X);
+                euler.Y = 2f * (float) System.Math.Atan2(q.Y, q.X);
                 euler.Z = 0;
             }
             else if (test < -0.4995f * unit) // singularitY at south pole
             {
                 euler.X = -PI / 2;
-                euler.Y = -2f * (float)System.Math.Atan2(q.Y, q.X);
+                euler.Y = -2f * (float) System.Math.Atan2(q.Y, q.X);
                 euler.Z = 0;
             }
             else // no singularitY - this is the majoritY of cases
             {
-                euler.X = (float)System.Math.Asin(2f * (q.W * q.X - q.Y * q.Z));
-                euler.Y = (float)System.Math.Atan2(2f * q.W * q.Y + 2f * q.Z * q.X, 1 - 2f * (q.X * q.X + q.Y * q.Y));
-                euler.Z = (float)System.Math.Atan2(2f * q.W * q.Z + 2f * q.X * q.Y, 1 - 2f * (q.Z * q.Z + q.X * q.X));
+                euler.X = (float) System.Math.Asin(2f * (q.W * q.X - q.Y * q.Z));
+                euler.Y = (float) System.Math.Atan2(2f * q.W * q.Y + 2f * q.Z * q.X, 1 - 2f * (q.X * q.X + q.Y * q.Y));
+                euler.Z = (float) System.Math.Atan2(2f * q.W * q.Z + 2f * q.X * q.Y, 1 - 2f * (q.Z * q.Z + q.X * q.X));
             }
 
             // all the math so far has been done in radians. Before returning, we convert to degrees...
@@ -167,7 +189,6 @@ namespace RaymarchEngine.EMath
             euler.Z %= 360;
 
             return euler;
-
         }
 
         public static void RotateAround(this ref Quaternion rotation, Vector3 axis, float angle)
@@ -183,7 +204,7 @@ namespace RaymarchEngine.EMath
         public static float Angle(this Quaternion a, Quaternion b)
         {
             float f = Quaternion.Dot(a, b);
-            return (float)System.Math.Acos(System.Math.Min(System.Math.Abs(f), 1f)) * 2f * Rad2Deg;
+            return (float) System.Math.Acos(System.Math.Min(System.Math.Abs(f), 1f)) * 2f * Rad2Deg;
         }
 
         /// <summary>
@@ -201,11 +222,11 @@ namespace RaymarchEngine.EMath
             var radians = degrees * Deg2Rad;
             radians *= 0.5f;
             axis = Vector3.Normalize(axis);
-            axis = axis * (float)System.Math.Sin(radians);
+            axis = axis * (float) System.Math.Sin(radians);
             result.X = axis.X;
             result.Y = axis.Y;
             result.Z = axis.Z;
-            result.W = (float)System.Math.Cos(radians);
+            result.W = (float) System.Math.Cos(radians);
 
             result = Quaternion.Normalize(result);
             return result;
@@ -236,6 +257,7 @@ namespace RaymarchEngine.EMath
                 {
                     return Quaternion.Identity;
                 }
+
                 return b;
             }
             else if (AlmostZero(b.LengthSquared()))
@@ -262,11 +284,11 @@ namespace RaymarchEngine.EMath
             if (cosHalfAngle < 0.99f)
             {
                 // do proper slerp for big angles
-                float halfAngle = (float)System.Math.Acos(cosHalfAngle);
-                float sinHalfAngle = (float)System.Math.Sin(halfAngle);
+                float halfAngle = (float) System.Math.Acos(cosHalfAngle);
+                float sinHalfAngle = (float) System.Math.Sin(halfAngle);
                 float oneOverSinHalfAngle = 1.0f / sinHalfAngle;
-                blendA = (float)System.Math.Sin(halfAngle * (1.0f - t)) * oneOverSinHalfAngle;
-                blendB = (float)System.Math.Sin(halfAngle * t) * oneOverSinHalfAngle;
+                blendA = (float) System.Math.Sin(halfAngle * (1.0f - t)) * oneOverSinHalfAngle;
+                blendB = (float) System.Math.Sin(halfAngle * t) * oneOverSinHalfAngle;
             }
             else
             {
@@ -325,6 +347,7 @@ namespace RaymarchEngine.EMath
             {
                 return to;
             }
+
             float t = System.Math.Min(1f, maxDegreesDelta / num);
             return SlerpUnclamped(ref from, ref to, t);
         }
@@ -379,7 +402,7 @@ namespace RaymarchEngine.EMath
             var quaternion = new Quaternion();
             if (num8 > 0f)
             {
-                var num = (float)System.Math.Sqrt(num8 + 1f);
+                var num = (float) System.Math.Sqrt(num8 + 1f);
                 quaternion.W = num * 0.5f;
                 num = 0.5f / num;
                 quaternion.X = (m12 - m21) * num;
@@ -387,9 +410,10 @@ namespace RaymarchEngine.EMath
                 quaternion.Z = (m01 - m10) * num;
                 return quaternion;
             }
+
             if ((m00 >= m11) && (m00 >= m22))
             {
-                var num7 = (float)System.Math.Sqrt(((1f + m00) - m11) - m22);
+                var num7 = (float) System.Math.Sqrt(((1f + m00) - m11) - m22);
                 var num4 = 0.5f / num7;
                 quaternion.X = 0.5f * num7;
                 quaternion.Y = (m01 + m10) * num4;
@@ -397,9 +421,10 @@ namespace RaymarchEngine.EMath
                 quaternion.W = (m12 - m21) * num4;
                 return quaternion;
             }
+
             if (m11 > m22)
             {
-                var num6 = (float)System.Math.Sqrt(((1f + m11) - m00) - m22);
+                var num6 = (float) System.Math.Sqrt(((1f + m11) - m00) - m22);
                 var num3 = 0.5f / num6;
                 quaternion.X = (m10 + m01) * num3;
                 quaternion.Y = 0.5f * num6;
@@ -407,7 +432,8 @@ namespace RaymarchEngine.EMath
                 quaternion.W = (m20 - m02) * num3;
                 return quaternion;
             }
-            var num5 = (float)System.Math.Sqrt(((1f + m22) - m00) - m11);
+
+            var num5 = (float) System.Math.Sqrt(((1f + m22) - m00) - m11);
             var num2 = 0.5f / num5;
             quaternion.X = (m20 + m02) * num2;
             quaternion.Y = (m21 + m12) * num2;
@@ -421,8 +447,8 @@ namespace RaymarchEngine.EMath
             if (System.Math.Abs(q.W) > 1.0f)
                 q = Quaternion.Normalize(q);
 
-            angle = 2.0f * (float)System.Math.Acos(q.W); // angle
-            float den = (float)System.Math.Sqrt(1.0 - q.W * q.W);
+            angle = 2.0f * (float) System.Math.Acos(q.W); // angle
+            float den = (float) System.Math.Sqrt(1.0 - q.W * q.W);
             if (den > 0.0001f)
             {
                 axis = new Vector3(q.X, q.Y, q.Z) / den;
@@ -456,7 +482,8 @@ namespace RaymarchEngine.EMath
 
         public static float ManhattanDistance(this Vector4 a, Vector4 b)
         {
-            return System.Math.Abs(a.X - b.X) + System.Math.Abs(a.Y - b.Y) + System.Math.Abs(a.Z - b.Z) + System.Math.Abs(a.W - b.W);
+            return System.Math.Abs(a.X - b.X) + System.Math.Abs(a.Y - b.Y) + System.Math.Abs(a.Z - b.Z) +
+                   System.Math.Abs(a.W - b.W);
         }
 
         #endregion
@@ -488,7 +515,7 @@ namespace RaymarchEngine.EMath
             return System.Math.Abs(f) < float.Epsilon;
         }
 
-        public static float PI => (float)System.Math.PI;
+        public static float PI => (float) System.Math.PI;
 
         /// <summary>
         /// Convert degrees into radians
@@ -521,6 +548,5 @@ namespace RaymarchEngine.EMath
         }
 
         #endregion
-
     }
 }

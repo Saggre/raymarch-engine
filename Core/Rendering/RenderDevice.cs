@@ -26,6 +26,8 @@ namespace RaymarchEngine.Core.Rendering
     /// </summary>
     public class RenderDevice : IDisposable
     {
+        private Resolution renderResolution;
+
         private RenderTargetView backbufferView;
         private DepthStencilView depthView;
 
@@ -47,6 +49,21 @@ namespace RaymarchEngine.Core.Rendering
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
 
+        /// <summary>
+        /// How many primitives are allowed in the game
+        /// </summary>
+        private Dictionary<Type, int> primitiveCounts;
+        
+        /// <summary>
+        /// Get the number of primitives by type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public int PrimitiveCount<T>() where T : IPrimitive
+        {
+            return primitiveCounts[typeof(T)];
+        }
+        
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
         {
@@ -66,8 +83,10 @@ namespace RaymarchEngine.Core.Rendering
         /// RenderDeviceStarted() is called when it is set up.
         /// </summary>
         /// <param name="renderForm">SharpDX RenderForm to render in</param>
-        public RenderDevice(RenderForm renderForm)
+        /// <param name="renderResolution">Resolution at which render</param>
+        public RenderDevice(RenderForm renderForm, Resolution renderResolution)
         {
+            this.renderResolution = renderResolution;
             this.renderForm = renderForm;
             InitializeDeviceResources();
         }
@@ -106,13 +125,10 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         private void InitializeDeviceResources()
         {
-            // Does this shit even work?
-            Size resolution = new Size(800, 600);
-
             ModeDescription backBufferDesc = new ModeDescription()
             {
-                Width = resolution.Width,
-                Height = resolution.Height,
+                Width = renderResolution.Width,
+                Height = renderResolution.Height,
                 RefreshRate = new Rational(Engine.Fps, 1), // TODO set numerator to 0 to disable vsync
                 Scaling = DisplayModeScaling.Stretched,
                 Format = Format.R8G8B8A8_UNorm,
@@ -285,21 +301,21 @@ namespace RaymarchEngine.Core.Rendering
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
                 primitivesBuffer[0].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Sphere>()
+                    Engine.CurrentScene.Components<RaymarchRenderer<Sphere>>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
 
                 primitivesBuffer[1].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Box>()
+                    Engine.CurrentScene.Components<RaymarchRenderer<Box>>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
 
                 primitivesBuffer[2].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Primitives.Plane>()
+                    Engine.CurrentScene.Components<RaymarchRenderer<Primitives.Plane>>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
 
-                primitivesBuffer[3].UpdateValue(
+                /*primitivesBuffer[3].UpdateValue(
                     Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Ellipsoid>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
@@ -312,7 +328,7 @@ namespace RaymarchEngine.Core.Rendering
                 primitivesBuffer[5].UpdateValue(
                     Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<CappedTorus>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
+                );*/
             }
 
             // Draw raymarch plane
@@ -343,10 +359,6 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         void Resize()
         {
-            // TODO render resolution is actually set here, because back buffer initiator calls Resize()
-            int width = 1280; //renderForm.ClientSize.Width;
-            int height = 720; //renderForm.ClientSize.Height;
-
             // Dispose all previous allocated resources
             Utilities.Dispose(ref backbufferView);
             Utilities.Dispose(ref depthView);
@@ -360,8 +372,8 @@ namespace RaymarchEngine.Core.Rendering
             // Resize the backbuffer 
             swapChain.ResizeBuffers(
                 1,
-                width,
-                height,
+                renderResolution.Width,
+                renderResolution.Height,
                 Format.R8G8B8A8_UNorm,
                 SwapChainFlags.None
             );
@@ -379,8 +391,8 @@ namespace RaymarchEngine.Core.Rendering
                 Format = Format.D16_UNorm,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = width,
-                Height = height,
+                Width = renderResolution.Width,
+                Height = renderResolution.Height,
                 SampleDescription = antiAliasing,
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,
@@ -393,7 +405,7 @@ namespace RaymarchEngine.Core.Rendering
             depthTexture.Dispose();
 
             // Setup targets and viewport for rendering
-            deviceContext.Rasterizer.SetViewport(0, 0, width, height);
+            deviceContext.Rasterizer.SetViewport(0, 0, renderResolution.Width, renderResolution.Height);
             deviceContext.OutputMerger.SetTargets(depthView, backbufferView);
         }
 

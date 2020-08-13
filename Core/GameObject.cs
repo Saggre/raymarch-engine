@@ -1,6 +1,7 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 09/08/2020
 
 using System.Collections.Generic;
+using System.Linq;
 using RaymarchEngine.EMath;
 using SharpDX;
 using Quaternion = System.Numerics.Quaternion;
@@ -20,24 +21,46 @@ namespace RaymarchEngine.Core
 
         private bool active;
 
-        private readonly List<IUpdateable> updateables;
+        private readonly List<IComponent> components;
 
+        /// <summary>
+        /// Create new GameObject
+        /// </summary>
         public GameObject()
         {
             active = true;
             position = Vector3.Zero;
             rotation = Quaternion.Identity;
             scale = Vector3.One;
-            updateables = new List<IUpdateable>();
+            components = new List<IComponent>();
         }
 
+        /// <summary>
+        /// Create new GameObject with components
+        /// </summary>
+        public GameObject(params IComponent[] components)
+        {
+            active = true;
+            position = Vector3.Zero;
+            rotation = Quaternion.Identity;
+            scale = Vector3.One;
+            this.components = components.ToList();
+            foreach (IComponent component in this.components)
+            {
+                component.OnAddedToGameObject(this);
+            }
+        }
+
+        /// <summary>
+        /// Create new GameObject
+        /// </summary>
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             active = true;
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
-            updateables = new List<IUpdateable>();
+            components = new List<IComponent>();
         }
 
         /// <summary>
@@ -50,19 +73,18 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Get the Updateables of this object
+        /// Get this gameobject's components
         /// </summary>
-        public IEnumerable<IUpdateable> Updateables => updateables.ToArray();
+        public IEnumerable<IComponent> Components => components.ToArray();
 
         /// <summary>
-        /// Add a Updateable to this object
+        /// Add a component to this object
         /// </summary>
-        /// <param name="updateable"></param>
-        /// <returns>Return this gameobject for chaining</returns>
-        public void AddUpdateable(IUpdateable updateable)
+        /// <param name="component">Component to add</param>
+        public void AddComponent(IComponent component)
         {
-            updateables.Add(updateable);
-            updateable.OnAddedToGameObject(this);
+            components.Add(component);
+            component.OnAddedToGameObject(this);
         }
 
         /// <summary>

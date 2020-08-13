@@ -8,7 +8,7 @@ using Plane = RaymarchEngine.Core.Primitives.Plane;
 
 namespace RaymarchEngine.Core
 {
-    public interface GPUReservedPrimitives
+    /*public interface GPUReservedPrimitives
     {
         public bool[] UserControlled();
         public Primitive[] Primitives();
@@ -102,7 +102,7 @@ namespace RaymarchEngine.Core
         {
             return ungroudpedPrimitives.ToArray();
         }
-    }
+    }*/
 
     /// <summary>
     /// A class that represents the physical space where objects can exist
@@ -114,7 +114,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         private Camera activeCamera;
 
-        private GPUReservedGroupedPrimitives groupedPrimitives;
+        private readonly List<GameObject> gameObjects;
 
         /// <summary>
         /// Initiates an empty scene.
@@ -122,27 +122,51 @@ namespace RaymarchEngine.Core
         /// </summary>
         public Scene()
         {
-            groupedPrimitives = new GPUReservedGroupedPrimitives();
+            gameObjects = new List<GameObject>();
 
             activeCamera = new Camera
             {
                 Position = new Vector3(0, 0, 0)
             };
-
-            //gameObjects = new List<Primitive>();
         }
-
 
         /// <summary>
-        /// Adds an object to the scene
+        /// Adds a gameobject to the scene
         /// </summary>
-        /// <param name="primitive"></param>
-        public void AddGameObject(Primitive primitive)
+        /// <param name="gameObject"></param>
+        public void AddGameObject(GameObject gameObject)
         {
-            groupedPrimitives.AddPrimitive(primitive);
+            gameObjects.Add(gameObject);
         }
 
-        public GPUReservedGroupedPrimitives GroupedPrimitives => groupedPrimitives;
+        /// <summary>
+        /// Gets gameobjects in this scene
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<GameObject> GameObjects => gameObjects.ToArray();
+
+        /// <summary>
+        /// Get a list of components in this scene's gameobjects
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T[] Components<T>() where T : IComponent
+        {
+            List<T> components = new List<T>();
+
+            foreach (GameObject gameObject in gameObjects)
+            {
+                foreach (IComponent component in gameObject.Components)
+                {
+                    if (component is T)
+                    {
+                        components.Add((T) component);
+                    }
+                }
+            }
+
+            return components.ToArray();
+        }
 
         /// <summary>
         /// Sets or gets the active camera, currently used for rendering.
