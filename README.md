@@ -44,17 +44,17 @@ DirectX 11 & Shader Model 5 support. Requirements will be lowered in the future.
 ### Features and future implementations:
 + :heavy_check_mark: Basic Gameobjects
 + :heavy_minus_sign: All primitives
-+ :x: Shading
++ :heavy_check_mark: Shading
 + :x: Reflections
-+ :x: Soft shadows
++ :heavy_check_mark: Soft shadows
 + :x: Custom resolutions
 + :x: Color blending between shapes
 + :x: Fractal support
-+ :x: Physics
++ :heavy_minus_sign: Physics
 + :x: Custom shader code editor
 + :x: Checkerboard rendering
 + :x: Pre-compiled shaders
 + :x: OpenGL support
 + :x: Hyperbolic and spherical spaces
 
-![Preview](https://i.imgur.com/FjwuLGe.png)
+![Preview](https://i.imgur.com/rc9qo0j.png)
