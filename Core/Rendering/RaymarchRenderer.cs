@@ -126,12 +126,11 @@ namespace RaymarchEngine.Core.Rendering
     [StructLayout(LayoutKind.Sequential)]
     public struct PrimitiveBufferData
     {
+        public MaterialBufferData material;
         public Vector4 primitiveOptions;
         public Vector3 position;
         public Vector3 eulerAngles;
         public Vector3 scale;
-        public Vector4 color;
-        public Vector2 materialOptions;
 
         public PrimitiveBufferData(
             Vector4 primitiveOptions,
@@ -140,12 +139,27 @@ namespace RaymarchEngine.Core.Rendering
             Vector3 scale
         )
         {
+            material = new MaterialBufferData(Vector3.One, 1f, 1f);
             this.primitiveOptions = primitiveOptions;
             this.position = position;
             this.eulerAngles = eulerAngles;
             this.scale = scale;
-            color = Vector4.One;
-            materialOptions = Vector2.Zero;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MaterialBufferData
+    {
+        public Vector3 color;
+        public float shininess;
+        public float specularStrength;
+        public Vector3 padding;
+
+        public MaterialBufferData(Vector3 color, float shininess, float specularStrength) : this()
+        {
+            this.color = color;
+            this.shininess = shininess;
+            this.specularStrength = specularStrength;
         }
     }
 }

@@ -1,3 +1,16 @@
+// Get pseudo-random number in the range [0, 1).
+float random(float2 co)
+{
+  return frac(sin(dot(co.xy, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+float checkers(float2 p)
+{
+    float2 w = fwidth(p) + 0.001;
+    float2 i = 2.0 * (abs(frac((p - 0.5 * w) * 0.5) - 0.5)-abs(frac((p + 0.5 * w) * 0.5) - 0.5)) / w;
+    return 0.5 - 0.5 * i.x * i.y;
+}
+
 float smoothMin(float a, float b, float k)
 {
 	float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0);
