@@ -1,9 +1,9 @@
 #include "Common.hlsl"
 
-#define MAX_STEPS 700
-#define MAX_DIST 400
-#define SHADOW_MAX_DIST 200
-#define AO_FALLOFF 100
+#define MAX_STEPS 500
+#define MAX_DIST 200
+#define SHADOW_MAX_DIST 100
+#define AO_FALLOFF 700
 #define SURF_DIST 1e-2
 
 static cLight mainLight;
@@ -59,7 +59,7 @@ float getDist(in float3 pos, out cMaterial material){
     materialC.Create(float3(0.1, 0.1, 0.1));
 
     cSphere sphere;
-    sphere.Create(materialA, float3(3, 1, 0));
+    sphere.Create(materialA, float3(sin(time) + 0.5, 1, 0));
     
     cPlane plane;
     plane.Create(materialC, float3(0, -1, 0));
@@ -119,13 +119,15 @@ float3 getNormal(in float3 pos) {
 }
 
 // Returns distance from rayOrigin to an object in the GetDist() scene, in ray direction rayDir
-float raymarch(in cRay ray, out float steps, out cMaterial hitMaterial) {
+void raymarch(in cRay ray, out cRaymarchResult raymarchResult) {
+    raymarchResult.ray = ray;
 	float totalDist = 0.0;
-
+    float3 marchPos;
+    
     int i = 0; 
 	while(i < MAX_STEPS) {
-		float3 marchPos = ray.origin + totalDist * ray.dir;
-		float curDist = getDist(marchPos, hitMaterial);
+		marchPos = ray.origin + totalDist * ray.dir;
+		float curDist = getDist(marchPos, raymarchResult.hitMaterial);
 		totalDist += curDist;
 		if (curDist < SURF_DIST || totalDist > MAX_DIST) {
 			break;
@@ -133,17 +135,19 @@ float raymarch(in cRay ray, out float steps, out cMaterial hitMaterial) {
 		i++;
 	}
 	
-	steps = i * 1.0;
-
-	return totalDist;
+	float3 hitPos = ray.origin + totalDist * ray.dir;
+	raymarchResult.hitPos = hitPos;
+	raymarchResult.stepsTaken = i * 1.0;
+    raymarchResult.hitDistance = totalDist; 
+    raymarchResult.surfaceNormal = getNormal(hitPos);
 }
 
 // Get shadow at position
 // lightDir is direction from object surface to light source
-float getShadow(in float3 pos, in float3 lightDir, float shadowHardness = 64, float shadowIntensity = 0.990)
+float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float shadowHardness = 4, float shadowIntensity = 0.995)
 {
     float res = 1.0;
-    float3 rayOrigin = pos;
+    float3 rayOrigin = raymarchResult.hitPos + raymarchResult.surfaceNormal * 0.01;
     float mint = SURF_DIST * 2.0;
     float ph = 1e20;
     
@@ -168,13 +172,9 @@ float getShadow(in float3 pos, in float3 lightDir, float shadowHardness = 64, fl
 }
 
 // Get light at position
-float getLight(in float3 pos, in cLight light) {
-	float3 lightDir = normalize(light.position - pos);
-	float3 normal = getNormal(pos);
-
-	float dif = clamp(dot(normal, lightDir), 0.0, 1.0);
-    dif *= getShadow(pos, lightDir);
-
+float getLight(cRaymarchResult raymarchResult) {
+	float3 lightDir = normalize(mainLight.position - raymarchResult.hitPos);
+	float dif = clamp(dot(raymarchResult.surfaceNormal, lightDir), 0.0, 1.0);
 	return dif;
 }
 
@@ -187,40 +187,59 @@ float3 getCameraRayDir(float2 uv, float fov)
     return normalize(uv.x * camRight + uv.y * camUp + camForward * fov);
 }
 
-float3 getPhongLight(cMaterial material, cRay ray, float dist, cLight light) {
-    float3 p = ray.origin + ray.dir * dist;
+float3 getPhongLight(cRaymarchResult raymarchResult) {
+    float3 normal = raymarchResult.surfaceNormal;
+    float3 lightReverseDir = normalize(mainLight.position - raymarchResult.hitPos); 
+    float3 reverseRayDir = -raymarchResult.ray.dir; 
+    float3 R = reflect(-lightReverseDir, normal); 
     
-    float3 N = getNormal(p); // surface normal
-    float3 L = normalize(light.position - p); // surface to light direction
-    float3 V = -ray.dir; // surface to camera direction
-    float3 R = reflect(-L, N); // mirror of L by the axis N
-    
-    float dotLN = dot(L, N); // project light direction to surface normal
-    float dotRV = dot(R, V); // project light reflection direction to direction to camera
+    float dotLN = dot(lightReverseDir, normal); // project light direction to surface normal
+    float dotRV = dot(R, reverseRayDir); // project light reflection direction to direction to camera
     
     float3 color = float3(0, 0, 0);
     
-    if (dotLN > 0.) { // we can see the diffuse
-        color += material.diffuseColor * dotLN;
+    if (dotLN > 0.0) { 
+        color += raymarchResult.hitMaterial.diffuseColor * dotLN;
     }
     
-    if (dotRV > 0.) { // we can see the specular
-        color += material.specularColor * pow(dotRV, material.shininess);
+    if (dotRV > 0.0) {
+        color += raymarchResult.hitMaterial.specularColor * pow(dotRV, raymarchResult.hitMaterial.shininess);
     }
-    
-    color *= light.color; // influence of color of the light
-    color *= getShadow(p, L);
+
     return color;
+}
+
+float3 getColor(cRaymarchResult raymarchResult) {
+	float3 color = float3(0, 0, 0);
+
+    color += getPhongLight(raymarchResult);
+    color *= mainLight.color;
+
+	return color;
+}
+
+float3 getReflection(cRaymarchResult raymarchResult) {
+    cRay ray;
+    cRaymarchResult refRaymarchResult;
+	ray.Create(raymarchResult.hitPos + raymarchResult.surfaceNormal * 0.01, reflect(raymarchResult.ray.dir, -raymarchResult.surfaceNormal));
+
+    raymarch(ray, refRaymarchResult);
+    
+    if(refRaymarchResult.hitDistance >= MAX_DIST){
+        return float3(0, 0, 0);
+    }
+    
+    return getPhongLight(refRaymarchResult) * .35;
 }
 
 float4 main(PS_INPUT input) : SV_Target
 {
+    float3 FOG_COLOR = float3(0.2, 0.2, 0.3);
+
     mainLight.Create(float3(70, 200, 100));
 
     // Move light
 	mainLight.position.xz += float2(sin(time), cos(time)) * 2.0;
-
-    float3 FOG_COLOR = float3(0.2, 0.2, 0.3);
 
 	float2 uv = input.TexCoord - (0.5).xx;
 	uv.x *= aspectRatio;
@@ -228,33 +247,44 @@ float4 main(PS_INPUT input) : SV_Target
 	cRay ray;
 	ray.Create(cameraPosition, getCameraRayDir(uv, 1.0));
 
-    cMaterial material;
-    float steps;
-	float dist = raymarch(ray, steps, material);
+    cRaymarchResult raymarchResult;
+	raymarch(ray, raymarchResult);
 	
-	if (dist > MAX_DIST) {
+	if (raymarchResult.hitDistance >= MAX_DIST) {
 	    return float4(FOG_COLOR, 1);
-	    //discard;
 	}
+	
+	// AO
+    float AOIntensity = raymarchResult.hitDistance / AO_FALLOFF;
+    float AO = pow(1.0 - (raymarchResult.stepsTaken / MAX_STEPS), 16);
+	
+	// Fog
+	float3 fogIntensity = raymarchResult.hitDistance / MAX_DIST;
+	
+	float3 sceneColor = getColor(raymarchResult);
+	
+	float3 lightReverseDir = normalize(mainLight.position - raymarchResult.hitPos); 
+	
+	float3 shadow = getShadow(raymarchResult, lightReverseDir);
+	
+	// Reflection
+	sceneColor += getReflection(raymarchResult);
+	
+	float3 ambientColor = float3(0.001, 0.001, 0.001);
+    sceneColor += ambientColor;
+	
+	sceneColor *= shadow;
+	
+	
 
-	float3 hitPos = ray.origin + ray.dir * dist;
-
-    float3 ambientColor = float3(0.05, 0.05, 0.05);
-	float3 color = float3(0, 0, 0);
-
-    color += ambientColor;
-    color += getPhongLight(material, ray, dist, mainLight);
-
-	float gamma = 0.4545;
-
-    // AO
-    color *= lerp(pow(1.0 - (steps / MAX_STEPS), 16), 1, dist / AO_FALLOFF);
-
-    // Gamma correction
-	color = pow(color, gamma.xxx); 
-
-    // Fog
-    color = lerp(color, FOG_COLOR, dist / MAX_DIST);
-
-	return float4(color, 1);
+	// Apply AO
+	sceneColor *= lerp(AO, 1, AOIntensity);
+	
+	// Apply fog
+	sceneColor = lerp(sceneColor, FOG_COLOR, fogIntensity);
+	
+	// Gamma correction
+	sceneColor = pow(sceneColor, 0.66); 
+	
+	return float4(sceneColor, 1);
 }

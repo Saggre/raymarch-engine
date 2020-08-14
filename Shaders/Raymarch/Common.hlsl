@@ -3,17 +3,6 @@
 #include "Primitives.hlsl"
 #include "Utils.hlsl"
 
-class cRay
-{
-    float3 origin;
-    float3 dir;
-    
-    void Create(float3 _origin, float3 _dir) {
-        origin = _origin;
-        dir = _dir;
-    }
-};
-
 class cLight
 {
     float3 position;
@@ -47,6 +36,35 @@ class cMaterial
      }
 };
 
+class cRay
+{
+    float3 origin;
+    float3 dir;
+    
+    void Create(float3 _origin, float3 _dir) {
+        origin = _origin;
+        dir = _dir;
+    }
+};
+
+class cRaymarchResult
+{
+    cRay ray;
+    cMaterial hitMaterial;
+    float3 hitPos;
+    float3 surfaceNormal;
+    float stepsTaken;
+    float hitDistance;
+    
+    void Create(cRay _ray, cMaterial _hitMaterial, float3 _hitPos, float3 _surfaceNormal, float _stepsTaken, float _hitDistance) {
+        ray = _ray;
+        hitMaterial = _hitMaterial;
+        hitPos = _hitPos;
+        surfaceNormal = _surfaceNormal;
+        stepsTaken = _stepsTaken;
+        hitDistance = _hitDistance;
+    }
+};
 
 // Primitive shape interface
 interface iPrimitive
