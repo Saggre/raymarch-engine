@@ -1,20 +1,18 @@
-﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
-
-using System.Numerics;
-using BepuPhysics.Collidables;
+﻿using System.Numerics;
 using RaymarchEngine.Core;
 using RaymarchEngine.Core.Input;
-using RaymarchEngine.Core.Primitives;
 using RaymarchEngine.Core.Rendering;
 using RaymarchEngine.EMath;
 using RaymarchEngine.Physics;
 using Plane = RaymarchEngine.Core.Primitives.Plane;
 using Sphere = RaymarchEngine.Core.Primitives.Sphere;
 
-namespace RaymarchEngine.Game
+namespace RaymarchEngine
 {
+    // TODO only RaymarchEngine references should be needed - create wrapper for Bepuphysics
     /// <summary>
     /// Main class for the game logic separated from the engine itself
+    /// Used to test how the engine could be used to build a game
     /// </summary>
     public class GameLogic : AutoUpdateable // TODO separate autoupdateable and iupdateable
     {
@@ -29,7 +27,7 @@ namespace RaymarchEngine.Game
             // Init movement manager
             playerMovement = new PlayerMovement();
 
-            camera = Engine.CurrentScene.ActiveCamera;
+            camera = Scene.CurrentScene.ActiveCamera;
             camera.Movement.Position = new Vector3(0, 2, 0);
 
             lookVector = new Vector2(180, 180);
@@ -46,8 +44,8 @@ namespace RaymarchEngine.Game
             );
             sphere.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
 
-            Engine.CurrentScene.AddGameObject(plane);
-            Engine.CurrentScene.AddGameObject(sphere);
+            Scene.CurrentScene.AddGameObject(plane);
+            Scene.CurrentScene.AddGameObject(sphere);
 
             //camera.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
         }
@@ -55,7 +53,7 @@ namespace RaymarchEngine.Game
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
-            
+
             sphere.GetComponent<PrimitivePhysics>().AddForce(Vector3.UnitX * 0.05f);
         }
 
@@ -69,7 +67,7 @@ namespace RaymarchEngine.Game
 
             // Move camera
             Vector3 xzInput = new Vector3(playerMovement.MovementInput.X, 0, playerMovement.MovementInput.Z);
-            camera.Movement.Move(xzInput.Multiply(Engine.CurrentScene.ActiveCamera.Movement.Rotation), deltaTime * 8f);
+            camera.Movement.Move(xzInput.Multiply(Scene.CurrentScene.ActiveCamera.Movement.Rotation), deltaTime * 8f);
             camera.Movement.Move(Vector3.UnitY * playerMovement.MovementInput.Y, deltaTime * 8f);
 
             // Rotate camera

@@ -2,7 +2,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Math = System.Math;
 
 namespace RaymarchEngine.Core
 {

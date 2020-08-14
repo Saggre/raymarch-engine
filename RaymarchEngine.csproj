@@ -3,7 +3,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{243B2BE3-FDE7-4C4D-BF4D-63E70D2856F2}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
     <AssemblyName>RaymarchEngine</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -62,6 +62,10 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BepuPhysics, Version=2.2.0.0, Culture=neutral, PublicKeyToken=null">
@@ -170,7 +174,7 @@
     <Compile Include="Core\Engine.cs" />
     <Compile Include="EMath\Byte4.cs" />
     <Compile Include="EMath\Vector2Int.cs" />
-    <Compile Include="Game\GameLogic.cs" />
+    <Compile Include="GameLogic.cs" />
     <Compile Include="Geometry\CardinalCollection.cs" />
     <Compile Include="Geometry\Primitive.cs" />
     <Compile Include="Geometry\RenderVertex.cs" />
@@ -184,7 +188,7 @@
     <Compile Include="Physics\PhysicsHandler.cs" />
     <Compile Include="Physics\PrimitivePhysics.cs" />
     <Compile Include="Physics\SimpleThreadDispatcher.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Ignition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\HLSLFileIncludeHandler.cs" />
   </ItemGroup>

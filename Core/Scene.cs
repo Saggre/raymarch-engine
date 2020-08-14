@@ -109,6 +109,14 @@ namespace RaymarchEngine.Core
     /// </summary>
     public class Scene
     {
+        private static Scene currentScene;
+
+        public static Scene CurrentScene
+        {
+            get => currentScene;
+            set => currentScene = value;
+        }
+
         /// <summary>
         /// The camera that is currently used in rendering this scene
         /// </summary>

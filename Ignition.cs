@@ -8,15 +8,21 @@ namespace RaymarchEngine
     /// <summary>
     /// The main class.
     /// </summary>
-    public static class Program
+    public static class Ignition
     {
+        static void Main(string[] args)
+        {
+            Start(new GameLogic());
+        }
+
         /// <summary>
         /// The main entry point for the application.
+        /// Starts the engine :)
         /// </summary>
         [STAThread]
-        static void Main()
+        public static void Start(AutoUpdateable gameLogic)
         {
-            using Engine gameEngine = new Engine();
+            Engine gameEngine = new Engine(gameLogic);
             gameEngine.Run();
         }
     }

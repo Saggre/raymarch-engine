@@ -8,6 +8,6 @@ namespace RaymarchEngine.Physics
         /// Gets the type of Bepuphysics collider shape
         /// </summary>
         /// <returns></returns>
-        public IConvexShape GetColliderShape();
+        IConvexShape GetColliderShape();
     }
 }

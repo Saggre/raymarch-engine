@@ -53,7 +53,7 @@ namespace RaymarchEngine.Core.Rendering
         /// How many primitives are allowed in the game
         /// </summary>
         private Dictionary<Type, int> primitiveCounts;
-        
+
         /// <summary>
         /// Get the number of primitives by type
         /// </summary>
@@ -63,7 +63,7 @@ namespace RaymarchEngine.Core.Rendering
         {
             return primitiveCounts[typeof(T)];
         }
-        
+
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
         {
@@ -293,25 +293,25 @@ namespace RaymarchEngine.Core.Rendering
 
             // Set raymarch shader buffer data
             {
-                raymarchShaderBufferData.cameraPosition = Engine.CurrentScene.ActiveCamera.Movement.Position;
-                raymarchShaderBufferData.cameraDirection = Engine.CurrentScene.ActiveCamera.Movement.Forward;
+                raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
+                raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
                 primitivesBuffer[0].UpdateValue(
-                    Engine.CurrentScene.Components<RaymarchRenderer<Sphere>>()
+                    Scene.CurrentScene.Components<RaymarchRenderer<Sphere>>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
 
                 primitivesBuffer[1].UpdateValue(
-                    Engine.CurrentScene.Components<RaymarchRenderer<Box>>()
+                    Scene.CurrentScene.Components<RaymarchRenderer<Box>>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
 
                 primitivesBuffer[2].UpdateValue(
-                    Engine.CurrentScene.Components<RaymarchRenderer<Primitives.Plane>>()
+                    Scene.CurrentScene.Components<RaymarchRenderer<Primitives.Plane>>()
                         .Select(primitive => primitive.GetBufferData()).ToArray()
                 );
 

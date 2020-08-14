@@ -1,15 +1,12 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 21/10/2019
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using WindowsInput.Native;
 using RaymarchEngine.Core.Input;
-using RaymarchEngine.Core.Primitives;
 using RaymarchEngine.Core.Rendering;
-using RaymarchEngine.Game;
 using RaymarchEngine.Physics;
 using SharpDX.Windows;
 
@@ -18,22 +15,17 @@ namespace RaymarchEngine.Core
     /// <summary>
     /// A class that handles initiating the rendering class (RenderDevice), rendering loop and input devices
     /// </summary>
-    public class Engine : IDisposable
+    internal class Engine : IDisposable
     {
         private static RenderForm renderForm;
         private static int fps = 60;
         private static bool isFullscreen = false;
 
-        // The scene that is currently active
-        private static Scene currentScene;
-
         private static float elapsedTime;
         private Stopwatch stopwatch;
-        private GameLogic gameLogic;
+        private AutoUpdateable gameLogic;
         private static RenderDevice renderDevice;
         private static PhysicsHandler physics;
-
-        public static Scene CurrentScene => currentScene;
 
         public static RenderDevice RenderDevice => renderDevice;
 
@@ -77,14 +69,16 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// 
         /// </summary>
-        public Engine()
+        public Engine(AutoUpdateable gameLogic)
         {
             {
                 // Init window
                 renderForm = new RenderForm("RaymarchEngine");
                 renderForm.AutoSize = false;
-                renderForm.ClientSize = new Size(Screen.PrimaryScreen.WorkingArea.Width,
-                    Screen.PrimaryScreen.WorkingArea.Height);
+                renderForm.ClientSize = new Size(
+                    Screen.PrimaryScreen.WorkingArea.Width,
+                    Screen.PrimaryScreen.WorkingArea.Height
+                );
                 renderForm.AllowUserResizing = false;
                 renderForm.IsFullscreen = isFullscreen;
                 renderForm.StartPosition = FormStartPosition.Manual;
@@ -94,13 +88,12 @@ namespace RaymarchEngine.Core
                 renderForm.Show();
             }
 
+            this.gameLogic = gameLogic;
+
             RaymarchRenderer.Init();
 
             // Create main scene
-            currentScene = new Scene();
-
-            // Init main game logic script
-            gameLogic = new GameLogic();
+            Scene.CurrentScene = new Scene();
 
             // Start physics library
             physics = new PhysicsHandler(PhysicsReady);
@@ -114,7 +107,7 @@ namespace RaymarchEngine.Core
             StaticUpdater.ExecuteStartActions(unixTime);
 
             // Execute each scene object's components' Start method
-            foreach (GameObject gameObject in currentScene.GameObjects)
+            foreach (GameObject gameObject in Scene.CurrentScene.GameObjects)
             {
                 foreach (IComponent component in gameObject.Components)
                 {
@@ -159,11 +152,11 @@ namespace RaymarchEngine.Core
 
             // Execute all Update methods
             StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
-
+            
             // Render on each frame
             renderDevice.Draw();
 
-            foreach (GameObject gameObject in currentScene.GameObjects)
+            foreach (GameObject gameObject in Scene.CurrentScene.GameObjects)
             {
                 // Execute updates per-object
                 foreach (IComponent component in gameObject.Components)
@@ -191,7 +184,7 @@ namespace RaymarchEngine.Core
             StaticUpdater.ExecuteEndActions(unixTime);
 
             // Execute each scene GameObject's end methods
-            foreach (GameObject gameObject in currentScene.GameObjects)
+            foreach (GameObject gameObject in Scene.CurrentScene.GameObjects)
             {
                 foreach (IComponent component in gameObject.Components)
                 {
