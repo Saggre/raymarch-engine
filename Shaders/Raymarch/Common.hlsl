@@ -22,13 +22,13 @@ class cMaterial
     float3 diffuseColor;
     float shininess;
     float3 specularColor;
-    float blank;
+    float diffraction; // 0 = nothing, 1 = full reflective, -1 = full refractive
     
-    void Create(float3 _diffuseColor, float _shininess = 50, float _specularColor = float3(1, 1, 1)) {
+    void Create(float3 _diffuseColor, float _shininess = 50.0, float _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0) {
         diffuseColor = _diffuseColor;
         shininess = _shininess;
         specularColor = _specularColor;
-        blank = 0;
+        diffraction = _diffraction;
     }
   
      float3 GetCheckered(float3 worldPosition) {
@@ -130,6 +130,13 @@ class cCappedTorus : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from) {
         return sdCappedTorus(from - position, primitiveOptions.xy, primitiveOptions.z, primitiveOptions.w);
+    }
+};
+
+class cOctahedron : cBasePrimitive, iPrimitive
+{
+    float ExecSDF(float3 from) {
+        return sdOctahedron(from - position, scale.x);
     }
 };
 

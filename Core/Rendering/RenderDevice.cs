@@ -135,7 +135,7 @@ namespace RaymarchEngine.Core.Rendering
             };
 
             // Why does count>1 not render anything?
-            antiAliasing = new SampleDescription(2, 0);
+            antiAliasing = new SampleDescription(4, 0);
 
             SwapChainDescription swapChainDesc = new SwapChainDescription()
             {

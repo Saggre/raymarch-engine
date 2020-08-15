@@ -116,7 +116,7 @@ namespace RaymarchEngine.Core
             }
 
             // It's important that render device is created after scene and game logic start
-            renderDevice = new RenderDevice(renderForm, new Resolution(1920, 1080));
+            renderDevice = new RenderDevice(renderForm, new Resolution(2560, 1440));
 
             // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();

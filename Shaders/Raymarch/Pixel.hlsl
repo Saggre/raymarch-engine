@@ -1,10 +1,10 @@
 #include "Common.hlsl"
 
-#define MAX_STEPS 500
-#define MAX_DIST 200
-#define SHADOW_MAX_DIST 100
-#define AO_FALLOFF 700
-#define SURF_DIST 1e-2
+#define MAX_STEPS 1000
+#define MAX_DIST 100
+#define SHADOW_MAX_DIST 50
+#define AO_FALLOFF 40
+#define SURF_DIST 1e-3
 
 static cLight mainLight;
 
@@ -50,13 +50,19 @@ static cLight mainLight;
 float getDist(in float3 pos, out cMaterial material){
 
     cMaterial materialA;
-    materialA.Create(float3(0.9, 0.1, 0.1));
-
+    materialA.Create(float3(0.4, 0.4, 0.4));
+    materialA.diffraction = 0.99;
+    
     cMaterial materialB;
     materialB.Create(float3(0.3, 0.8, 0.2));
     
     cMaterial materialC;
     materialC.Create(float3(0.1, 0.1, 0.1));
+    materialC.diffraction = 0.33;
+    
+    cMaterial materialD;
+    materialD.Create(float3(0.2, 0.1, 0.8));
+    materialD.diffraction = 0.33;
 
     cSphere sphere;
     sphere.Create(materialA, float3(sin(time) + 0.5, 1, 0));
@@ -66,6 +72,9 @@ float getDist(in float3 pos, out cMaterial material){
     
     cBox box;
     box.Create(materialB, float3(-1, 1, 0));
+    
+    cOctahedron octahedron;
+    octahedron.Create(materialD, float3(1, 2.1, 0));
     
     /*iPrimitive primitives[3] = {
         sphere,
@@ -96,10 +105,16 @@ float getDist(in float3 pos, out cMaterial material){
         material = plane.material;
     }
     
-    float boxDist = box.ExecSDF(pos);
+    float boxDist = opRound(box.ExecSDF(pos), 0.4);
     if(boxDist < dist){
         dist = boxDist;
         material = box.material;
+    }
+    
+    float octDist = octahedron.ExecSDF(pos);
+    if(octDist < dist){
+        dist = octDist;
+        material = octahedron.material;
     }
       
     return dist;
@@ -229,7 +244,18 @@ float3 getReflection(cRaymarchResult raymarchResult) {
         return float3(0, 0, 0);
     }
     
-    return getPhongLight(refRaymarchResult) * .35;
+    return getPhongLight(refRaymarchResult);
+}
+
+float getSubsurfCheap(cRaymarchResult raymarchResult) {
+    float sub = 0.0;
+    cMaterial mat;
+    for (int i = 0; i < 30; i++) {
+        float dist = i * 0.4 / 30.0;
+        sub += dist + getDist(raymarchResult.hitPos - raymarchResult.surfaceNormal * dist, mat);
+    }
+    sub /= 30.0;
+    return sub;
 }
 
 float4 main(PS_INPUT input) : SV_Target
@@ -268,23 +294,23 @@ float4 main(PS_INPUT input) : SV_Target
 	float3 shadow = getShadow(raymarchResult, lightReverseDir);
 	
 	// Reflection
-	sceneColor += getReflection(raymarchResult);
+	sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
+	
+	sceneColor += getSubsurfCheap(raymarchResult).xxx * pow(raymarchResult.hitMaterial.diffuseColor, 0.5);
 	
 	float3 ambientColor = float3(0.001, 0.001, 0.001);
     sceneColor += ambientColor;
 	
 	sceneColor *= shadow;
 	
-	
-
 	// Apply AO
 	sceneColor *= lerp(AO, 1, AOIntensity);
+	
+	// Gamma correction
+	sceneColor = pow(sceneColor, 0.5); 
 	
 	// Apply fog
 	sceneColor = lerp(sceneColor, FOG_COLOR, fogIntensity);
 	
-	// Gamma correction
-	sceneColor = pow(sceneColor, 0.66); 
-	
-	return float4(sceneColor, 1);
+	return float4(saturate(sceneColor), 1);
 }
