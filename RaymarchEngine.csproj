@@ -157,6 +157,7 @@
     <Compile Include="Core\AutoUpdateable.cs" />
     <Compile Include="Core\Buffers\ConstantBuffer.cs" />
     <Compile Include="Core\Buffers\StructuredBuffer.cs" />
+    <Compile Include="Core\Buffers\TextureBuffer.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\CharacterController.cs" />
     <Compile Include="Core\IComponent.cs" />
@@ -173,6 +174,7 @@
     <Compile Include="Core\Primitives\IPrimitive.cs" />
     <Compile Include="Core\Primitives\Plane.cs" />
     <Compile Include="Core\Primitives\Sphere.cs" />
+    <Compile Include="Core\Rendering\FastNoise.cs" />
     <Compile Include="Core\Rendering\RaymarchRenderer.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
     <Compile Include="Core\Rendering\Resolution.cs" />

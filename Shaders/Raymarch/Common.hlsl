@@ -51,10 +51,10 @@ class cRaymarchResult
 {
     cRay ray;
     cMaterial hitMaterial;
-    float3 hitPos;
-    float3 surfaceNormal;
-    float stepsTaken;
-    float hitDistance;
+    float3 hitPos; // Hit position 3d world coords
+    float3 surfaceNormal; // Normal of hit surface
+    float stepsTaken; // Steps needed to calculate this result
+    float hitDistance; // Distance from ray start to end
     
     void Create(cRay _ray, cMaterial _hitMaterial, float3 _hitPos, float3 _surfaceNormal, float _stepsTaken, float _hitDistance) {
         ray = _ray;
@@ -140,6 +140,13 @@ class cOctahedron : cBasePrimitive, iPrimitive
     }
 };
 
+class cPrimitiveInformation
+{
+    float3 position;
+    float3 eulerAngles;
+    // TODO add more
+};
+
 cbuffer ShaderBuffer : register(b0)
 {
 	float3 cameraPosition;
@@ -148,15 +155,14 @@ cbuffer ShaderBuffer : register(b0)
 	float time;
 };
 
-uniform StructuredBuffer<cSphere> spheres : register(t0); 
-uniform StructuredBuffer<cBox> boxes : register(t1); 
-uniform StructuredBuffer<cPlane> planes : register(t2); 
-uniform StructuredBuffer<cEllipsoid> ellipsoids : register(t3); 
-uniform StructuredBuffer<cTorus> tori : register(t4); 
-uniform StructuredBuffer<cCappedTorus> cappedTori : register(t5); 
+// Buffers
+uniform StructuredBuffer<cPrimitiveInformation> spheres : register(t0); 
+Texture2D<float4> blueNoiseTexture : register(t1);
+SamplerState textureSampler : register(s0);
 
 struct VS_INPUT
 {
+    uint vI : SV_VERTEXID;
 	float4 Position : POSITION;
 	float2 TexCoord : TEXCOORD;
 };

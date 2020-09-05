@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -48,6 +49,7 @@ namespace RaymarchEngine.Core.Rendering
         private RaymarchShaderBufferData raymarchShaderBufferData; // Values to send to the raymarch shader
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
+        private TextureBuffer<Color> noiseTextureBuffer;
 
         /// <summary>
         /// How many primitives are allowed in the game
@@ -116,6 +118,37 @@ namespace RaymarchEngine.Core.Rendering
             {
                 primitivesBuffer[i] = new StructuredBuffer<PrimitiveBufferData>(device, i);
             }
+
+            noiseTextureBuffer =
+                new TextureBuffer<Color>(device, CreateNoise(1024), 1024, Format.R8G8B8A8_UNorm, 1);
+        }
+
+        /// <summary>
+        /// Creates noise to use in the shader
+        /// </summary>
+        /// <param name="size"></param>
+        private Color[] CreateNoise(int size)
+        {
+            FastNoise fastNoise = new FastNoise();
+            fastNoise.SetNoiseType(FastNoise.NoiseType.CubicFractal);
+            fastNoise.SetFractalOctaves(8);
+            fastNoise.SetFractalType(FastNoise.FractalType.Billow);
+            fastNoise.SetFrequency(0.01f);
+
+            Color[] noiseData = new Color[size * size];
+
+            int i = 0;
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    noiseData[i] = new Color((fastNoise.GetNoise(x * 80, y * 80) + 1.0f) / 2.0f);
+                    noiseData[i] = Color.Lerp(noiseData[i], Color.White, 0.5f);
+                    i++;
+                }
+            }
+
+            return noiseData;
         }
 
         #region Setup
@@ -129,7 +162,7 @@ namespace RaymarchEngine.Core.Rendering
             {
                 Width = renderResolution.Width,
                 Height = renderResolution.Height,
-                RefreshRate = new Rational(Engine.Fps, 1), // TODO set numerator to 0 to disable vsync
+                RefreshRate = new Rational(0, 1),
                 Scaling = DisplayModeScaling.Stretched,
                 Format = Format.R8G8B8A8_UNorm,
             };
@@ -242,7 +275,7 @@ namespace RaymarchEngine.Core.Rendering
             Utilities.Dispose(ref samplerState);
 
             SamplerStateDescription description = SamplerStateDescription.Default();
-            description.Filter = Filter.Anisotropic;
+            /*description.Filter = Filter.Anisotropic;
             description.AddressU = TextureAddressMode.Clamp;
             description.AddressV = TextureAddressMode.Clamp;
             description.AddressW = TextureAddressMode.Clamp;
@@ -250,7 +283,7 @@ namespace RaymarchEngine.Core.Rendering
             description.ComparisonFunction = Comparison.Never;
             description.MipLodBias = 0;
             description.MinimumLod = -float.MaxValue;
-            description.MaximumLod = float.MaxValue;
+            description.MaximumLod = float.MaxValue;*/
 
             samplerState = new SamplerState(device, description);
         }
@@ -264,12 +297,8 @@ namespace RaymarchEngine.Core.Rendering
             deviceContext.OutputMerger.SetBlendState(blendState);
             deviceContext.OutputMerger.SetDepthStencilState(depthState);
 
-            // TODO only slot 0?
             deviceContext.PixelShader.SetSampler(0, samplerState);
             deviceContext.DomainShader.SetSampler(0, samplerState);
-            // TODO set sampler state to other types of shaders as well
-
-            // TODO make states changeable
         }
 
         #endregion
@@ -422,6 +451,7 @@ namespace RaymarchEngine.Core.Rendering
             deviceContext.Dispose();
             renderForm.Dispose();
             raymarchShaderBuffer.Dispose();
+            noiseTextureBuffer.Dispose();
             foreach (var buffer in primitivesBuffer)
             {
                 buffer.Dispose();

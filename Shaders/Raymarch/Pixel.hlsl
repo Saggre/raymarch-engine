@@ -1,6 +1,6 @@
 #include "Common.hlsl"
 
-#define MAX_STEPS 1000
+#define MAX_STEPS 128
 #define MAX_DIST 100
 #define SHADOW_MAX_DIST 50
 #define AO_FALLOFF 40
@@ -138,11 +138,12 @@ void raymarch(in cRay ray, out cRaymarchResult raymarchResult) {
     raymarchResult.ray = ray;
 	float totalDist = 0.0;
     float3 marchPos;
+    float curDist;
     
     int i = 0; 
 	while(i < MAX_STEPS) {
 		marchPos = ray.origin + totalDist * ray.dir;
-		float curDist = getDist(marchPos, raymarchResult.hitMaterial);
+	    curDist = getDist(marchPos, raymarchResult.hitMaterial);
 		totalDist += curDist;
 		if (curDist < SURF_DIST || totalDist > MAX_DIST) {
 			break;
@@ -258,8 +259,25 @@ float getSubsurfCheap(cRaymarchResult raymarchResult) {
     return sub;
 }
 
+// AO
+// Will be of lower resolution with low MAX_STEPS, because it's calculated from raymarch steps taken
+float getAmbientOcclusion(in cRaymarchResult raymarchResult, float noise) {
+    float AO = pow(1.0 - (raymarchResult.stepsTaken / MAX_STEPS), 8 * noise);
+    return lerp(AO, 1, raymarchResult.hitDistance / AO_FALLOFF);
+}
+
 float4 main(PS_INPUT input) : SV_Target
 {
+    // Checkerboard rendering
+    /*int2 pixelCoord = input.Position.xy;
+    
+    int2 mask = int2(pixelCoord.x & 1, pixelCoord.y & 1);
+    
+    if(((mask.x & 1 == 1) && (mask.y & 1 == 1)) || ((mask.x & 1 == 0) && (mask.y & 1 == 0))) {
+        discard;
+    }*/
+ 	float3 noise = blueNoiseTexture.Sample(textureSampler, input.TexCoord).rrr;
+
     float3 FOG_COLOR = float3(0.2, 0.2, 0.3);
 
     mainLight.Create(float3(70, 200, 100));
@@ -276,13 +294,9 @@ float4 main(PS_INPUT input) : SV_Target
     cRaymarchResult raymarchResult;
 	raymarch(ray, raymarchResult);
 	
-	if (raymarchResult.hitDistance >= MAX_DIST) {
+	if(raymarchResult.hitDistance >= MAX_DIST){
 	    return float4(FOG_COLOR, 1);
 	}
-	
-	// AO
-    float AOIntensity = raymarchResult.hitDistance / AO_FALLOFF;
-    float AO = pow(1.0 - (raymarchResult.stepsTaken / MAX_STEPS), 16);
 	
 	// Fog
 	float3 fogIntensity = raymarchResult.hitDistance / MAX_DIST;
@@ -296,7 +310,8 @@ float4 main(PS_INPUT input) : SV_Target
 	// Reflection
 	sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
 	
-	sceneColor += getSubsurfCheap(raymarchResult).xxx * pow(raymarchResult.hitMaterial.diffuseColor, 0.5);
+	// Very expensive
+	//sceneColor += getSubsurfCheap(raymarchResult).xxx * pow(raymarchResult.hitMaterial.diffuseColor, 0.5);
 	
 	float3 ambientColor = float3(0.001, 0.001, 0.001);
     sceneColor += ambientColor;
@@ -304,7 +319,7 @@ float4 main(PS_INPUT input) : SV_Target
 	sceneColor *= shadow;
 	
 	// Apply AO
-	sceneColor *= lerp(AO, 1, AOIntensity);
+	sceneColor *= getAmbientOcclusion(raymarchResult, noise);
 	
 	// Gamma correction
 	sceneColor = pow(sceneColor, 0.5); 

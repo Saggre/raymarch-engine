@@ -30,7 +30,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Resource views for this shader
         /// </summary>
-        private Dictionary<int, ShaderResourceView> shaderResourceViews;
+        private readonly Dictionary<int, ShaderResourceView> shaderResourceViews;
 
         public Shader(InputLayout inputLayout, VertexShader vertexShader, HullShader hullShader,
             DomainShader domainShader,
@@ -65,8 +65,14 @@ namespace RaymarchEngine.Core
         /// <param name="resourceView"></param>
         public void AddShaderResource(int slot, ShaderResourceView resourceView)
         {
-            // TODO check if exists
-            shaderResourceViews.Add(slot, resourceView);
+            if (shaderResourceViews.ContainsKey(slot))
+            {
+                shaderResourceViews[slot] = resourceView;
+            }
+            else
+            {
+                shaderResourceViews.Add(slot, resourceView);
+            }
 
             SendResourceViewToShader(slot, resourceView);
         }
@@ -92,13 +98,12 @@ namespace RaymarchEngine.Core
         /// </summary>
         /// <param name="slot"></param>
         /// <param name="resourceView"></param>
-        public void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
+        private void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
         {
-            // TODO ability to send selectively to only certain stages
             Engine.RenderDevice.deviceContext.VertexShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.deviceContext.HullShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.deviceContext.DomainShader.SetShaderResource(slot, resourceView);
-            Engine.RenderDevice.deviceContext.GeometryShader.SetShaderResource(slot, resourceView);
+            //Engine.RenderDevice.deviceContext.HullShader.SetShaderResource(slot, resourceView);
+            //Engine.RenderDevice.deviceContext.DomainShader.SetShaderResource(slot, resourceView);
+            //Engine.RenderDevice.deviceContext.GeometryShader.SetShaderResource(slot, resourceView);
             Engine.RenderDevice.deviceContext.PixelShader.SetShaderResource(slot, resourceView);
         }
 

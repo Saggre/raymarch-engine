@@ -18,7 +18,7 @@ namespace RaymarchEngine.Core
     internal class Engine : IDisposable
     {
         private static RenderForm renderForm;
-        private static int fps = 60;
+        private static int fps = 144;
         private static bool isFullscreen = false;
 
         private static float elapsedTime;
