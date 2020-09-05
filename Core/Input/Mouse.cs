@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Windows.Forms;
 using SharpDX.Windows;
+using WinMouse = System.Windows.Input.Mouse;
 
 namespace RaymarchEngine.Core.Input
 {
@@ -97,8 +98,10 @@ namespace RaymarchEngine.Core.Input
         /// <inheritdoc />
         public override void Update(float deltaTime)
         {
+            //WinMouse.GetPosition()
+            // TODO use sharpdx in its RenderControl.cs instead of RenderForm, and add it to a custom windows form
             Point cursorPosition = Cursor.Position;
-
+            
             position.X = cursorPosition.X;
             position.Y = cursorPosition.Y;
 
