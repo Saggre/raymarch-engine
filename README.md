@@ -1,5 +1,7 @@
 # Raymarch Engine
 
+![Preview](https://i.imgur.com/SG6HFpm.png)
+
 WIP
 
 A game engine that renders primitive objects by utilizing raymarching.
@@ -45,7 +47,11 @@ DirectX 11 & Shader Model 5 support. Requirements will be lowered in the future.
 + :heavy_check_mark: Basic Gameobjects
 + :heavy_minus_sign: All primitives
 + :heavy_check_mark: Shading
-+ :x: Reflections
++ :heavy_check_mark: AO
++ :heavy_check_mark: Subsurface scattering
++ :x: Blue noise
++ :x: Dynamic sky
++ :heavy_check_mark: Reflections
 + :heavy_check_mark: Soft shadows
 + :x: Custom resolutions
 + :x: Color blending between shapes
@@ -56,5 +62,3 @@ DirectX 11 & Shader Model 5 support. Requirements will be lowered in the future.
 + :x: Pre-compiled shaders
 + :x: OpenGL support
 + :x: Hyperbolic and spherical spaces
-
-![Preview](https://i.imgur.com/rc9qo0j.png)
