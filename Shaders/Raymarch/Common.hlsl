@@ -2,6 +2,7 @@
 #include "RaymarchEngine"
 #include "Primitives.hlsl"
 #include "Utils.hlsl"
+#include "Options.hlsl"
 
 class cLight
 {
@@ -24,7 +25,7 @@ class cMaterial
     float3 specularColor;
     float diffraction; // 0 = nothing, 1 = full reflective, -1 = full refractive
     
-    void Create(float3 _diffuseColor, float _shininess = 50.0, float _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0) {
+    void Create(float3 _diffuseColor = float3(1.0, 1.0, 1.0), float _shininess = 50.0, float _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0) {
         diffuseColor = _diffuseColor;
         shininess = _shininess;
         specularColor = _specularColor;
@@ -33,6 +34,13 @@ class cMaterial
   
      float3 GetCheckered(float3 worldPosition) {
         return checkers(worldPosition.xz);
+     }
+     
+     void fuse(cMaterial material) {
+        diffuseColor = diffuseColor * 0.5 + material.diffuseColor * 0.5;
+        shininess = shininess * 0.5 + material.shininess * 0.5;
+        specularColor = specularColor * 0.5 + material.specularColor * 0.5;
+        diffraction = diffraction * 0.5 + material.diffraction * 0.5;
      }
 };
 
@@ -75,26 +83,30 @@ interface iPrimitive
 // Primitive shape base class
 class cBasePrimitive
 {
-    cMaterial material;
     float4 primitiveOptions;
 	float3 position;
 	float3 eulerAngles;
 	float3 scale;
 	
-	void Create (cMaterial _material, float3 _position, float3 _eulerAngles = float3(0, 0, 0), float3 _scale = float3(1, 1, 1)) {
-        material = _material;
+	void Create (float3 _position, float3 _eulerAngles = float3(0, 0, 0), float3 _scale = float3(1, 1, 1)) {
         position = _position;
         eulerAngles = _eulerAngles;
         scale = _scale;
         primitiveOptions = float4(0, 0, 0, 0);
     }
-   
 };    
 
 class cSphere : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from) {
         return sdSphere(from - position, scale.x);
+    }
+};
+
+class cCylinder : cBasePrimitive, iPrimitive
+{
+    float ExecSDF(float3 from) {
+        return sdCylinder(from - position, scale.z, scale.y, scale.x);
     }
 };
 
@@ -153,6 +165,7 @@ cbuffer ShaderBuffer : register(b0)
 	float aspectRatio;
 	float3 cameraDirection;
 	float time;
+	float4 additionalData;
 };
 
 // Buffers

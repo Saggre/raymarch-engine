@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using RaymarchEngine.Core.Buffers;
 using RaymarchEngine.Core.Primitives;
 using SharpDX;
@@ -69,14 +70,11 @@ namespace RaymarchEngine.Core.Rendering
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
         {
-            /// <summary>
-            /// Camera position, rotation, scale
-            /// </summary>
             public Vector3 cameraPosition;
-
             public float aspectRatio;
             public Vector3 cameraDirection;
             public float time;
+            public Vector4 additionalData;
         }
 
         /// <summary>

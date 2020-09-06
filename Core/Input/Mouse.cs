@@ -99,7 +99,7 @@ namespace RaymarchEngine.Core.Input
         public override void Update(float deltaTime)
         {
             //WinMouse.GetPosition()
-            // TODO use sharpdx in its RenderControl.cs instead of RenderForm, and add it to a custom windows form
+            // TODO for smoother input render sharpdx to a custom windows form by changing swapchain handle
             Point cursorPosition = Cursor.Position;
             
             position.X = cursorPosition.X;

@@ -1,124 +1,7 @@
 #include "Common.hlsl"
-
-#define MAX_STEPS 128
-#define MAX_DIST 100
-#define SHADOW_MAX_DIST 50
-#define AO_FALLOFF 40
-#define SURF_DIST 1e-3
+#include "Draw.hlsl"
 
 static cLight mainLight;
-
-// Returns distance from position to the closest point in scene geometry
-/*float getDist2(float3 pos, out float3 color) {
-    float minDist = MAX_DIST;
-
-    // TODO [unroll(sphereCount)] 
-    for(int i = 0; i < sphereCount; i++){
-        float3 objectColor;
-        float curDist = spheres[i].ExecSDF(pos);
-        
-        if(curDist < minDist){
-            color = objectColor;
-            minDist = curDist; 
-        }
-    }
-    
-    for(int i = 0; i < planeCount; i++){
-        float3 objectColor;
-        float curDist = planes[i].ExecSDF(pos);
-        
-        if(curDist < minDist){
-            color = objectColor;
-            minDist = curDist; 
-        }
-    }
-    
-    for(int i = 0; i < boxCount; i++){
-        float3 objectColor;
-        float curDist = boxes[i].ExecSDF(pos);
-        
-        if(curDist < minDist){
-            color = objectColor;
-            minDist = curDist; 
-        }
-    }
-    
-    color = float3(0, 0, 0);
-	return minDist;
-}*/
-
-float getDist(in float3 pos, out cMaterial material){
-
-    cMaterial materialA;
-    materialA.Create(float3(0.4, 0.4, 0.4));
-    materialA.diffraction = 0.99;
-    
-    cMaterial materialB;
-    materialB.Create(float3(0.3, 0.8, 0.2));
-    
-    cMaterial materialC;
-    materialC.Create(float3(0.1, 0.1, 0.1));
-    materialC.diffraction = 0.33;
-    
-    cMaterial materialD;
-    materialD.Create(float3(0.2, 0.1, 0.8));
-    materialD.diffraction = 0.33;
-
-    cSphere sphere;
-    sphere.Create(materialA, float3(sin(time) + 0.5, 1, 0));
-    
-    cPlane plane;
-    plane.Create(materialC, float3(0, -1, 0));
-    
-    cBox box;
-    box.Create(materialB, float3(-1, 1, 0));
-    
-    cOctahedron octahedron;
-    octahedron.Create(materialD, float3(1, 2.1, 0));
-    
-    /*iPrimitive primitives[3] = {
-        sphere,
-        plane,
-        box
-    };
-    
-    float dist = MAX_DIST;
-    int closestIndex = 0;
-    for(int i = 0; i<3; i++){
-        float sdf = primitives[i].ExecSDF(pos);
-        if(sdf < dist){
-            dist = sdf;
-            closestIndex = 0;
-        }
-    }
-    
-    returnMaterial = primitives[closestIndex].GetMaterial();*/
-    
-    float dist = MAX_DIST;
-    
-    dist = sphere.ExecSDF(pos);
-    material = sphere.material;
-    
-    float planeDist = plane.ExecSDF(pos);
-    if(planeDist < dist){
-        dist = planeDist; // TODO materialMin()
-        material = plane.material;
-    }
-    
-    float boxDist = opRound(box.ExecSDF(pos), 0.4);
-    if(boxDist < dist){
-        dist = boxDist;
-        material = box.material;
-    }
-    
-    float octDist = octahedron.ExecSDF(pos);
-    if(octDist < dist){
-        dist = octDist;
-        material = octahedron.material;
-    }
-      
-    return dist;
-}
 
 // Calculate surface normal at position
 float3 getNormal(in float3 pos) {
@@ -294,35 +177,50 @@ float4 main(PS_INPUT input) : SV_Target
     cRaymarchResult raymarchResult;
 	raymarch(ray, raymarchResult);
 	
-	if(raymarchResult.hitDistance >= MAX_DIST){
-	    return float4(FOG_COLOR, 1);
+    if(raymarchResult.hitDistance >= MAX_DIST){
+        if(input.TexCoord.x > 0.5){
+            return float4(FOG_COLOR, 1);
+        }else{
+            return float4(0,0,0,1);
+        }     
 	}
 	
 	// Fog
 	float3 fogIntensity = raymarchResult.hitDistance / MAX_DIST;
 	
-	float3 sceneColor = getColor(raymarchResult);
+	float3 sceneColor;
 	
-	float3 lightReverseDir = normalize(mainLight.position - raymarchResult.hitPos); 
+	if(input.TexCoord.x > 0.5){
+	    sceneColor = getColor(raymarchResult);
+	}else {
+	fogIntensity = 0;
+	    sceneColor = getLight(raymarchResult);
+	}
 	
-	float3 shadow = getShadow(raymarchResult, lightReverseDir);
+	if(input.TexCoord.x > 0.5){
 	
-	// Reflection
-	sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
+        float3 lightReverseDir = normalize(mainLight.position - raymarchResult.hitPos); 
+        
+        float3 shadow = getShadow(raymarchResult, lightReverseDir);
+        
+        // Reflection
+        sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
+        
+        // Very expensive
+        sceneColor += getSubsurfCheap(raymarchResult).xxx * pow(raymarchResult.hitMaterial.diffuseColor, 0.5);
+        
+        float3 ambientColor = float3(0.001, 0.001, 0.001);
+        sceneColor += ambientColor;
+        
+        sceneColor *= shadow;
+        
+        // Apply AO
+        sceneColor *= getAmbientOcclusion(raymarchResult, noise);
+        
+        // Gamma correction
+        sceneColor = pow(sceneColor, 0.5);
 	
-	// Very expensive
-	//sceneColor += getSubsurfCheap(raymarchResult).xxx * pow(raymarchResult.hitMaterial.diffuseColor, 0.5);
-	
-	float3 ambientColor = float3(0.001, 0.001, 0.001);
-    sceneColor += ambientColor;
-	
-	sceneColor *= shadow;
-	
-	// Apply AO
-	sceneColor *= getAmbientOcclusion(raymarchResult, noise);
-	
-	// Gamma correction
-	sceneColor = pow(sceneColor, 0.5); 
+	}
 	
 	// Apply fog
 	sceneColor = lerp(sceneColor, FOG_COLOR, fogIntensity);
