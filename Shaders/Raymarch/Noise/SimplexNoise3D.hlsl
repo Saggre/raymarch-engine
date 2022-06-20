@@ -46,8 +46,8 @@ float SimplexNoise(float3 v)
     const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
 
     // First corner
-    float3 i  = floor(v + dot(v, C.yyy));
-    float3 x0 = v   - i + dot(i, C.xxx);
+    float3 i = floor(v + dot(v, C.yyy));
+    float3 x0 = v - i + dot(i, C.xxx);
 
     // Other corners
     float3 g = step(x0.yzx, x0.xyz);
@@ -65,16 +65,16 @@ float SimplexNoise(float3 v)
     // Permutations
     i = mod289(i); // Avoid truncation effects in permutation
     float4 p =
-      permute(permute(permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
-                            + i.y + float4(0.0, i1.y, i2.y, 1.0))
-                            + i.x + float4(0.0, i1.x, i2.x, 1.0));
+        permute(permute(permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
+                + i.y + float4(0.0, i1.y, i2.y, 1.0))
+            + i.x + float4(0.0, i1.x, i2.x, 1.0));
 
     // Gradients: 7x7 points over a square, mapped onto an octahedron.
     // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-    float4 j = p - 49.0 * floor(p / 49.0);  // mod(p,7*7)
+    float4 j = p - 49.0 * floor(p / 49.0); // mod(p,7*7)
 
     float4 x_ = floor(j / 7.0);
-    float4 y_ = floor(j - 7.0 * x_);  // mod(j,N)
+    float4 y_ = floor(j - 7.0 * x_); // mod(j,N)
 
     float4 x = (x_ * 2.0 + 0.5) / 7.0 - 1.0;
     float4 y = (y_ * 2.0 + 0.5) / 7.0 - 1.0;
@@ -115,22 +115,23 @@ float SimplexNoise(float3 v)
 }
 
 //Simplex noise with octaves
-float SimplexNoise_Octaves(float3 inCoord, float scale, float3 speed, uint octaveNumber, float octaveScale, float octaveAttenuation, float time) {
+float SimplexNoise_Octaves(float3 inCoord, float scale, float3 speed, uint octaveNumber, float octaveScale,
+                           float octaveAttenuation, float time)
+{
+    float output = 0.0f;
+    float weight = 1.0f;
 
-	float output = 0.0f;
-	float weight = 1.0f;
+    for (uint i = 0; i < octaveNumber; i++)
+    {
+        float3 coord = inCoord * scale + time * speed;
 
-	for (uint i = 0; i < octaveNumber; i++)
-	{
-		float3 coord = inCoord * scale + time * speed;
+        output += SimplexNoise(coord) * weight;
 
-		output += SimplexNoise(coord) * weight;
+        scale *= octaveScale;
+        weight *= 1.0f - octaveAttenuation;
+    }
 
-		scale *= octaveScale;
-		weight *= 1.0f - octaveAttenuation;
-	}
-
-	return output;
+    return output;
 }
 
 //Simplex noise gradient
@@ -139,8 +140,8 @@ float4 SimplexNoiseGradient(float3 v)
     const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
 
     // First corner
-    float3 i  = floor(v + dot(v, C.yyy));
-    float3 x0 = v   - i + dot(i, C.xxx);
+    float3 i = floor(v + dot(v, C.yyy));
+    float3 x0 = v - i + dot(i, C.xxx);
 
     // Other corners
     float3 g = step(x0.yzx, x0.xyz);
@@ -158,16 +159,16 @@ float4 SimplexNoiseGradient(float3 v)
     // Permutations
     i = mod289(i); // Avoid truncation effects in permutation
     float4 p =
-      permute(permute(permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
-                            + i.y + float4(0.0, i1.y, i2.y, 1.0))
-                            + i.x + float4(0.0, i1.x, i2.x, 1.0));
+        permute(permute(permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
+                + i.y + float4(0.0, i1.y, i2.y, 1.0))
+            + i.x + float4(0.0, i1.x, i2.x, 1.0));
 
     // Gradients: 7x7 points over a square, mapped onto an octahedron.
     // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-    float4 j = p - 49.0 * floor(p / 49.0);  // mod(p,7*7)
+    float4 j = p - 49.0 * floor(p / 49.0); // mod(p,7*7)
 
     float4 x_ = floor(j / 7.0);
-    float4 y_ = floor(j - 7.0 * x_);  // mod(j,N)
+    float4 y_ = floor(j - 7.0 * x_); // mod(j,N)
 
     float4 x = (x_ * 2.0 + 0.5) / 7.0 - 1.0;
     float4 y = (y_ * 2.0 + 0.5) / 7.0 - 1.0;
@@ -213,20 +214,21 @@ float4 SimplexNoiseGradient(float3 v)
 }
 
 //Simplex noise gradient with octaves
-float4 SimplexNoiseGradient_Octaves(float3 inCoord, float scale, float3 speed, uint octaveNumber, float octaveScale, float octaveAttenuation, float time) {
+float4 SimplexNoiseGradient_Octaves(float3 inCoord, float scale, float3 speed, uint octaveNumber, float octaveScale,
+                                    float octaveAttenuation, float time)
+{
+    float4 output = 0.0f;
+    float weight = 1.0f;
 
-	float4 output = 0.0f;
-	float weight = 1.0f;
+    for (uint i = 0; i < octaveNumber; i++)
+    {
+        float3 coord = inCoord * scale + time * speed;
 
-	for (uint i = 0; i < octaveNumber; i++)
-	{
-		float3 coord = inCoord * scale + time * speed;
+        output += SimplexNoiseGradient(coord) * weight;
 
-		output += SimplexNoiseGradient(coord) * weight;
+        scale *= octaveScale;
+        weight *= 1.0f - octaveAttenuation;
+    }
 
-		scale *= octaveScale;
-		weight *= 1.0f - octaveAttenuation;
-	}
-
-	return output;
+    return output;
 }

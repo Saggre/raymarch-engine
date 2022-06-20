@@ -1,7 +1,7 @@
 // The MIT License
 // Copyright � 2013 Inigo Quilez
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    
+
 
 // A list of useful distance function to simple primitives. All
 // these functions (except for ellipsoid) return an exact
@@ -57,8 +57,8 @@ float sdHexPrism(float3 p, float2 h)
     p = abs(p);
     p.xy -= 2.0 * min(dot(k.xy, p.xy), 0.0) * k.xy;
     float2 d = float2(
-       length(p.xy - float2(clamp(p.x, -k.z * h.x, k.z * h.x), h.x)) * sign(p.y - h.x),
-       p.z - h.y);
+        length(p.xy - float2(clamp(p.x, -k.z * h.x, k.z * h.x), h.x)) * sign(p.y - h.x),
+        p.z - h.y);
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
 
@@ -72,16 +72,16 @@ float sdCapsule(float3 p, float3 a, float3 b, float r)
 float sdRoundCone(in float3 p, in float r1, float r2, float h)
 {
     float2 q = float2(length(p.xz), p.y);
-    
+
     float b = (r1 - r2) / h;
     float a = sqrt(1.0 - b * b);
     float k = dot(q, float2(-b, a));
-    
+
     if (k < 0.0)
         return length(q) - r1;
     if (k > a * h)
         return length(q - float2(0.0, h)) - r2;
-        
+
     return dot(q, float2(a, b)) - r1;
 }
 
@@ -89,6 +89,7 @@ float dot2(in float3 v)
 {
     return dot(v, v);
 }
+
 float sdRoundCone(float3 p, float3 a, float3 b, float r1, float r2)
 {
     // sampling independent computations (only depend on shape)
@@ -97,7 +98,7 @@ float sdRoundCone(float3 p, float3 a, float3 b, float r1, float r2)
     float rr = r1 - r2;
     float a2 = l2 - rr * rr;
     float il2 = 1.0 / l2;
-    
+
     // sampling dependant computations
     float3 pa = p - a;
     float y = dot(pa, ba);
@@ -158,7 +159,7 @@ float sdCone(in float3 p, in float2 c, float h)
 {
     float2 q = h * float2(c.x, -c.y) / c.y;
     float2 w = float2(length(p.xz), p.y);
-    
+
     float2 a = w - q * clamp(dot(w, q) / dot(q, q), 0.0, 1.0);
     float2 b = w - q * float2(clamp(w.x / q.x, 0.0, 1.0), 1.0);
     float k = sign(q.y);
@@ -171,10 +172,11 @@ float dot2(in float2 v)
 {
     return dot(v, v);
 }
+
 float sdCappedCone(in float3 p, in float h, in float r1, in float r2)
 {
     float2 q = float2(length(p.xz), p.y);
-    
+
     float2 k1 = float2(r2, h);
     float2 k2 = float2(r2 - r1, 2.0 * h);
     float2 ca = float2(q.x - min(q.x, (q.y < 0.0) ? r1 : r2), abs(q.y) - h);
@@ -201,11 +203,11 @@ float sdCappedCone(float3 p, float3 a, float3 b, float ra, float rb)
 
     float cbx = x - ra - f * rba;
     float cby = paba - f;
-    
+
     float s = (cbx < 0.0 && cay < 0.0) ? -1.0 : 1.0;
-    
+
     return s * sqrt(min(cax * cax + cay * cay * baba,
-                       cbx * cbx + cby * cby * baba));
+                        cbx * cbx + cby * cby * baba));
 }
 
 // c is the sin/cos of the desired cone angle
@@ -238,23 +240,23 @@ float sdOctahedron(float3 p, float s)
 float sdPyramid(in float3 p, in float h)
 {
     float m2 = h * h + 0.25;
-    
+
     // symmetry
     p.xz = abs(p.xz);
     p.xz = (p.z > p.x) ? p.zx : p.xz;
     p.xz -= 0.5;
-	
+
     // project into face plane (2D)
     float3 q = float3(p.z, h * p.y - 0.5 * p.x, h * p.x + 0.5 * p.y);
-   
+
     float s = max(-q.x, 0.0);
     float t = clamp((q.y - 0.5 * p.z) / (m2 + 0.25), 0.0, 1.0);
-    
+
     float a = m2 * (q.x + s) * (q.x + s) + q.y * q.y;
     float b = m2 * (q.x + 0.5 * t) * (q.x + 0.5 * t) + (q.y - m2 * t) * (q.y - m2 * t);
-    
+
     float d2 = min(q.y, -q.x * m2 - q.y * 0.5) > 0.0 ? 0.0 : min(a, b);
-    
+
     // recover 3D and scale, and add sign
     return sqrt((d2 + q.z * q.z) / m2) * sign(max(q.z, -p.y));;
 }
@@ -270,6 +272,7 @@ float sdRhombus(float3 p, float la, float lb, float h, float ra)
     p = abs(p);
     float2 b = float2(la, lb);
     float f = clamp((ndot(b, b - 2.0 * p.xz)) / dot(b, b), -1.0, 1.0);
-    float2 q = float2(length(p.xz - 0.5 * b * float2(1.0 - f, 1.0 + f)) * sign(p.x * b.y + p.z * b.x - b.x * b.y) - ra, p.y - h);
+    float2 q = float2(length(p.xz - 0.5 * b * float2(1.0 - f, 1.0 + f)) * sign(p.x * b.y + p.z * b.x - b.x * b.y) - ra,
+                      p.y - h);
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0));
 }
