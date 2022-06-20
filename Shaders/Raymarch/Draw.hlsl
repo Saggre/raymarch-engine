@@ -42,8 +42,6 @@ float getDist(in float3 pos, out cMaterial material)
 {
     float ts = sin(time) + 1.0;
 
-    // TODO get consts like materials from cpu
-
     cMaterial materialA;
     materialA.Create(float3(0.99, 0.99, 0.99));
     materialA.diffraction = 0.7;
@@ -83,37 +81,12 @@ float getDist(in float3 pos, out cMaterial material)
     cCylinder cyl;
     cyl.Create(float3(0, 0, 0));
 
-    // ----
-
     float dist = MAX_DIST;
 
     addPrimitive(octahedron, materialC, pos, dist, material);
     addPrimitive(sphere, materialB, pos, dist, material);
     addPrimitive(sphere2, materialD, pos, dist, material);
     addPrimitive(plane, materialA, pos, dist, material);
-
-    return dist;
-
-    /*dist = sphere.ExecSDF(pos);
-    material = sphere.material;
-   
-    float planeDist = plane.ExecSDF(pos);
-    if(planeDist < dist){
-        dist = planeDist; // TODO materialMin()
-        material = plane.material;
-    }
-    
-    float boxDist = opRound(box.ExecSDF(pos), 0.4);
-    if(boxDist < dist){
-        dist = boxDist;
-        material = box.material;
-    }
-    
-    float octDist = octahedron.ExecSDF(pos);
-    if(octDist < dist){
-        dist = octDist;
-        material = octahedron.material;
-    }*/
 
     return dist;
 }

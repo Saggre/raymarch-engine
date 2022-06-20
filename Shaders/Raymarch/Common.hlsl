@@ -1,4 +1,4 @@
-// Compiler adds array lengts as consts on RaymarchEngine include
+// Compiler adds array lengths as constants on RaymarchEngine include
 #include "RaymarchEngine"
 #include "Primitives.hlsl"
 #include "Utils.hlsl"
