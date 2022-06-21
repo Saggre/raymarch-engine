@@ -19,8 +19,7 @@ namespace RaymarchEngine
         private Camera camera;
         private Vector2 lookVector;
         private PlayerMovement playerMovement;
-
-        private GameObject sphere;
+        //private GameObject sphere;
 
         public override void Start(int startTime)
         {
@@ -28,11 +27,11 @@ namespace RaymarchEngine
             playerMovement = new PlayerMovement();
 
             camera = Scene.CurrentScene.ActiveCamera;
-            camera.Movement.Position = new Vector3(0, 2, 0);
+            camera.Movement.Position = new Vector3(0, 2, -5);
 
             lookVector = new Vector2(180, 180);
 
-            GameObject plane = new GameObject(
+            /*GameObject plane = new GameObject(
                 new Vector3(0, -1, 0),
                 new RaymarchRenderer<Plane>(),
                 new PrimitivePhysics(new BepuPhysics.Collidables.Box(1000f, 0.1f, 1000f), 1, true)
@@ -47,14 +46,14 @@ namespace RaymarchEngine
             Scene.CurrentScene.AddGameObject(plane);
             Scene.CurrentScene.AddGameObject(sphere);
 
-            //camera.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
+            camera.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));*/
         }
 
         public override void Update(float deltaTime)
         {
             CameraLook(deltaTime);
 
-            sphere.GetComponent<PrimitivePhysics>().AddForce(Vector3.UnitX * 0.05f);
+            //sphere.GetComponent<PrimitivePhysics>().AddForce(Vector3.UnitX * 0.05f);
         }
 
         public override void End(int endTime)
