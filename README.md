@@ -4,6 +4,8 @@ A game engine that renders primitive objects by utilizing raymarching. Different
 primitives to create more complex objects. The engine uses `SharpDX` as its `DirectX`
 wrapper and `System.Numerics.Vectors` for Vectors, Quaternions and Matrices.
 
+Raymarch shader code is located [here](Shaders/Raymarch/Pixel.hlsl).
+
 ## Live rendering preview
 
 ### Things to look for:
@@ -22,8 +24,11 @@ wrapper and `System.Numerics.Vectors` for Vectors, Quaternions and Matrices.
 
 ## Requirements:
 
+- .NET Framework 4.8
+- C# 7.3+
 - DirectX 11
 - Shader Model 5 support
+- A capable GPU
 
 ## Supported primitives:
 
