@@ -117,7 +117,9 @@ class cCylinder : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdCylinder(from - position, scale.z, scale.y, scale.x);
+        // Vertical cylinder: scale.x is the radius, scale.y the half height. Passing four scalars
+        // instead resolved to the arbitrary-orientation overload, whose axis collapsed to zero.
+        return sdCylinder(from - position, float2(scale.x, scale.y));
     }
 };
 
