@@ -39,11 +39,15 @@ namespace RaymarchEngine.Core.Buffers
 
         private void CreateBuffer()
         {
+            // D3D11 rejects a constant buffer whose size is not a multiple of 16 bytes, and the
+            // struct only happens to be a multiple today. Round up so adding a field cannot break it.
+            int alignedSize = (elementSize + 15) & ~15;
+
             buffer = new Buffer(device, new BufferDescription
             {
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.ConstantBuffer,
-                SizeInBytes = elementSize,
+                SizeInBytes = alignedSize,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None,
                 StructureByteStride = 0

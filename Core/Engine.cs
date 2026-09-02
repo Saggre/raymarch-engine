@@ -47,15 +47,12 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Get the window's width
         /// </summary>
-        public static int Width =>
-            renderForm.Width; // TODO width and height should update on window size changes such as fullscreen entry
-
-        // TODO check height and width are right
+        public static int Width => renderForm.ClientSize.Width;
 
         /// <summary>
         /// Get the window's height
         /// </summary>
-        public static int Height => renderForm.Height;
+        public static int Height => renderForm.ClientSize.Height;
 
         /// <summary>
         /// Get the window's aspect ratio
@@ -192,6 +189,7 @@ namespace RaymarchEngine.Core
                 }
             }
 
+            renderDevice?.Dispose();
             renderForm.Dispose();
         }
     }

@@ -58,7 +58,7 @@ namespace RaymarchEngine.Core.Buffers
                 buffer = new Buffer(device, new BufferDescription
                 {
                     Usage = ResourceUsage.Default,
-                    BindFlags = BindFlags.ShaderResource | BindFlags.UnorderedAccess,
+                    BindFlags = BindFlags.ShaderResource,
                     SizeInBytes = elementSize * objectCount,
                     CpuAccessFlags = CpuAccessFlags.None,
                     OptionFlags = ResourceOptionFlags.BufferStructured,

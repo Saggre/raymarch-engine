@@ -27,6 +27,13 @@ namespace RaymarchEngine.Core.Rendering
     /// </summary>
     public class RenderDevice : IDisposable
     {
+        /// <summary>
+        /// Shader resource slots 0..7 are taken by the per-primitive structured buffers, so the
+        /// noise texture has to sit above them. Binding it inside that range silently replaced
+        /// whichever primitive buffer shared the slot.
+        /// </summary>
+        private const int NoiseTextureSlot = 8;
+
         private Resolution renderResolution;
 
         private RenderTargetView backbufferView;
@@ -101,8 +108,8 @@ namespace RaymarchEngine.Core.Rendering
                 primitivesBuffer[i] = new StructuredBuffer<PrimitiveBufferData>(device, i);
             }
 
-            noiseTextureBuffer =
-                new TextureBuffer<Color>(device, CreateNoise(1024), 1024, Format.R8G8B8A8_UNorm, 1);
+            noiseTextureBuffer = new TextureBuffer<Color>(device, CreateNoise(1024), 1024,
+                Format.R8G8B8A8_UNorm, NoiseTextureSlot);
         }
 
         /// <summary>
@@ -306,7 +313,10 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
-                raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
+                // The aspect ratio has to come from the render target, not the window. The swap
+                // chain and viewport are sized to renderResolution and stretched to fit, so using
+                // the window's ratio here corrects for the aspect a second time.
+                raymarchShaderBufferData.aspectRatio = renderResolution.AspectRatio;
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
@@ -428,16 +438,31 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         public void Dispose()
         {
-            swapChain.Dispose();
-            device.Dispose();
-            deviceContext.Dispose();
-            renderForm.Dispose();
-            raymarchShaderBuffer.Dispose();
-            noiseTextureBuffer.Dispose();
-            foreach (var buffer in primitivesBuffer)
+            // Resources go before the context and device that own them. The render form is left
+            // alone, because Engine created it and disposes it itself.
+            // These can still be null when the program closes before the first frame is drawn.
+            raymarchShaderBuffer?.Dispose();
+            noiseTextureBuffer?.Dispose();
+            raymarchRenderPlane?.Dispose();
+
+            if (primitivesBuffer != null)
             {
-                buffer.Dispose();
+                foreach (StructuredBuffer<PrimitiveBufferData> buffer in primitivesBuffer)
+                {
+                    buffer.Dispose();
+                }
             }
+
+            Utilities.Dispose(ref backbufferView);
+            Utilities.Dispose(ref depthView);
+            Utilities.Dispose(ref rasterState);
+            Utilities.Dispose(ref blendState);
+            Utilities.Dispose(ref depthState);
+            Utilities.Dispose(ref samplerState);
+
+            swapChain.Dispose();
+            deviceContext.Dispose();
+            device.Dispose();
         }
     }
 }
