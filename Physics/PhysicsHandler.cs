@@ -66,6 +66,7 @@ namespace RaymarchEngine.Physics
             /// <summary>
             /// Chooses whether to allow contact generation to proceed for the children of two overlapping collidables in a compound-including pair.
             /// </summary>
+            /// <param name="workerIndex">Index of the worker thread that identified the pair.</param>
             /// <param name="pair">Parent pair of the two child collidables.</param>
             /// <param name="childIndexA">Index of the child of collidable A in the pair. If collidable A is not compound, then this is always 0.</param>
             /// <param name="childIndexB">Index of the child of collidable B in the pair. If collidable B is not compound, then this is always 0.</param>
