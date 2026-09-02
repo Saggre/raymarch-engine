@@ -36,9 +36,11 @@ uploaded to the GPU in buffers and the raymarch pixel shader does the work.
 
 **Component model.** A `GameObject` owns a `Movement` (position, rotation, scale) and a
 list of `IComponent`. Components implement `Start(int startTime)`, `Update(float deltaTime)`
-and `End(int endTime)`, plus `OnAddedToGameObject(GameObject parent)`. `Camera` and
-`RaymarchRenderer<T>` are components. `Scene.CurrentScene` is the single active scene and
-holds the game objects and the active camera.
+and `End(int endTime)`, plus `OnAddedToGameObject(GameObject parent)`. `Movement` and
+`RaymarchRenderer<T>` are components. `Camera` is **not** a component: it derives from
+`GameObject`, so it is added to the scene with `AddGameObject`, never `AddComponent`.
+`Scene.CurrentScene` is the single active scene and holds the game objects and the active
+camera.
 
 **Frame order** (`Engine.GameLoop`): escape check, stopwatch restart, `StaticUpdater`
 update actions, `renderDevice.Draw()`, per-component `Update`, physics timestep, deltaTime
