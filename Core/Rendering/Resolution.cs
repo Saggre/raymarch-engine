@@ -28,10 +28,5 @@
         /// Screen resolution height in px
         /// </summary>
         public int Height => height;
-
-        /// <summary>
-        /// Width divided by height
-        /// </summary>
-        public float AspectRatio => width * 1.0f / height;
     }
 }

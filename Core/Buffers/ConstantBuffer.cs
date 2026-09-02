@@ -39,15 +39,22 @@ namespace RaymarchEngine.Core.Buffers
 
         private void CreateBuffer()
         {
-            // D3D11 rejects a constant buffer whose size is not a multiple of 16 bytes, and the
-            // struct only happens to be a multiple today. Round up so adding a field cannot break it.
-            int alignedSize = (elementSize + 15) & ~15;
+            // D3D11 rejects a constant buffer whose size is not a multiple of 16 bytes. Padding
+            // the buffer instead of the struct would not help: UpdateValue passes a null region,
+            // so D3D copies the buffer's full size out of a struct-sized stack local and reads
+            // past the end of it. Fail here with something readable instead.
+            if (elementSize % 16 != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Constant buffer struct {typeof(T).Name} is {elementSize} bytes. D3D11 requires " +
+                    "a multiple of 16, so pad the struct itself.");
+            }
 
             buffer = new Buffer(device, new BufferDescription
             {
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.ConstantBuffer,
-                SizeInBytes = alignedSize,
+                SizeInBytes = elementSize,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None,
                 StructureByteStride = 0

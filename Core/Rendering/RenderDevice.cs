@@ -53,6 +53,7 @@ namespace RaymarchEngine.Core.Rendering
 
         // Raymarch
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
+        private Shader raymarchShader;
         private RaymarchShaderBufferData raymarchShaderBufferData; // Values to send to the raymarch shader
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
@@ -90,7 +91,7 @@ namespace RaymarchEngine.Core.Rendering
         private void RenderDeviceStarted()
         {
             // TODO pre-compile shader
-            Shader raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
+            raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
             raymarchRenderPlane = Mesh.CreateQuad();
 
             // Set as current shaders
@@ -313,10 +314,11 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
-                // The aspect ratio has to come from the render target, not the window. The swap
-                // chain and viewport are sized to renderResolution and stretched to fit, so using
-                // the window's ratio here corrects for the aspect a second time.
-                raymarchShaderBufferData.aspectRatio = renderResolution.AspectRatio;
+                // This has to be the window's aspect ratio, not the render target's. The shader
+                // builds uv from TexCoord, which spans the quad regardless of resolution, so the
+                // back buffer's pixel dimensions never enter the ray math. What the correction has
+                // to match is the shape of the area the back buffer is stretched onto on Present.
+                raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
@@ -444,6 +446,7 @@ namespace RaymarchEngine.Core.Rendering
             raymarchShaderBuffer?.Dispose();
             noiseTextureBuffer?.Dispose();
             raymarchRenderPlane?.Dispose();
+            raymarchShader?.Dispose();
 
             if (primitivesBuffer != null)
             {
