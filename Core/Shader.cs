@@ -116,7 +116,12 @@ namespace RaymarchEngine.Core
             // TODO simplify method with a loop
             // TODO build shaders on program build with dxc
 
-            ShaderFlags shaderFlags = ShaderFlags.Debug;
+            // Debug bytecode is unoptimized. Compiling it in Release cost the whole optimizer.
+#if DEBUG
+            ShaderFlags shaderFlags = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
+#else
+            ShaderFlags shaderFlags = ShaderFlags.OptimizationLevel3;
+#endif
 
             InputLayout inputLayout = null;
             VertexShader vertexShader = null;

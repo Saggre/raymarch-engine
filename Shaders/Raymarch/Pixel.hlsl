@@ -26,6 +26,7 @@ void raymarch(in cRay ray, out cRaymarchResult raymarchResult)
     float curDist;
 
     int i = 0;
+    [loop]
     while (i < MAX_STEPS)
     {
         marchPos = ray.origin + totalDist * ray.dir;
@@ -58,6 +59,7 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
     cMaterial material;
 
     // t = distance from object surface towards light source
+    [loop]
     for (float t = mint; t < SHADOW_MAX_DIST;)
     {
         float h = getDist(rayOrigin + lightDir * t, material);
