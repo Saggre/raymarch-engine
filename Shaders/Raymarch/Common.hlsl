@@ -8,13 +8,11 @@ class cLight
 {
     float3 position;
     float3 color;
-    float intensity;
 
-    void Create(float3 _position, float3 _color = float3(1, 1, 1), float _intensity = 1)
+    void Create(float3 _position, float3 _color = float3(1, 1, 1))
     {
         position = _position;
         color = _color;
-        intensity = _intensity;
     }
 };
 
