@@ -9,13 +9,14 @@ namespace RaymarchEngine.Core
     /// </summary>
     public class Camera : GameObject
     {
-        float aspectRatio; // TODO send to shader
-        float fieldOfView;
+        /// <summary>
+        /// Vertical field of view in radians. TODO send to shader
+        /// </summary>
+        public float FieldOfView { get; set; } = (float) (Math.PI / 4.0);
 
-        public Camera()
-        {
-            aspectRatio = Engine.AspectRatio();
-            fieldOfView = (float) (Math.PI / 4.0f);
-        }
+        /// <summary>
+        /// The render window's current aspect ratio. Read live, because the window can be resized.
+        /// </summary>
+        public float AspectRatio => Engine.AspectRatio();
     }
 }

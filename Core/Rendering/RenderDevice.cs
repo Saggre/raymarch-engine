@@ -1,7 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 05/11/2019
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -51,21 +50,6 @@ namespace RaymarchEngine.Core.Rendering
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
         private TextureBuffer<Color> noiseTextureBuffer;
-
-        /// <summary>
-        /// How many primitives are allowed in the game
-        /// </summary>
-        private Dictionary<Type, int> primitiveCounts;
-
-        /// <summary>
-        /// Get the number of primitives by type
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public int PrimitiveCount<T>() where T : IPrimitive
-        {
-            return primitiveCounts[typeof(T)];
-        }
 
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
