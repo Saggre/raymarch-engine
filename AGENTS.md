@@ -26,7 +26,7 @@ uploaded to the GPU in buffers and the raymarch pixel shader does the work.
 | `Core/Buffers/` | `ConstantBuffer<T>`, `StructuredBuffer<T>`, `TextureBuffer<T>` wrappers |
 | `Core/Primitives/` | Marker types (`Sphere`, `Box`, `Plane`) implementing `IPrimitive` |
 | `Core/Input/` | `InputDevice` with static `Keyboard` / `Mouse`, `PlayerMovement` |
-| `EMath/` | Math helpers and extension methods, `Vector2Int`, `Byte4`, `FastNoise` |
+| `EMath/` | Math helpers and extension methods, `Vector2Int`, `Byte4` |
 | `Geometry/` | `RenderVertex` (input layout), `Primitive`, `SquareRect` |
 | `Physics/` | `PhysicsHandler` (Bepu simulation), `PrimitivePhysics` component |
 | `Shaders/Raymarch/` | HLSL: `Vertex.hlsl`, `Pixel.hlsl` and the includes they pull in |
