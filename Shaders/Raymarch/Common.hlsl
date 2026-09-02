@@ -27,7 +27,7 @@ class cMaterial
     float diffraction; // 0 = nothing, 1 = full reflective, -1 = full refractive
 
     void Create(float3 _diffuseColor = float3(1.0, 1.0, 1.0), float _shininess = 50.0,
-                float _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0)
+                float3 _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0)
     {
         diffuseColor = _diffuseColor;
         shininess = _shininess;
