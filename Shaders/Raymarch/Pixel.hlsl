@@ -94,7 +94,11 @@ float3 getCameraRayDir(float2 uv, float focalLength)
 
     // The cross product collapses to a zero vector when the view direction is parallel to the
     // world up axis, which would make every ray NaN. Swap the reference axis near the poles.
-    float3 worldUp = abs(camForward.y) > 0.999 ? float3(0.0, 0.0, 1.0) : float3(0.0, 1.0, 0.0);
+    // The sign keeps the basis handed the same way at both poles; a fixed axis would mirror
+    // camRight between looking straight up and straight down.
+    float3 worldUp = abs(camForward.y) > 0.999
+                         ? float3(0.0, 0.0, -sign(camForward.y))
+                         : float3(0.0, 1.0, 0.0);
 
     float3 camRight = normalize(cross(worldUp, camForward));
     float3 camUp = normalize(cross(camForward, camRight));
