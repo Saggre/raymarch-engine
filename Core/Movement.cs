@@ -97,7 +97,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         public void Rotate(float x, float y, float z)
         {
-            Rotate(new Vector3(x, y, x));
+            Rotate(new Vector3(x, y, z));
         }
 
         /// <summary>

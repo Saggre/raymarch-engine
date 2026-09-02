@@ -274,8 +274,9 @@ namespace RaymarchEngine.EMath
             }
             else if (cosHalfAngle < 0.0f)
             {
-                b.XYZ(-b.XYZ());
-                b.W = -b.W;
+                // Negate the whole quaternion to take the short way round. Negating only W would
+                // leave a different rotation, not the equivalent one.
+                b = new Quaternion(-b.X, -b.Y, -b.Z, -b.W);
                 cosHalfAngle = -cosHalfAngle;
             }
 
@@ -309,30 +310,6 @@ namespace RaymarchEngine.EMath
         /// </summary>
         /// <param name="quaternion"></param>
         private static Vector3 XYZ(this Quaternion quaternion) => new Vector3(quaternion.X, quaternion.Y, quaternion.Z);
-
-        /// <summary>
-        /// Sets the xyz component of a quaternion
-        /// </summary>
-        /// <param name="quaternion"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
-        private static void XYZ(this Quaternion quaternion, float x, float y, float z)
-        {
-            quaternion.X = x;
-            quaternion.Y = y;
-            quaternion.Z = z;
-        }
-
-        /// <summary>
-        /// Sets the xyz component of a quaternion
-        /// </summary>
-        /// <param name="quaternion"></param>
-        /// <param name="vector"></param>
-        private static void XYZ(this Quaternion quaternion, Vector3 vector)
-        {
-            XYZ(quaternion, vector.X, vector.Y, vector.Z);
-        }
 
         /// <summary>
         /// Rotates a quaternion from towards to
@@ -510,9 +487,15 @@ namespace RaymarchEngine.EMath
             return i < min ? min : max;
         }
 
+        /// <summary>
+        /// Tolerance for the near-zero comparisons below. float.Epsilon is the smallest denormal,
+        /// roughly 1.4e-45, so comparing against it is an exact zero test rather than a tolerance.
+        /// </summary>
+        private const float NearZero = 1e-6f;
+
         public static bool AlmostZero(float f)
         {
-            return System.Math.Abs(f) < float.Epsilon;
+            return System.Math.Abs(f) < NearZero;
         }
 
         public static float PI => (float) System.Math.PI;
