@@ -24,6 +24,7 @@ namespace RaymarchEngine.Physics
         /// <summary>
         /// Create from Bepuphysics shape and mass
         /// </summary>
+        /// <param name="colliderShape"></param>
         /// <param name="mass"></param>
         /// <param name="isStatic"></param>
         public PrimitivePhysics(IConvexShape colliderShape, float mass, bool isStatic = false)

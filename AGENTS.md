@@ -102,8 +102,14 @@ predates Roslyn and only understands C# 5.
     msbuild RaymarchEngine.sln /p:Configuration=Debug /p:Platform=x64
     bin\x64\Debug\RaymarchEngine.exe
 
-`Debug|x86` and `Debug|AnyCPU` both output to `bin\Debug\`; the x64 configurations output to
-`bin\x64\Debug\` and `bin\x64\Release\`. `Debug|x86` sets `PlatformTarget` to x64.
+Every configuration has its own output directory: `Debug|x86` (the project default) writes to
+`bin\Debug\`, `Debug|AnyCPU` to `bin\AnyCPU\Debug\`, the x64 pair to `bin\x64\Debug\` and
+`bin\x64\Release\`, and `Release|x86` to `bin\x86\Release\`.
+
+`PlatformTarget` is x64 everywhere except `Release|x86`, including in the configurations whose
+solution platform is named x86 or AnyCPU. That is deliberate: BepuPhysics runs its solver on
+`System.Numerics.Vector<T>`, which .NET Framework only hardware-accelerates on x64. Do not
+"correct" a config to 32-bit to match its name.
 
 Running opens a maximized borderless window on the primary screen. Escape quits, WASD and
 the mouse move the camera. There is no headless mode: the `Engine` constructor creates a
