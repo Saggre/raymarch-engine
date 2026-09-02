@@ -215,7 +215,7 @@ namespace RaymarchEngine.EMath
         /// <returns></returns>
         public static Quaternion AngleAxis(float degrees, ref Vector3 axis)
         {
-            if (AlmostZero(axis.SqrMagnitude()))
+            if (AlmostZeroSquared(axis.SqrMagnitude()))
                 return Quaternion.Identity;
 
             Quaternion result = Quaternion.Identity;
@@ -251,16 +251,16 @@ namespace RaymarchEngine.EMath
         private static Quaternion SlerpUnclamped(ref Quaternion a, ref Quaternion b, float t)
         {
             // if either input is zero, return the other.
-            if (AlmostZero(a.LengthSquared()))
+            if (AlmostZeroSquared(a.LengthSquared()))
             {
-                if (AlmostZero(b.LengthSquared()))
+                if (AlmostZeroSquared(b.LengthSquared()))
                 {
                     return Quaternion.Identity;
                 }
 
                 return b;
             }
-            else if (AlmostZero(b.LengthSquared()))
+            else if (AlmostZeroSquared(b.LengthSquared()))
             {
                 return a;
             }
@@ -299,7 +299,7 @@ namespace RaymarchEngine.EMath
             }
 
             Quaternion result = new Quaternion(blendA * a.XYZ() + blendB * b.XYZ(), blendA * a.W + blendB * b.W);
-            if (!AlmostZero(result.LengthSquared()))
+            if (!AlmostZeroSquared(result.LengthSquared()))
                 return Quaternion.Normalize(result);
             else
                 return Quaternion.Identity;
@@ -496,6 +496,16 @@ namespace RaymarchEngine.EMath
         public static bool AlmostZero(float f)
         {
             return System.Math.Abs(f) < NearZero;
+        }
+
+        /// <summary>
+        /// Near-zero test for an already squared magnitude. Comparing a squared value against
+        /// NearZero directly would make the effective tolerance on the magnitude its square root,
+        /// a thousand times looser than the constant reads.
+        /// </summary>
+        private static bool AlmostZeroSquared(float squared)
+        {
+            return squared < NearZero * NearZero;
         }
 
         public static float PI => (float) System.Math.PI;
