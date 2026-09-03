@@ -48,7 +48,7 @@ float getDist(in float3 pos, out cMaterial material)
 
     cMaterial materialB;
     materialB.Create(float3(0.95, 0.1, 0), 200);
-    materialA.diffraction = 0.98;
+    materialB.diffraction = 0.98;
 
     cMaterial materialC;
     materialC.Create(float3(0, 0.99, 0));

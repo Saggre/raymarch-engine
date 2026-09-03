@@ -105,14 +105,15 @@ float3 getPhongLight(cRaymarchResult raymarchResult)
 
     float3 color = float3(0, 0, 0);
 
+    // Specular only counts where the light reaches the surface, so it nests inside the diffuse test
     if (dotLN > 0.0)
     {
         color += raymarchResult.hitMaterial.diffuseColor * dotLN;
-    }
 
-    if (dotRV > 0.0)
-    {
-        color += raymarchResult.hitMaterial.specularColor * pow(dotRV, raymarchResult.hitMaterial.shininess);
+        if (dotRV > 0.0)
+        {
+            color += raymarchResult.hitMaterial.specularColor * pow(dotRV, raymarchResult.hitMaterial.shininess);
+        }
     }
 
     return color;
