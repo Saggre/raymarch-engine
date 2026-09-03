@@ -81,8 +81,6 @@ namespace RaymarchEngine.Core
 
             this.gameLogic = gameLogic;
 
-            RaymarchRenderer.Init();
-
             // Create main scene
             Scene.CurrentScene = new Scene();
 

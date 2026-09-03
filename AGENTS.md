@@ -46,21 +46,23 @@ camera.
 update actions, `renderDevice.Draw()`, per-component `Update`, physics timestep, deltaTime
 measurement. `deltaTime` is the *previous* frame's duration.
 
-**Startup order matters.** `RaymarchRenderer.Init()` runs, then the scene is created, then
-physics, then input, then every component's `Start`, and only then is `RenderDevice`
-constructed. The shader is compiled lazily on the first frame, because the primitive counts
-per type must be final before the HLSL is generated. `RaymarchRenderer<T>` throws from
-`OnAddedToGameObject` if `Engine.RenderDevice` already exists, so renderers can only be
-added during `Start`.
+**Startup order matters.** The scene is created, then physics, then input, then every
+component's `Start`, and only then is `RenderDevice` constructed. The shader is compiled
+lazily on the first frame, because the primitive counts per type must be final before the
+HLSL is generated. `RaymarchRenderer<T>` throws from `OnAddedToGameObject` if
+`Engine.RenderDevice` already exists, so renderers can only be added during `Start`.
 
 **Shader constant injection.** `Shader.CompileFromFiles(@"Shaders\Raymarch")` compiles every
 stage file that exists in the folder (`Vertex.hlsl`, `Hull.hlsl`, `Domain.hlsl`,
 `Geometry.hlsl`, `Pixel.hlsl`), each with entry point `main`. `HLSLFileIncludeHandler`
 resolves `#include`. The virtual include `RaymarchEngine` is not a file: the handler
-synthesizes `static const int sphereCount/boxCount/planeCount` from the live counts in
-`RaymarchRenderer`. If you add a primitive type, register it in `RaymarchRenderer.Init()`,
-emit its count in `HLSLFileIncludeHandler.GetShaderConstantsStream()`, and consume it in the
-HLSL. Shaders are copied to the output directory as `Content` with
+synthesizes `static const int sphereCount/boxCount/planeCount` by counting the
+`RaymarchRenderer<T>` components in `Scene.CurrentScene`. That has to stay the same source
+`RenderDevice.Draw` uploads from, or the baked count and the structured buffer disagree and
+the shader loop reads past the end. If you add a primitive type, emit its count in
+`HLSLFileIncludeHandler.GetShaderConstantsStream()`, give it a `StructuredBuffer` register
+in `Common.hlsl`, upload it in `RenderDevice.Draw`, and loop over it in `getDist`.
+Shaders are copied to the output directory as `Content` with
 `CopyToOutputDirectory=Always`, so they are read from disk at runtime and can be edited
 without rebuilding the C#.
 
