@@ -1,8 +1,9 @@
 // Compiler adds array lengths as constants on RaymarchEngine include
 #include "RaymarchEngine"
+// Options first, the rest read its constants
+#include "Options.hlsl"
 #include "Primitives.hlsl"
 #include "Utils.hlsl"
-#include "Options.hlsl"
 
 class cLight
 {

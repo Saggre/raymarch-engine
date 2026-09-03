@@ -177,33 +177,32 @@ float4 main(PS_INPUT input) : SV_Target
     // Only rays that missed the scene reach the cloud layer, which sits far past MAX_DIST
     if (raymarchResult.hitDistance >= MAX_DIST)
     {
-        return float4(saturate(pow(getSkyColorWithClouds(ray.origin, ray.dir), 1.0 / 2.2)), 1);
+        return float4(toDisplay(getSkyColorWithClouds(ray.origin, ray.dir)), 1);
     }
 
-    float3 sceneColor = getColor(raymarchResult);
+    // Direct sunlight, which is the only thing the shadow ray occludes
+    float3 sceneColor = getColor(raymarchResult) * getShadow(raymarchResult, mainLight.direction);
 
-    float3 shadow = getShadow(raymarchResult, mainLight.direction);
+    // Sky fill. Shadowed surfaces still see the sky, so this is added after the shadow rather than
+    // before it, and it scales with the surface colour: a dark material has to come out dark.
+    sceneColor += raymarchResult.hitMaterial.diffuseColor * getSkyColor(float3(0, 1, 0)) * SKY_AMBIENT;
 
     // Reflection
     sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
 
-    float3 ambientColor = float3(0.05, 0.05, 0.06);
-    sceneColor += ambientColor;
-
-    sceneColor *= shadow;
-
     // Apply AO
     sceneColor *= getAmbientOcclusion(raymarchResult, noise);
-
-    // Gamma correction
-    sceneColor = pow(sceneColor, 1.0 / 2.2);
 
     // Aerial perspective, towards the sky in the direction being looked at rather than a constant.
     // The direction is clamped to the horizon: the haze in front of distant ground is lit like the
     // sky just above it, and sampling below would hand back the unlit ground colour.
+    //
+    // Applied to linear radiance, before the curve, and falling off exponentially with distance
+    // rather than linearly. Linear fog reached halfway to the sky colour by the middle of the
+    // view, which is what greyed out everything in the foreground.
     float3 hazeDir = normalize(float3(ray.dir.x, max(ray.dir.y, 0.0), ray.dir.z));
-    float fogIntensity = raymarchResult.hitDistance / MAX_DIST;
-    sceneColor = lerp(sceneColor, pow(getSkyColor(hazeDir), 1.0 / 2.2), fogIntensity);
+    float fog = 1.0 - exp(-raymarchResult.hitDistance * FOG_DENSITY);
+    sceneColor = lerp(sceneColor, getSkyColor(hazeDir), fog);
 
-    return float4(saturate(sceneColor), 1);
+    return float4(toDisplay(sceneColor), 1);
 }
