@@ -116,7 +116,7 @@ namespace RaymarchEngine.Core
             // TODO simplify method with a loop
             // TODO build shaders on program build with dxc
 
-            // Debug bytecode is unoptimized. Compiling it in Release cost the whole optimizer.
+            // Debug bytecode is unoptimized, so Release was losing the whole shader optimizer
 #if DEBUG
             ShaderFlags shaderFlags = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
 #else

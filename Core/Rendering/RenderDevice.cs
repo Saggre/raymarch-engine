@@ -148,8 +148,7 @@ namespace RaymarchEngine.Core.Rendering
                 Format = Format.R8G8B8A8_UNorm,
             };
 
-            // No multisampling: the scene is one fullscreen quad, so there are no geometric
-            // edges inside it for MSAA to resolve. Higher counts only cost colour bandwidth.
+            // One fullscreen quad has no interior edges for MSAA to resolve, so it only costs bandwidth
             antiAliasing = new SampleDescription(1, 0);
 
             SwapChainDescription swapChainDesc = new SwapChainDescription()
@@ -220,9 +219,7 @@ namespace RaymarchEngine.Core.Rendering
         }
 
         /// <summary>
-        /// Set the colour blending state. The raymarch quad is opaque and covers the whole
-        /// target, so blending is disabled. The previous alpha setup only passed the source
-        /// through because the cleared target happened to be opaque.
+        /// Set the colour blending state. Disabled: the raymarch quad is opaque and covers the target.
         /// </summary>
         void SetBlendState()
         {
@@ -235,8 +232,7 @@ namespace RaymarchEngine.Core.Rendering
         }
 
         /// <summary>
-        /// Set depth state. Depth testing is off and no depth buffer is allocated, because the
-        /// only draw is a single fullscreen quad that nothing can be occluded by.
+        /// Set depth state. Off, with no depth buffer: a single fullscreen quad occludes nothing.
         /// </summary>
         void SetDepthState()
         {
