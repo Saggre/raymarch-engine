@@ -117,7 +117,9 @@ class cCylinder : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdCylinder(from - position, scale.z, scale.y, scale.x);
+        // scale.x radius, scale.y half height. Four scalars resolve to the arbitrary orientation
+        // overload, whose axis collapses to zero.
+        return sdCylinder(from - position, float2(scale.x, scale.y));
     }
 };
 
