@@ -58,8 +58,7 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
     cMaterial material;
 
     // t = distance from object surface towards light source.
-    // The step count is capped as well as the distance, because at grazing angles h can stay just
-    // above the hit threshold and advance t by almost nothing on every iteration.
+    // Capped by step count too: at grazing angles h barely advances t.
     float t = mint;
     for (int i = 0; i < SHADOW_MAX_STEPS && t < SHADOW_MAX_DIST; i++)
     {
@@ -92,10 +91,8 @@ float3 getCameraRayDir(float2 uv, float focalLength)
 {
     float3 camForward = normalize(cameraDirection);
 
-    // The cross product collapses to a zero vector when the view direction is parallel to the
-    // world up axis, which would make every ray NaN. Swap the reference axis near the poles.
-    // The sign keeps the basis handed the same way at both poles; a fixed axis would mirror
-    // camRight between looking straight up and straight down.
+    // cross() collapses to zero when the view direction is parallel to world up, giving NaN rays.
+    // The sign keeps the basis handed the same way at both poles.
     float3 worldUp = abs(camForward.y) > 0.999
                          ? float3(0.0, 0.0, -sign(camForward.y))
                          : float3(0.0, 1.0, 0.0);
