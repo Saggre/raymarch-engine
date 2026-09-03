@@ -192,15 +192,6 @@ namespace RaymarchEngine.Core.Rendering
 
             deviceContext = device.ImmediateContext;
 
-            // TODO what is this vvvvvvv
-
-            //Ignore all windows events
-            //var factory = swapChain.GetParent<Factory>();
-            //factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
-
-            //Setup handler on resize form
-            //renderForm.UserResized += (sender, args) => MustResize = true;
-
             SetRasterState();
             SetBlendState();
             SetDepthState();

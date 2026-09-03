@@ -160,14 +160,6 @@ float getAmbientOcclusion(in cRaymarchResult raymarchResult, float noise)
 
 float4 main(PS_INPUT input) : SV_Target
 {
-    // Checkerboard rendering
-    /*int2 pixelCoord = input.Position.xy;
-    
-    int2 mask = int2(pixelCoord.x & 1, pixelCoord.y & 1);
-    
-    if(((mask.x & 1 == 1) && (mask.y & 1 == 1)) || ((mask.x & 1 == 0) && (mask.y & 1 == 0))) {
-        discard;
-    }*/
     float3 noise = noiseTexture.Sample(textureSampler, input.TexCoord).rrr;
 
     float3 FOG_COLOR = float3(0.2, 0.2, 0.3);

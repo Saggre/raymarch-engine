@@ -103,9 +103,6 @@ namespace RaymarchEngine.Core
         private void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
         {
             Engine.RenderDevice.deviceContext.VertexShader.SetShaderResource(slot, resourceView);
-            //Engine.RenderDevice.deviceContext.HullShader.SetShaderResource(slot, resourceView);
-            //Engine.RenderDevice.deviceContext.DomainShader.SetShaderResource(slot, resourceView);
-            //Engine.RenderDevice.deviceContext.GeometryShader.SetShaderResource(slot, resourceView);
             Engine.RenderDevice.deviceContext.PixelShader.SetShaderResource(slot, resourceView);
         }
 
