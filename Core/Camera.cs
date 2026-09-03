@@ -15,8 +15,7 @@ namespace RaymarchEngine.Core
         public float FieldOfView { get; set; } = (float) (Math.PI / 4.0);
 
         /// <summary>
-        /// The render window's current aspect ratio. Read on demand rather than cached at
-        /// construction, when the window has not been sized yet.
+        /// The render window's current aspect ratio. Not cached: the window is unsized at construction.
         /// </summary>
         public float AspectRatio => Engine.AspectRatio();
     }

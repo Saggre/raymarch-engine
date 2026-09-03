@@ -39,10 +39,8 @@ namespace RaymarchEngine.Core.Buffers
 
         private void CreateBuffer()
         {
-            // D3D11 rejects a constant buffer whose size is not a multiple of 16 bytes. Padding
-            // the buffer instead of the struct would not help: UpdateValue passes a null region,
-            // so D3D copies the buffer's full size out of a struct-sized stack local and reads
-            // past the end of it. Fail here with something readable instead.
+            // D3D11 requires a multiple of 16. Padding the buffer instead of the struct would make
+            // UpdateValue read past the end of its stack local, so fail loudly here.
             if (elementSize % 16 != 0)
             {
                 throw new InvalidOperationException(

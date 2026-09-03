@@ -56,8 +56,7 @@ namespace RaymarchEngine.Core.Buffers
             //Console.WriteLine(textureSize * format.SizeOfInBytes());
             shaderResourceView = new ShaderResourceView(device, texture);
 
-            // The view holds its own reference, so the texture is released with the view rather
-            // than surviving to process exit.
+            // The view holds its own reference, so this does not free the texture early
             texture.Dispose();
 
             deviceContext.VertexShader.SetShaderResource(slot, shaderResourceView);

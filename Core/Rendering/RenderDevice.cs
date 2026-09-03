@@ -28,9 +28,8 @@ namespace RaymarchEngine.Core.Rendering
     public class RenderDevice : IDisposable
     {
         /// <summary>
-        /// Shader resource slots 0..7 are taken by the per-primitive structured buffers, so the
-        /// noise texture has to sit above them. Binding it inside that range silently replaced
-        /// whichever primitive buffer shared the slot.
+        /// Slots 0..7 belong to the per-primitive structured buffers. Anything bound inside that
+        /// range silently replaces whichever primitive buffer shares the slot.
         /// </summary>
         private const int NoiseTextureSlot = 8;
 
@@ -314,10 +313,8 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
-                // This has to be the window's aspect ratio, not the render target's. The shader
-                // builds uv from TexCoord, which spans the quad regardless of resolution, so the
-                // back buffer's pixel dimensions never enter the ray math. What the correction has
-                // to match is the shape of the area the back buffer is stretched onto on Present.
+                // The window's ratio, not the render target's: uv comes from TexCoord, so the
+                // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
@@ -440,9 +437,8 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         public void Dispose()
         {
-            // Resources go before the context and device that own them. The render form is left
-            // alone, because Engine created it and disposes it itself.
-            // These can still be null when the program closes before the first frame is drawn.
+            // Resources before the context and device that own them. Engine owns the render form.
+            // These are still null if the program closes before the first frame.
             raymarchShaderBuffer?.Dispose();
             noiseTextureBuffer?.Dispose();
             raymarchRenderPlane?.Dispose();

@@ -22,8 +22,7 @@ namespace RaymarchEngine
         [STAThread]
         public static void Start(AutoUpdateable gameLogic)
         {
-            // The using is what makes every component's End method run, and what releases the
-            // D3D device. Without it Engine.Dispose is never reached.
+            // Engine.Dispose runs every component's End and releases the D3D device
             using (Engine gameEngine = new Engine(gameLogic))
             {
                 gameEngine.Run();

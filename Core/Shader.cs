@@ -202,9 +202,7 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Releases the shader stages and the input layout.
-        /// These hold references to the D3D device, so the device is not actually freed until
-        /// they are.
+        /// Releases the shader stages and input layout. They hold references to the D3D device.
         /// </summary>
         public void Dispose()
         {
