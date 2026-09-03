@@ -180,6 +180,7 @@
     <Compile Include="Core\Input\Mouse.cs" />
     <Compile Include="Core\Input\RawMouseInput.cs" />
     <Compile Include="Core\IUpdateable.cs" />
+    <Compile Include="Core\LoadingScreen.cs" />
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\FirstPersonController.cs" />

@@ -81,12 +81,13 @@ namespace RaymarchEngine.Core.Rendering
             InitializeDeviceResources();
         }
 
-        private bool renderDeviceStarted;
-
         /// <summary>
-        /// Called when the first frame rendering is started, and D3DDevice is properly started and functional
+        /// Compiles the shaders and creates the buffers the raymarch pass needs.
+        ///
+        /// Separate from the constructor because it reads the scene: the shader bakes in how many
+        /// of each primitive type there are, so everything has to be in the scene before this runs.
         /// </summary>
-        private void RenderDeviceStarted()
+        public void Load()
         {
             // TODO pre-compile shader
             raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
@@ -288,12 +289,6 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         public void Draw()
         {
-            if (!renderDeviceStarted)
-            {
-                renderDeviceStarted = true;
-                RenderDeviceStarted();
-            }
-
             // Clear with a color
             Clear(Color.Black);
 
