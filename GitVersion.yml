@@ -1,0 +1,11 @@
+# GitVersion 6 configuration. Run `dotnet-gitversion /showconfig` to see the full effective
+# config, of which this file only overrides the parts that matter here.
+#
+# ContinuousDeployment gives master a clean release version with no pre-release label, so a
+# merge produces 0.0.2 rather than 0.0.2-42. The default ContinuousDelivery would keep the
+# version in pre-release until a tag was pushed by hand, which defeats automatic versioning.
+#
+# The version comes from the most recent tag plus the increment, so every commit on master
+# between two tags resolves to the same version. That is fine because the release workflow
+# creates the tag as part of publishing, which is what moves the next build on.
+mode: ContinuousDeployment

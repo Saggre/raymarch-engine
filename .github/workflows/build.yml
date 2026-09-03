@@ -1,0 +1,121 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A second push to master while a release is still publishing would race for the same tag.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+env:
+  CONFIGURATION: Release
+  PLATFORM: x64
+
+jobs:
+  build:
+    name: Build and package
+    # .NET Framework 4.8 needs Windows. This image carries the 4.8 targeting pack, MSBuild and NuGet.
+    runs-on: windows-latest
+
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
+      fullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}
+      package: ${{ steps.package.outputs.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # GitVersion reads tags and the full commit graph. A shallow clone makes it fail outright.
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.7.0
+        with:
+          versionSpec: '6.8.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.7.0
+
+      - name: Stamp assembly version
+        shell: pwsh
+        run: >
+          ./build/Stamp-AssemblyInfo.ps1
+          -AssemblySemVer '${{ steps.gitversion.outputs.assemblySemVer }}'
+          -AssemblySemFileVer '${{ steps.gitversion.outputs.assemblySemFileVer }}'
+          -InformationalVersion '${{ steps.gitversion.outputs.informationalVersion }}'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v4
+
+      # packages.config restore, which needs the NuGet CLI rather than dotnet restore. The test
+      # project is SDK style and gets skipped here with a warning, which is expected.
+      - name: Restore packages
+        run: nuget restore RaymarchEngine.sln
+
+      - name: Build
+        run: msbuild RaymarchEngine.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }} /v:minimal /nologo
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $name = "RaymarchEngine-${{ steps.gitversion.outputs.semVer }}-win-${{ env.PLATFORM }}"
+          $stage = "artifacts/$name"
+          New-Item -ItemType Directory -Force $stage | Out-Null
+
+          # Everything the exe needs at runtime, including the Shaders folder, which the engine
+          # reads from disk on the first frame. Debug symbols and IntelliSense docs are dropped.
+          Copy-Item "bin/${{ env.PLATFORM }}/${{ env.CONFIGURATION }}/*" $stage -Recurse -Exclude *.pdb,*.xml
+
+          if (-not (Test-Path "$stage/RaymarchEngine.exe")) { throw "RaymarchEngine.exe missing from $stage" }
+          if (-not (Test-Path "$stage/Shaders/Raymarch/Pixel.hlsl")) { throw "Shaders missing from $stage" }
+
+          Compress-Archive -Path $stage -DestinationPath "artifacts/$name.zip" -Force
+          "name=$name" >> $env:GITHUB_OUTPUT
+
+      - name: Upload package
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: build
+    # Only master publishes. Pull requests build and package but stop short of releasing.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build.outputs.package }}
+          path: artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v3
+        with:
+          # Creating the release creates the tag, which is what lets GitVersion move to the next
+          # version on the following push.
+          tag_name: v${{ needs.build.outputs.semVer }}
+          name: v${{ needs.build.outputs.semVer }}
+          files: artifacts/*.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true

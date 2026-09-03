@@ -119,6 +119,24 @@ the mouse move the camera. There is no headless mode: the `Engine` constructor c
 WinForms window and a D3D11 device, so it cannot run without a GPU and an interactive
 desktop session.
 
+## CI and versioning
+
+`.github/workflows/build.yml` builds `Release|x64` on every pull request and every push to
+`master`, and a push to `master` also publishes a GitHub release with the packaged zip.
+
+The version comes from GitVersion (`GitVersion.yml`, mode `ContinuousDeployment`), so `master`
+resolves to a clean version like `0.0.2` while branches get a pre-release label. Every commit
+between two tags resolves to the same version; the release step creates the tag, and that is
+what moves the next build to the next number.
+
+This is a non SDK style project, so there is no `<Version>` property to set. The workflow runs
+`build/Stamp-AssemblyInfo.ps1` to write the version into `Properties/AssemblyInfo.cs` before
+building. GitVersion's own `/updateassemblyinfo` is not used, because the CLI restores the file
+when it exits and the build step that follows would see the original values.
+
+The packaged zip carries the DLLs and the `Shaders` folder alongside the exe. Dropping either
+breaks the app at runtime rather than at build time, so the package step asserts both are present.
+
 ## Tests
 
 `RaymarchEngineTests` is NUnit 3 and only covers pure logic (`GameObject` hierarchy). It has
