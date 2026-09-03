@@ -194,24 +194,11 @@ namespace RaymarchEngine.Physics
             //instead of outside the timestep, too, but it's a little more complicated.)
             Simulation simulation = Simulation.Create(bufferPool, new NarrowPhaseCallbacks(),
                 new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new PositionLastTimestepper());
-
-            /*simulation.Statics.Add(new StaticDescription(new Vector3(0, 0, 0),
-                new CollidableDescription(simulation.Shapes.Add(new Box(500, 1, 500)), 0.1f)));
-*/
-            //var threadDispatcher = new SimpleThreadDispatcher(Environment.ProcessorCount);
-
-            //If you intend to reuse the BufferPool, disposing the simulation is a good idea- it returns all the buffers to the pool for reuse.
-            //Here, we dispose it, but it's not really required; we immediately thereafter clear the BufferPool of all held memory.
-            //Note that failing to dispose buffer pools can result in memory leaks.
-            //simulation.Dispose();
-            //threadDispatcher.Dispose();
-            //bufferPool.Clear();
         }
 
         public void Dispose()
         {
             simulation.Dispose();
-            //threadDispatcher.Dispose();
             bufferPool.Clear();
         }
     }

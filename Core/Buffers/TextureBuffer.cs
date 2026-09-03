@@ -52,8 +52,7 @@ namespace RaymarchEngine.Core.Buffers
                 ArraySize = 1,
                 SampleDescription = {Count = 1, Quality = 0}
             }, new DataRectangle(Util.GetDataPtr(data), textureSize * format.SizeOfInBytes()));
-            
-            //Console.WriteLine(textureSize * format.SizeOfInBytes());
+
             shaderResourceView = new ShaderResourceView(device, texture);
 
             // The view holds its own reference, so this does not free the texture early
