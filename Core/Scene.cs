@@ -1,10 +1,6 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 24/10/2019
 
-using System;
 using System.Collections.Generic;
-using System.Numerics;
-using RaymarchEngine.Core.Primitives;
-using Plane = RaymarchEngine.Core.Primitives.Plane;
 
 namespace RaymarchEngine.Core
 {
