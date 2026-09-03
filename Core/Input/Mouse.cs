@@ -43,6 +43,10 @@ namespace RaymarchEngine.Core.Input
 
             SetCursorCenter();
             Update(0); // Do first update manually to prevent mouse jump at start
+
+            // That update measured its delta against an unset lastCursorPosition, so the stored
+            // delta is the whole distance from the screen origin. Reading it first jerks the camera.
+            deltaPosition = Vector2.Zero;
         }
 
         public void HideCursor()

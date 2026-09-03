@@ -10,11 +10,19 @@ Raymarch shader code is located [here](Shaders/Raymarch/Pixel.hlsl).
 
 ### Things to look for:
 
-- The preview has four different primitives (octahedron, box, sphere, plane). And one light source.
-- All objects cast and receive shadows. These are fully dynamic.
-- Octahedron, sphere and plane have reflections.
+The scene the engine starts with is built in `GameLogic.BuildScene`, and everything below is in
+frame from the first rendered image without the camera having to move.
+
+- Seven primitive types at once (torus, octahedron, box, sphere, ellipsoid, cylinder, plane), lit
+  by one moving light source.
+- The torus tumbles on two axes, the box turns on the spot, the octahedron bobs and spins, and a
+  small sphere orbits the box. Rotation is per-object, sent to the shader as a quaternion.
+- All objects cast and receive shadows. These are fully dynamic and soft.
+- The floor and most of the shapes are reflective. The mirror ball above the box shows the whole
+  row reflected in it, and the floor shows every shape a second time.
+- Per-object materials: colour, specular exponent, specular strength and reflectivity all come
+  from the `RaymarchRenderer<T>` that placed the shape.
 - All objects have Phong shading as a base.
-- The box has rounded corners as a result of a rounding operation being applied to it.
 - There is ambient occlusion applied to the view space, dithered with a noise texture.
 - Some purple-ish distance fog is visible in the background.
 - Raymarched objects have infinite resolution (signed distance function = no mesh).
@@ -31,18 +39,25 @@ Raymarch shader code is located [here](Shaders/Raymarch/Pixel.hlsl).
 
 ## Supported primitives:
 
+These can be placed from game code as a `RaymarchRenderer<T>`, and each has its own buffer the
+engine uploads every frame:
+
 - Sphere
 - Box
 - Plane
 - Torus
-- Capped torus
 - Ellipsoid
+- Cylinder
+- Octahedron
+
+Signed distance functions for these also exist in `Shaders/Raymarch/Primitives.hlsl`, but they are
+not wired up to a buffer yet:
+
+- Capped torus
 - Capsule
 - Hex prism
 - Cone
-- Cylinder
 - Pyramid
-- Octahedron
 - Rhombus
 
 ## Supported operations:

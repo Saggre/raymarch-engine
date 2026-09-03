@@ -65,7 +65,11 @@ namespace RaymarchEngine.Core
             // they are constructed would include ones never added, overrunning the structured buffer.
             string hlslString = $"static const int sphereCount = {SceneRendererCount<Sphere>()};" +
                                 $"static const int boxCount = {SceneRendererCount<Box>()};" +
-                                $"static const int planeCount = {SceneRendererCount<Plane>()};";
+                                $"static const int planeCount = {SceneRendererCount<Plane>()};" +
+                                $"static const int torusCount = {SceneRendererCount<Torus>()};" +
+                                $"static const int octahedronCount = {SceneRendererCount<Octahedron>()};" +
+                                $"static const int ellipsoidCount = {SceneRendererCount<Ellipsoid>()};" +
+                                $"static const int cylinderCount = {SceneRendererCount<Cylinder>()};";
 
             Debug.WriteLine(hlslString);
             byte[] byteArray = Encoding.ASCII.GetBytes(hlslString);

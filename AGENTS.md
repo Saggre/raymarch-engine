@@ -24,7 +24,7 @@ uploaded to the GPU in buffers and the raymarch pixel shader does the work.
 | `Core/` | Engine core: `Engine`, `Scene`, `GameObject`, `Camera`, `Shader`, `Movement` |
 | `Core/Rendering/` | `RenderDevice` (D3D11 device, swap chain, draw loop), `RaymarchRenderer` |
 | `Core/Buffers/` | `ConstantBuffer<T>`, `StructuredBuffer<T>`, `TextureBuffer<T>` wrappers |
-| `Core/Primitives/` | Marker types (`Sphere`, `Box`, `Plane`) implementing `IPrimitive` |
+| `Core/Primitives/` | Marker types (`Sphere`, `Box`, `Plane`, `Torus`, `Octahedron`, `Ellipsoid`, `Cylinder`) implementing `IPrimitive` |
 | `Core/Input/` | `InputDevice` with static `Keyboard` / `Mouse`, `PlayerMovement` |
 | `EMath/` | Math helpers and extension methods, `Vector2Int`, `Byte4` |
 | `Geometry/` | `RenderVertex` (input layout), `Primitive`, `SquareRect` |
@@ -56,7 +56,7 @@ HLSL is generated. `RaymarchRenderer<T>` throws from `OnAddedToGameObject` if
 stage file that exists in the folder (`Vertex.hlsl`, `Hull.hlsl`, `Domain.hlsl`,
 `Geometry.hlsl`, `Pixel.hlsl`), each with entry point `main`. `HLSLFileIncludeHandler`
 resolves `#include`. The virtual include `RaymarchEngine` is not a file: the handler
-synthesizes `static const int sphereCount/boxCount/planeCount` by counting the
+synthesizes a `static const int <type>Count` per primitive type by counting the
 `RaymarchRenderer<T>` components in `Scene.CurrentScene`. That has to stay the same source
 `RenderDevice.Draw` uploads from, or the baked count and the structured buffer disagree and
 the shader loop reads past the end. If you add a primitive type, emit its count in
@@ -69,8 +69,9 @@ without rebuilding the C#.
 **GPU data.** `PrimitiveBufferData` and `MaterialBufferData` are
 `[StructLayout(LayoutKind.Sequential)]` structs mirrored by HLSL `cbuffer` and
 `StructuredBuffer` declarations. Any field change must be mirrored on both sides, with HLSL
-16-byte packing rules respected. Rotation is sent to the GPU as Euler angles, not as a
-quaternion.
+16-byte packing rules respected. Rotation travels as a quaternion, and `getDist` rotates the
+sample point by its conjugate to put the point in each primitive's local frame, so the signed
+distance functions themselves stay axis aligned and receive an already-local point.
 
 ## Conventions
 
