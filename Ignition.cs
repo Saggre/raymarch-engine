@@ -10,16 +10,15 @@ namespace RaymarchEngine
     /// </summary>
     public static class Ignition
     {
+        [STAThread]
         static void Main(string[] args)
         {
             Start(new GameLogic());
         }
 
         /// <summary>
-        /// The main entry point for the application.
-        /// Starts the engine :)
+        /// Starts the engine with the given game logic
         /// </summary>
-        [STAThread]
         public static void Start(AutoUpdateable gameLogic)
         {
             // Engine.Dispose runs every component's End and releases the D3D device

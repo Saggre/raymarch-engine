@@ -192,7 +192,10 @@ namespace RaymarchEngine.Physics
             //PositionLastTimestepper avoids that by running collision detection and the solver first at the cost of a tiny amount of overhead.
             //(You could avoid the issue with PositionFirstTimestepper by modifying velocities in the PositionFirstTimestepper's BeforeCollisionDetection callback 
             //instead of outside the timestep, too, but it's a little more complicated.)
-            Simulation simulation = Simulation.Create(bufferPool, new NarrowPhaseCallbacks(),
+            // Create runs NarrowPhaseCallbacks.Initialize, which is where the static is published.
+            // Assigning the same instance here as well is what stops a local shadowing it and
+            // making that look like dead code.
+            simulation = Simulation.Create(bufferPool, new NarrowPhaseCallbacks(),
                 new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new PositionLastTimestepper());
         }
 
