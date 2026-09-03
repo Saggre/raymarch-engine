@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Numerics;
 using RaymarchEngine.Core;
 using RaymarchEngine.Core.Input;
@@ -24,8 +24,6 @@ namespace RaymarchEngine
         private const float OrbitRadius = 2.1f;
 
         private Camera camera;
-        private Vector2 lookVector;
-        private PlayerMovement playerMovement;
 
         private float elapsedTime;
 
@@ -40,15 +38,12 @@ namespace RaymarchEngine
 
         public override void Start(int startTime)
         {
-            // Init movement manager
-            playerMovement = new PlayerMovement();
-
             camera = Scene.CurrentScene.ActiveCamera;
 
-            // Far enough back that the whole row is in frame without the player moving first
-            camera.Movement.Position = new Vector3(0, 2.6f, -10.2f);
-
-            lookVector = new Vector2(180, 172);
+            // Far enough back that the whole row is in frame without the player moving first.
+            // The controller drops the eye to standing height, so only x and z matter here.
+            camera.Movement.Position = new Vector3(0, 0, -10.2f);
+            camera.AddComponent(new FirstPersonController());
 
             BuildScene();
             AnimateScene();
@@ -180,7 +175,6 @@ namespace RaymarchEngine
         {
             elapsedTime += deltaTime;
 
-            CameraLook(deltaTime);
             AnimateScene();
         }
 
@@ -188,32 +182,5 @@ namespace RaymarchEngine
         {
         }
 
-        private void CameraLook(float deltaTime)
-        {
-            float sensitivity = 0.03f;
-
-            // Move camera
-            Vector3 xzInput = new Vector3(playerMovement.MovementInput.X, 0, playerMovement.MovementInput.Z);
-            camera.Movement.Move(xzInput.Multiply(Scene.CurrentScene.ActiveCamera.Movement.Rotation), deltaTime * 8f);
-            camera.Movement.Move(Vector3.UnitY * playerMovement.MovementInput.Y, deltaTime * 8f);
-
-            // Rotate camera
-            lookVector.X += InputDevice.Mouse.DeltaPosition.X * sensitivity;
-            lookVector.Y -= InputDevice.Mouse.DeltaPosition.Y * sensitivity;
-
-            // Clamp camera rotation
-            if (lookVector.Y < 100)
-            {
-                lookVector.Y = 100;
-            }
-            else if (lookVector.Y > 260 - float.Epsilon)
-            {
-                lookVector.Y = 260;
-            }
-
-            camera.Movement.Rotation =
-                Quaternion.CreateFromAxisAngle(Vector3.UnitY, lookVector.X * EMath.Util.Deg2Rad) *
-                Quaternion.CreateFromAxisAngle(Vector3.UnitX, lookVector.Y * EMath.Util.Deg2Rad);
-        }
     }
 }
