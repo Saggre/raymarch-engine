@@ -1,5 +1,7 @@
 # Raymarch Engine (WIP)
 
+[![Build](https://github.com/Saggre/raymarch-engine/actions/workflows/build.yml/badge.svg)](https://github.com/Saggre/raymarch-engine/actions/workflows/build.yml)
+
 A game engine that renders primitive objects by utilizing raymarching. Different operations can be applied to the
 primitives to create more complex objects. The engine uses `SharpDX` as its `DirectX`
 wrapper and `System.Numerics.Vectors` for Vectors, Quaternions and Matrices.
@@ -28,6 +30,18 @@ frame from the first rendered image without the camera having to move.
 - Raymarched objects have infinite resolution (signed distance function = no mesh).
 
 ![Rendering preview](.github/assets/raymarch.gif)
+
+## Download
+
+Every merge to `release` publishes a [release](https://github.com/Saggre/raymarch-engine/releases)
+with a zipped x64 build. Unzip it and run `RaymarchEngine.exe`. The zip has to stay together: the
+engine loads `Shaders/Raymarch` from disk on the first frame, so the exe on its own will not start.
+
+## Branches
+
+`master` is the development branch and `release` is what ships. Work goes into `master` through
+`feature/*` branches, and merging `master` into `release` cuts a release. Development builds are
+versioned `0.0.2-alpha.43`, releases `0.0.2`.
 
 ## Requirements:
 

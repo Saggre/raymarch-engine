@@ -1,0 +1,32 @@
+# GitVersion 6 configuration. Run `dotnet-gitversion /showconfig` to see the full effective
+# config, of which this file only overrides the parts that matter here.
+#
+# The branch roles are the opposite way round from GitVersion's defaults. Out of the box it
+# treats master as the release branch and develop as the development branch. Here master is the
+# development branch and a long lived `release` branch is what gets published, so both entries
+# below exist to swap those roles.
+#
+# The mode is set per branch rather than at the top level, because ContinuousDeployment drops the
+# pre-release label entirely. That is what the release branch wants, so a merge produces a clean
+# 0.0.2, but on master it would erase the alpha label and make development builds look like
+# releases.
+
+branches:
+  # The long lived release branch. GitVersion's built-in `release` entry matches release/x.y
+  # style branches, so the bare branch name needs an entry of its own.
+  release-line:
+    regex: ^release$
+    mode: ContinuousDeployment
+    label: ''
+    increment: Patch
+    is-main-branch: true
+    source-branches: [main]
+
+  # master. Development only, so it always carries an alpha label and can never resolve to a
+  # version the release workflow would publish.
+  main:
+    regex: ^master$|^main$
+    mode: ContinuousDelivery
+    label: alpha
+    increment: Patch
+    is-main-branch: false
