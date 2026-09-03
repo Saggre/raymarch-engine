@@ -39,6 +39,15 @@ namespace RaymarchEngine.Core.Buffers
 
         private void CreateBuffer()
         {
+            // D3D11 requires a multiple of 16. Padding the buffer instead of the struct would make
+            // UpdateValue read past the end of its stack local, so fail loudly here.
+            if (elementSize % 16 != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Constant buffer struct {typeof(T).Name} is {elementSize} bytes. D3D11 requires " +
+                    "a multiple of 16, so pad the struct itself.");
+            }
+
             buffer = new Buffer(device, new BufferDescription
             {
                 Usage = ResourceUsage.Default,

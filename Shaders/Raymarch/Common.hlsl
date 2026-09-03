@@ -27,7 +27,7 @@ class cMaterial
     float diffraction; // 0 = nothing, 1 = full reflective, -1 = full refractive
 
     void Create(float3 _diffuseColor = float3(1.0, 1.0, 1.0), float _shininess = 50.0,
-                float _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0)
+                float3 _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0)
     {
         diffuseColor = _diffuseColor;
         shininess = _shininess;
@@ -117,7 +117,9 @@ class cCylinder : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdCylinder(from - position, scale.z, scale.y, scale.x);
+        // scale.x radius, scale.y half height. Four scalars resolve to the arbitrary orientation
+        // overload, whose axis collapses to zero.
+        return sdCylinder(from - position, float2(scale.x, scale.y));
     }
 };
 
@@ -187,7 +189,8 @@ float4 additionalData;
 
 // Buffers
 uniform StructuredBuffer<cPrimitiveInformation> spheres : register(t0);
-Texture2D<float4> blueNoiseTexture : register(t1);
+// t0..t7 belong to the per-primitive structured buffers, so the noise texture starts at t8.
+Texture2D<float4> blueNoiseTexture : register(t8);
 SamplerState textureSampler : register(s0);
 
 struct VS_INPUT

@@ -58,9 +58,10 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
 
     cMaterial material;
 
-    // t = distance from object surface towards light source
-    [loop]
-    for (float t = mint; t < SHADOW_MAX_DIST;)
+    // t = distance from object surface towards light source.
+    // Capped by step count too: at grazing angles h barely advances t.
+    float t = mint;
+    for (int i = 0; i < SHADOW_MAX_STEPS && t < SHADOW_MAX_DIST; i++)
     {
         float h = getDist(rayOrigin + lightDir * t, material);
         if (h < 0.001)
@@ -86,13 +87,21 @@ float getLight(cRaymarchResult raymarchResult)
     return dif;
 }
 
-float3 getCameraRayDir(float2 uv, float fov)
+// focalLength is the distance from the eye to the uv plane, so a larger value narrows the view.
+float3 getCameraRayDir(float2 uv, float focalLength)
 {
-    float3 camForward = cameraDirection;
-    float3 camRight = normalize(cross(float3(0.0, 1.0, 0.0), camForward));
+    float3 camForward = normalize(cameraDirection);
+
+    // cross() collapses to zero when the view direction is parallel to world up, giving NaN rays.
+    // The sign keeps the basis handed the same way at both poles.
+    float3 worldUp = abs(camForward.y) > 0.999
+                         ? float3(0.0, 0.0, -sign(camForward.y))
+                         : float3(0.0, 1.0, 0.0);
+
+    float3 camRight = normalize(cross(worldUp, camForward));
     float3 camUp = normalize(cross(camForward, camRight));
 
-    return normalize(uv.x * camRight + uv.y * camUp + camForward * fov);
+    return normalize(uv.x * camRight + uv.y * camUp + camForward * focalLength);
 }
 
 float3 getPhongLight(cRaymarchResult raymarchResult)
@@ -107,14 +116,15 @@ float3 getPhongLight(cRaymarchResult raymarchResult)
 
     float3 color = float3(0, 0, 0);
 
+    // Specular only counts where the light reaches the surface, so it nests inside the diffuse test
     if (dotLN > 0.0)
     {
         color += raymarchResult.hitMaterial.diffuseColor * dotLN;
-    }
 
-    if (dotRV > 0.0)
-    {
-        color += raymarchResult.hitMaterial.specularColor * pow(dotRV, raymarchResult.hitMaterial.shininess);
+        if (dotRV > 0.0)
+        {
+            color += raymarchResult.hitMaterial.specularColor * pow(dotRV, raymarchResult.hitMaterial.shininess);
+        }
     }
 
     return color;
@@ -135,7 +145,7 @@ float3 getReflection(cRaymarchResult raymarchResult)
     cRay ray;
     cRaymarchResult refRaymarchResult;
     ray.Create(raymarchResult.hitPos + raymarchResult.surfaceNormal * 0.01,
-               reflect(raymarchResult.ray.dir, -raymarchResult.surfaceNormal));
+               reflect(raymarchResult.ray.dir, raymarchResult.surfaceNormal));
 
     raymarch(ray, refRaymarchResult);
 
@@ -165,7 +175,7 @@ float getSubsurfCheap(cRaymarchResult raymarchResult)
 float getAmbientOcclusion(in cRaymarchResult raymarchResult, float noise)
 {
     float AO = pow(1.0 - (raymarchResult.stepsTaken / MAX_STEPS), 8 * noise);
-    return lerp(AO, 1, raymarchResult.hitDistance / AO_FALLOFF);
+    return lerp(AO, 1, saturate(raymarchResult.hitDistance / AO_FALLOFF));
 }
 
 float4 main(PS_INPUT input) : SV_Target
@@ -225,7 +235,7 @@ float4 main(PS_INPUT input) : SV_Target
     sceneColor *= getAmbientOcclusion(raymarchResult, noise);
 
     // Gamma correction
-    sceneColor = pow(sceneColor, 0.5);
+    sceneColor = pow(sceneColor, 1.0 / 2.2);
 
     // Apply fog
     sceneColor = lerp(sceneColor, FOG_COLOR, fogIntensity);
