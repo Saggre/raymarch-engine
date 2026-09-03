@@ -105,8 +105,7 @@ float3 getPhongLight(cRaymarchResult raymarchResult)
 
     float3 color = float3(0, 0, 0);
 
-    // The specular term is only valid where the light actually reaches the surface, so it stays
-    // nested inside the diffuse test. Without that the highlight also appears on unlit backsides.
+    // Specular only counts where the light reaches the surface, so it nests inside the diffuse test
     if (dotLN > 0.0)
     {
         color += raymarchResult.hitMaterial.diffuseColor * dotLN;
