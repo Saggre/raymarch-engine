@@ -51,10 +51,10 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         public float Diffraction { get; set; }
 
-        private Vector4 GetOptions()
-        {
-            return new Vector4(parent.Movement.Scale.MinComponent(), 0f, 0f, 0f);
-        }
+        /// <summary>
+        /// Shape specific parameters for signed distance functions that need more than a scale
+        /// </summary>
+        public Vector4 Options { get; set; }
 
         /// <summary>
         /// Get data needed to render this shape
@@ -62,11 +62,13 @@ namespace RaymarchEngine.Core.Rendering
         /// <returns></returns>
         public PrimitiveBufferData GetBufferData()
         {
+            Quaternion rotation = parent.Movement.Rotation;
+
             return new PrimitiveBufferData(
                 new MaterialBufferData(Color, Shininess, SpecularStrength, Diffraction),
-                GetOptions(),
+                Options,
                 parent.Movement.Position,
-                parent.Movement.Rotation.QuaternionToEuler(),
+                new Vector4(rotation.X, rotation.Y, rotation.Z, rotation.W),
                 parent.Movement.Scale
             );
         }
@@ -89,7 +91,8 @@ namespace RaymarchEngine.Core.Rendering
 
     /// <summary>
     /// Data that is passed to the raymarch shader, mirrored by cPrimitiveData in Common.hlsl.
-    /// Euler angles are passed instead of quaternion rotation, because the object can't be/shouldn't be rotated in the shader. Euler angle data will suffice for rendering the shape at different rotations.
+    /// Rotation travels as a quaternion: no euler convention to agree on, and it fits the same
+    /// 16 bytes the padded euler triple used.
     /// Vectors are padded to 16 byte boundaries so the C# and HLSL layouts agree. Change both.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -99,8 +102,7 @@ namespace RaymarchEngine.Core.Rendering
         public Vector4 primitiveOptions;
         public Vector3 position;
         public float positionPadding;
-        public Vector3 eulerAngles;
-        public float eulerAnglesPadding;
+        public Vector4 rotation;
         public Vector3 scale;
         public float scalePadding;
 
@@ -108,14 +110,14 @@ namespace RaymarchEngine.Core.Rendering
             MaterialBufferData material,
             Vector4 primitiveOptions,
             Vector3 position,
-            Vector3 eulerAngles,
+            Vector4 rotation,
             Vector3 scale
         ) : this()
         {
             this.material = material;
             this.primitiveOptions = primitiveOptions;
             this.position = position;
-            this.eulerAngles = eulerAngles;
+            this.rotation = rotation;
             this.scale = scale;
         }
     }

@@ -86,20 +86,17 @@ interface iPrimitive
     float ExecSDF(float3 from);
 };
 
-// Primitive shape base class
+// Primitive shape base class. ExecSDF receives a point already in this primitive's local
+// frame, so position and rotation are not stored here.
 class cBasePrimitive
 {
     float4 primitiveOptions;
-    float3 position;
-    float3 eulerAngles;
     float3 scale;
 
-    void Create(float3 _position, float3 _eulerAngles = float3(0, 0, 0), float3 _scale = float3(1, 1, 1))
+    void Create(float3 _scale = float3(1, 1, 1), float4 _primitiveOptions = float4(0, 0, 0, 0))
     {
-        position = _position;
-        eulerAngles = _eulerAngles;
         scale = _scale;
-        primitiveOptions = float4(0, 0, 0, 0);
+        primitiveOptions = _primitiveOptions;
     }
 };
 
@@ -107,7 +104,7 @@ class cSphere : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdSphere(from - position, scale.x);
+        return sdSphere(from, scale.x);
     }
 };
 
@@ -117,7 +114,7 @@ class cCylinder : cBasePrimitive, iPrimitive
     {
         // scale.x radius, scale.y half height. Four scalars resolve to the arbitrary orientation
         // overload, whose axis collapses to zero.
-        return sdCylinder(from - position, float2(scale.x, scale.y));
+        return sdCylinder(from, float2(scale.x, scale.y));
     }
 };
 
@@ -125,7 +122,7 @@ class cBox : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdBox(from - position, scale);
+        return sdBox(from, scale);
     }
 };
 
@@ -133,7 +130,7 @@ class cPlane : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdPlane(from - position);
+        return sdPlane(from);
     }
 };
 
@@ -141,7 +138,7 @@ class cEllipsoid : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdEllipsoid(from - position, scale);
+        return sdEllipsoid(from, scale);
     }
 };
 
@@ -149,7 +146,8 @@ class cTorus : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdTorus(from - position, primitiveOptions.xy);
+        // scale.x is the major radius, scale.y the minor radius
+        return sdTorus(from, float2(scale.x, scale.y));
     }
 };
 
@@ -157,7 +155,7 @@ class cCappedTorus : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdCappedTorus(from - position, primitiveOptions.xy, primitiveOptions.z, primitiveOptions.w);
+        return sdCappedTorus(from, primitiveOptions.xy, primitiveOptions.z, primitiveOptions.w);
     }
 };
 
@@ -165,7 +163,7 @@ class cOctahedron : cBasePrimitive, iPrimitive
 {
     float ExecSDF(float3 from)
     {
-        return sdOctahedron(from - position, scale.x);
+        return sdOctahedron(from, scale.x);
     }
 };
 
@@ -187,8 +185,7 @@ struct cPrimitiveData
     float4 options;
     float3 position;
     float positionPadding;
-    float3 eulerAngles;
-    float eulerAnglesPadding;
+    float4 rotation;
     float3 scale;
     float scalePadding;
 };
@@ -204,10 +201,14 @@ float4 additionalData;
 
 // Buffers
 // One buffer per primitive type, filled by RenderDevice.Draw. The register indices have to match
-// the primitivesBuffer slots there: 0 spheres, 1 boxes, 2 planes.
+// the primitivesBuffer slots there.
 StructuredBuffer<cPrimitiveData> spheres : register(t0);
 StructuredBuffer<cPrimitiveData> boxes : register(t1);
 StructuredBuffer<cPrimitiveData> planes : register(t2);
+StructuredBuffer<cPrimitiveData> toruses : register(t3);
+StructuredBuffer<cPrimitiveData> octahedrons : register(t4);
+StructuredBuffer<cPrimitiveData> ellipsoids : register(t5);
+StructuredBuffer<cPrimitiveData> cylinders : register(t6);
 
 // Dither source for the AO term. This is low-frequency fractal value noise, not blue noise:
 // see CreateNoise in RenderDevice. TODO generate real blue noise (void-and-cluster).

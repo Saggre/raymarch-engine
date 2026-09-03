@@ -317,35 +317,14 @@ namespace RaymarchEngine.Core.Rendering
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
-                primitivesBuffer[0].UpdateValue(
-                    Scene.CurrentScene.Components<RaymarchRenderer<Sphere>>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[1].UpdateValue(
-                    Scene.CurrentScene.Components<RaymarchRenderer<Box>>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[2].UpdateValue(
-                    Scene.CurrentScene.Components<RaymarchRenderer<Primitives.Plane>>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                /*primitivesBuffer[3].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Ellipsoid>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[4].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Torus>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[5].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<CappedTorus>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );*/
+                // Slot order has to match the register indices in Common.hlsl
+                UploadPrimitives<Sphere>(0);
+                UploadPrimitives<Box>(1);
+                UploadPrimitives<Primitives.Plane>(2);
+                UploadPrimitives<Torus>(3);
+                UploadPrimitives<Octahedron>(4);
+                UploadPrimitives<Ellipsoid>(5);
+                UploadPrimitives<Cylinder>(6);
             }
 
             // Draw raymarch plane
@@ -353,6 +332,17 @@ namespace RaymarchEngine.Core.Rendering
 
             // Draw rendered scene to screen
             swapChain.Present(1, PresentFlags.None);
+        }
+
+        /// <summary>
+        /// Uploads every renderer of one primitive type in the current scene to its buffer slot
+        /// </summary>
+        private void UploadPrimitives<T>(int slot) where T : IPrimitive
+        {
+            primitivesBuffer[slot].UpdateValue(
+                Scene.CurrentScene.Components<RaymarchRenderer<T>>()
+                    .Select(primitive => primitive.GetBufferData()).ToArray()
+            );
         }
 
         /// <summary>

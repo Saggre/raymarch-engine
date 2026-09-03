@@ -172,7 +172,8 @@ float4 main(PS_INPUT input) : SV_Target
 
     float3 FOG_COLOR = float3(0.2, 0.2, 0.3);
 
-    mainLight.Create(float3(70, 200, 100));
+    // High, in front and off to the left, so the camera facing sides are the lit ones
+    mainLight.Create(float3(-45, 70, -55));
 
     // Move light
     mainLight.position.xz += float2(sin(time), cos(time)) * 2.0;
@@ -203,7 +204,7 @@ float4 main(PS_INPUT input) : SV_Target
     // Reflection
     sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
 
-    float3 ambientColor = float3(0.001, 0.001, 0.001);
+    float3 ambientColor = float3(0.05, 0.05, 0.06);
     sceneColor += ambientColor;
 
     sceneColor *= shadow;
