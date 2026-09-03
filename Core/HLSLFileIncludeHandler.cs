@@ -61,13 +61,23 @@ namespace RaymarchEngine.Core
         /// <returns>Stream with HLSL code</returns>
         private Stream GetShaderConstantsStream()
         {
-            string hlslString = $"static const int sphereCount = {RaymarchRenderer.PrimitiveCount<Sphere>()};" +
-                                $"static const int boxCount = {RaymarchRenderer.PrimitiveCount<Box>()};" +
-                                $"static const int planeCount = {RaymarchRenderer.PrimitiveCount<Plane>()};";
+            // Counted from the scene, which is what RenderDevice.Draw uploads. Counting renderers as
+            // they are constructed would include ones never added, overrunning the structured buffer.
+            string hlslString = $"static const int sphereCount = {SceneRendererCount<Sphere>()};" +
+                                $"static const int boxCount = {SceneRendererCount<Box>()};" +
+                                $"static const int planeCount = {SceneRendererCount<Plane>()};";
 
             Debug.WriteLine(hlslString);
             byte[] byteArray = Encoding.ASCII.GetBytes(hlslString);
             return new MemoryStream(byteArray);
+        }
+
+        /// <summary>
+        /// How many renderers of a given primitive type the current scene holds
+        /// </summary>
+        private static int SceneRendererCount<T>() where T : IPrimitive
+        {
+            return Scene.CurrentScene.Components<RaymarchRenderer<T>>().Length;
         }
 
         public Stream Open(IncludeType type, string fileName, Stream parentStream)
