@@ -427,7 +427,6 @@ namespace RaymarchEngine.Core.Rendering
             }
 
             Utilities.Dispose(ref backbufferView);
-            Utilities.Dispose(ref depthView);
             Utilities.Dispose(ref rasterState);
             Utilities.Dispose(ref blendState);
             Utilities.Dispose(ref depthState);

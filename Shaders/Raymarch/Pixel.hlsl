@@ -61,6 +61,7 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
     // t = distance from object surface towards light source.
     // Capped by step count too: at grazing angles h barely advances t.
     float t = mint;
+    [loop]
     for (int i = 0; i < SHADOW_MAX_STEPS && t < SHADOW_MAX_DIST; i++)
     {
         float h = getDist(rayOrigin + lightDir * t, material);
