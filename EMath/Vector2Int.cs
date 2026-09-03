@@ -43,6 +43,19 @@ namespace RaymarchEngine.EMath
             return X == other.X && Y == other.Y;
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj is Vector2Int other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (x * 397) ^ y;
+            }
+        }
+
         public static bool operator ==(Vector2Int a, Vector2Int b)
         {
             return a.Equals(b);

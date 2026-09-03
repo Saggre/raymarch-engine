@@ -59,8 +59,6 @@ namespace RaymarchEngine.Core.Rendering
     /// </summary>
     public class RaymarchRenderer<T> : IComponent where T : IPrimitive
     {
-        private IPrimitive primitive;
-        private Type primitiveType;
         private GameObject parent;
 
         /// <summary>
@@ -80,13 +78,11 @@ namespace RaymarchEngine.Core.Rendering
 
             RaymarchRenderer.AddPrimitiveCount<T>();
             this.parent = parent;
-            primitiveType = typeof(T);
         }
 
         private Vector4 GetOptions()
         {
             return new Vector4(parent.Movement.Scale.MinComponent(), 0f, 0f, 0f);
-            return Vector4.Zero;
         }
 
         /// <summary>

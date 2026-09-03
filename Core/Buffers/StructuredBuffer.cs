@@ -10,7 +10,7 @@ using Device = SharpDX.Direct3D11.Device;
 namespace RaymarchEngine.Core.Buffers
 {
     /// <summary>
-    /// With this class you can effortlessly add a HLSL StructuredBuffer<T> and update its values.
+    /// With this class you can effortlessly add a HLSL StructuredBuffer&lt;T&gt; and update its values.
     /// Structured buffer is a shader resource view and has a 't' flag.
     /// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-object-structuredbuffer
     /// </summary>

@@ -68,8 +68,6 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Create From Vertices and Indices array
         /// </summary>
-        /// <typeparam name="VType">Vertex Type</typeparam>
-        /// <param name="device">Device</param>
         /// <param name="vertices">Vertices</param>
         /// <param name="indices">Indices</param>
         /// <returns>Mesh</returns>
