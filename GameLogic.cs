@@ -4,6 +4,7 @@ using RaymarchEngine.Core.Input;
 using RaymarchEngine.Core.Rendering;
 using RaymarchEngine.EMath;
 using RaymarchEngine.Physics;
+using Box = RaymarchEngine.Core.Primitives.Box;
 using Plane = RaymarchEngine.Core.Primitives.Plane;
 using Sphere = RaymarchEngine.Core.Primitives.Sphere;
 
@@ -31,22 +32,53 @@ namespace RaymarchEngine
 
             lookVector = new Vector2(180, 180);
 
-            /*GameObject plane = new GameObject(
-                new Vector3(0, -1, 0),
-                new RaymarchRenderer<Plane>(),
-                new PrimitivePhysics(new BepuPhysics.Collidables.Box(1000f, 0.1f, 1000f), 1, true)
-            );
+            BuildScene();
+        }
 
-            sphere = new GameObject(
-                new Vector3(2, 5, 0),
-                new RaymarchRenderer<Sphere>()
-            );
-            sphere.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));
+        /// <summary>
+        /// Fills the scene with the objects the raymarch shader renders.
+        /// Renderers can only be added here: the shader bakes the per-type counts in on first compile.
+        /// </summary>
+        private void BuildScene()
+        {
+            GameObject plane = new GameObject(new Vector3(0, -1, 0));
+            plane.AddComponent(new RaymarchRenderer<Plane>
+            {
+                Color = new Vector3(0.99f, 0.99f, 0.99f),
+                Diffraction = 0.7f
+            });
+
+            // A sphere's radius comes from Scale.x
+            GameObject redSphere = new GameObject(new Vector3(0, 0.5f, 0));
+            redSphere.Movement.Scale = new Vector3(0.8f, 0.8f, 0.8f);
+            redSphere.AddComponent(new RaymarchRenderer<Sphere>
+            {
+                Color = new Vector3(0.95f, 0.1f, 0f),
+                Shininess = 200f,
+                Diffraction = 0.98f
+            });
+
+            GameObject blueSphere = new GameObject(new Vector3(2.5f, 1.5f, 2f));
+            blueSphere.AddComponent(new RaymarchRenderer<Sphere>
+            {
+                Color = new Vector3(0f, 0f, 0.99f),
+                Shininess = 100f,
+                Diffraction = 0.98f
+            });
+
+            // A box's Scale is its half extents
+            GameObject greenBox = new GameObject(new Vector3(-2f, 0f, 1f));
+            greenBox.Movement.Scale = new Vector3(0.8f, 0.8f, 0.8f);
+            greenBox.AddComponent(new RaymarchRenderer<Box>
+            {
+                Color = new Vector3(0f, 0.99f, 0f),
+                Diffraction = 0.98f
+            });
 
             Scene.CurrentScene.AddGameObject(plane);
-            Scene.CurrentScene.AddGameObject(sphere);
-
-            camera.AddComponent(new PrimitivePhysics(new BepuPhysics.Collidables.Sphere(1f), 10));*/
+            Scene.CurrentScene.AddGameObject(redSphere);
+            Scene.CurrentScene.AddGameObject(blueSphere);
+            Scene.CurrentScene.AddGameObject(greenBox);
         }
 
         public override void Update(float deltaTime)
