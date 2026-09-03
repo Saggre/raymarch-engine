@@ -9,6 +9,7 @@ namespace RaymarchEngine.Core.Rendering
     /// <summary>
     /// Attached to a gameobject to enable raymarch rendering
     /// </summary>
+    /// <typeparam name="T">Primitive shape to draw, which picks the shader's distance function</typeparam>
     public class RaymarchRenderer<T> : IComponent where T : IPrimitive
     {
         private GameObject parent;
@@ -57,9 +58,9 @@ namespace RaymarchEngine.Core.Rendering
         public Vector4 Options { get; set; }
 
         /// <summary>
-        /// Get data needed to render this shape
+        /// Packs this frame's transform and material into the layout the shader expects
         /// </summary>
-        /// <returns></returns>
+        /// <returns>One element of the structured buffer for this primitive type</returns>
         public PrimitiveBufferData GetBufferData()
         {
             Quaternion rotation = parent.Movement.Rotation;
@@ -98,14 +99,49 @@ namespace RaymarchEngine.Core.Rendering
     [StructLayout(LayoutKind.Sequential)]
     public struct PrimitiveBufferData
     {
+        /// <summary>
+        /// Surface parameters for this primitive
+        /// </summary>
         public MaterialBufferData material;
+
+        /// <summary>
+        /// Shape specific parameters, unused by shapes that only need a scale
+        /// </summary>
         public Vector4 primitiveOptions;
+
+        /// <summary>
+        /// World space position
+        /// </summary>
         public Vector3 position;
+
+        /// <summary>
+        /// Pads position out to 16 bytes
+        /// </summary>
         public float positionPadding;
+
+        /// <summary>
+        /// World space rotation as a quaternion, x y z w
+        /// </summary>
         public Vector4 rotation;
+
+        /// <summary>
+        /// Scale along each axis, read differently by each distance function
+        /// </summary>
         public Vector3 scale;
+
+        /// <summary>
+        /// Pads scale out to 16 bytes
+        /// </summary>
         public float scalePadding;
 
+        /// <summary>
+        /// Creates one buffer element. The padding fields are left at zero.
+        /// </summary>
+        /// <param name="material">Surface parameters</param>
+        /// <param name="primitiveOptions">Shape specific parameters</param>
+        /// <param name="position">World space position</param>
+        /// <param name="rotation">World space rotation as a quaternion, x y z w</param>
+        /// <param name="scale">Scale along each axis</param>
         public PrimitiveBufferData(
             MaterialBufferData material,
             Vector4 primitiveOptions,
@@ -128,12 +164,38 @@ namespace RaymarchEngine.Core.Rendering
     [StructLayout(LayoutKind.Sequential)]
     public struct MaterialBufferData
     {
+        /// <summary>
+        /// Diffuse colour
+        /// </summary>
         public Vector3 color;
+
+        /// <summary>
+        /// Phong specular exponent
+        /// </summary>
         public float shininess;
+
+        /// <summary>
+        /// Strength of the specular highlight
+        /// </summary>
         public float specularStrength;
+
+        /// <summary>
+        /// How much of the surroundings the surface reflects, 0 to 1
+        /// </summary>
         public float diffraction;
+
+        /// <summary>
+        /// Pads the struct out to a multiple of 16 bytes
+        /// </summary>
         public Vector2 padding;
 
+        /// <summary>
+        /// Creates the material block. The padding field is left at zero.
+        /// </summary>
+        /// <param name="color">Diffuse colour</param>
+        /// <param name="shininess">Phong specular exponent</param>
+        /// <param name="specularStrength">Strength of the specular highlight</param>
+        /// <param name="diffraction">Reflectivity, 0 to 1</param>
         public MaterialBufferData(Vector3 color, float shininess, float specularStrength, float diffraction)
             : this()
         {

@@ -4,7 +4,8 @@ using RaymarchEngine.EMath;
 namespace RaymarchEngine.Core
 {
     /// <summary>
-    /// A component that let's GameObjects move
+    /// A component holding a GameObject's position, rotation and scale. Every GameObject has one,
+    /// and moving it carries its children along.
     /// </summary>
     public class Movement : IComponent
     {
@@ -29,11 +30,11 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Create a new movement from params
+        /// Create a new movement from a full transform
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="rotation"></param>
-        /// <param name="scale"></param>
+        /// <param name="position">World space position</param>
+        /// <param name="rotation">World space rotation</param>
+        /// <param name="scale">Scale along each axis</param>
         public Movement(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             this.position = position;
@@ -60,10 +61,11 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Moves the GameObject
+        /// Moves the GameObject by direction scaled by speed. The direction is not normalised,
+        /// so its length is part of the distance travelled.
         /// </summary>
-        /// <param name="direction"></param>
-        /// <param name="speed"></param>
+        /// <param name="direction">Offset to add to the position</param>
+        /// <param name="speed">Multiplier applied to the offset</param>
         public void Move(Vector3 direction, float speed = 1f)
         {
             position += direction * speed;
@@ -81,7 +83,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Add eulerAngles to the current rotation
         /// </summary>
-        /// <param name="eulerAngles"></param>
+        /// <param name="eulerAngles">Rotation to apply, in degrees per axis</param>
         public void Rotate(Vector3 eulerAngles)
         {
             Quaternion eulerRot = eulerAngles.EulerToQuaternion();
@@ -89,8 +91,11 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Add eulerAngles to the current rotation
+        /// Add a rotation to the current rotation
         /// </summary>
+        /// <param name="x">Rotation around the x axis, in degrees</param>
+        /// <param name="y">Rotation around the y axis, in degrees</param>
+        /// <param name="z">Rotation around the z axis, in degrees</param>
         public void Rotate(float x, float y, float z)
         {
             Rotate(new Vector3(x, y, z));
@@ -117,10 +122,12 @@ namespace RaymarchEngine.Core
             this.gameObject = gameObject;
         }
 
+        /// <inheritdoc />
         public void Start(int startTime)
         {
         }
 
+        /// <inheritdoc />
         public void Update(float deltaTime)
         {
             deltaPosition = position - lastPosition;
@@ -134,6 +141,7 @@ namespace RaymarchEngine.Core
             lastPosition = position;
         }
 
+        /// <inheritdoc />
         public void End(int endTime)
         {
         }
