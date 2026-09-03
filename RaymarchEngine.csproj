@@ -205,7 +205,6 @@
     <Compile Include="EMath\BufferData.cs" />
     <Compile Include="EMath\ComputeBuffer.cs" />
     <Compile Include="EMath\ComputeShader.cs" />
-    <Compile Include="EMath\FastNoise.cs" />
     <Compile Include="EMath\Util.cs" />
     <Compile Include="Physics\IPhysicsObject.cs" />
     <Compile Include="Physics\PhysicsHandler.cs" />

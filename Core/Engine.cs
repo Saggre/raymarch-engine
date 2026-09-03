@@ -18,7 +18,6 @@ namespace RaymarchEngine.Core
     internal class Engine : IDisposable
     {
         private static RenderForm renderForm;
-        private static int fps = 144;
         private static bool isFullscreen = false;
 
         private static float elapsedTime;
@@ -33,11 +32,6 @@ namespace RaymarchEngine.Core
         /// Time elapsed since starting the engine
         /// </summary>
         public static float ElapsedTime => elapsedTime;
-
-        /// <summary>
-        /// Get the program's frames per second
-        /// </summary>
-        public static int Fps => fps;
 
         /// <summary>
         /// Is the window full screen?

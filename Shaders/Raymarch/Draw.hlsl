@@ -40,8 +40,6 @@ void subtractPrimitiveSmooth(iPrimitive primitive, in float3 pos, inout float di
 
 float getDist(in float3 pos, out cMaterial material)
 {
-    float ts = sin(time) + 1.0;
-
     cMaterial materialA;
     materialA.Create(float3(0.99, 0.99, 0.99));
     materialA.diffraction = 0.7;
@@ -69,17 +67,10 @@ float getDist(in float3 pos, out cMaterial material)
     cPlane plane;
     plane.Create(float3(0, -1, 0));
 
-    cBox box;
-    box.Create(float3(-1, 1, 0));
-    box.scale = (1.5 - ts).xxx;
-
     cOctahedron octahedron;
     octahedron.Create(float3(1, 2.1, 0));
     octahedron.position = float3(sin(time), 3 + sin(time) * 0.1, cos(time));
     octahedron.scale.x = 1 + sin(time) * 0.3;
-
-    cCylinder cyl;
-    cyl.Create(float3(0, 0, 0));
 
     float dist = MAX_DIST;
 

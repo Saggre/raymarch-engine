@@ -15,12 +15,8 @@ namespace RaymarchEngine.Core
         private Vector3 scale;
 
         private Vector3 deltaPosition;
-        private Quaternion deltaRotation;
-        private Vector3 deltaScale;
 
         private Vector3 lastPosition;
-        private Quaternion lastRotation;
-        private Vector3 lastScale;
 
         /// <summary>
         /// Create a new movement
@@ -128,8 +124,6 @@ namespace RaymarchEngine.Core
         public void Update(float deltaTime)
         {
             deltaPosition = position - lastPosition;
-            deltaRotation = rotation - lastRotation;
-            deltaScale = scale - lastScale;
 
             foreach (GameObject gameObject in gameObject.Children)
             {
@@ -138,8 +132,6 @@ namespace RaymarchEngine.Core
             }
 
             lastPosition = position;
-            lastRotation = rotation;
-            lastScale = scale;
         }
 
         public void End(int endTime)

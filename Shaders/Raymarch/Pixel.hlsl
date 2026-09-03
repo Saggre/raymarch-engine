@@ -80,14 +80,6 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
     return lerp(1.0 - shadowIntensity, 1.0, res);
 }
 
-// Get light at position
-float getLight(cRaymarchResult raymarchResult)
-{
-    float3 lightDir = normalize(mainLight.position - raymarchResult.hitPos);
-    float dif = clamp(dot(raymarchResult.surfaceNormal, lightDir), 0.0, 1.0);
-    return dif;
-}
-
 // focalLength is the distance from the eye to the uv plane, so a larger value narrows the view.
 float3 getCameraRayDir(float2 uv, float focalLength)
 {
@@ -158,19 +150,6 @@ float3 getReflection(cRaymarchResult raymarchResult)
     return getPhongLight(refRaymarchResult);
 }
 
-float getSubsurfCheap(cRaymarchResult raymarchResult)
-{
-    float sub = 0.0;
-    cMaterial mat;
-    for (int i = 0; i < 30; i++)
-    {
-        float dist = i * 0.4 / 30.0;
-        sub += dist + getDist(raymarchResult.hitPos - raymarchResult.surfaceNormal * dist, mat);
-    }
-    sub /= 30.0;
-    return sub;
-}
-
 // AO
 // Will be of lower resolution with low MAX_STEPS, because it's calculated from raymarch steps taken
 float getAmbientOcclusion(in cRaymarchResult raymarchResult, float noise)
@@ -223,9 +202,6 @@ float4 main(PS_INPUT input) : SV_Target
 
     // Reflection
     sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
-
-    // Very expensive
-    //sceneColor += getSubsurfCheap(raymarchResult).xxx * pow(raymarchResult.hitMaterial.diffuseColor, 0.5);
 
     float3 ambientColor = float3(0.001, 0.001, 0.001);
     sceneColor += ambientColor;
