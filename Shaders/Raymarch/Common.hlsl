@@ -24,19 +24,17 @@ class cMaterial
     float shininess;
     float3 specularColor;
     float diffraction; // 0 = nothing, 1 = full reflective, -1 = full refractive
+    float checkerSize; // World size of one checkerboard square, 0 for a plain surface
 
     void Create(float3 _diffuseColor = float3(1.0, 1.0, 1.0), float _shininess = 50.0,
-                float3 _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0)
+                float3 _specularColor = float3(1.0, 1.0, 1.0), float _diffraction = 0.0,
+                float _checkerSize = 0.0)
     {
         diffuseColor = _diffuseColor;
         shininess = _shininess;
         specularColor = _specularColor;
         diffraction = _diffraction;
-    }
-
-    float3 GetCheckered(float3 worldPosition)
-    {
-        return checkers(worldPosition.xz);
+        checkerSize = _checkerSize;
     }
 
     void fuse(cMaterial material)
@@ -45,6 +43,7 @@ class cMaterial
         shininess = shininess * 0.5 + material.shininess * 0.5;
         specularColor = specularColor * 0.5 + material.specularColor * 0.5;
         diffraction = diffraction * 0.5 + material.diffraction * 0.5;
+        checkerSize = max(checkerSize, material.checkerSize);
     }
 };
 
@@ -175,7 +174,8 @@ struct cMaterialData
     float shininess;
     float specularStrength;
     float diffraction;
-    float2 padding;
+    float checkerSize;
+    float padding;
 };
 
 // Mirrors PrimitiveBufferData in RaymarchRenderer.cs. Every vector starts on a 16 byte boundary

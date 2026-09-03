@@ -57,6 +57,12 @@ namespace RaymarchEngine.Core.Rendering
         public Vector4 Options { get; set; }
 
         /// <summary>
+        /// World space size of one checkerboard square laid over the surface, or 0 for a plain
+        /// surface. The pattern is in world space, so it does not travel with the object.
+        /// </summary>
+        public float CheckerSize { get; set; }
+
+        /// <summary>
         /// Get data needed to render this shape
         /// </summary>
         /// <returns></returns>
@@ -65,7 +71,7 @@ namespace RaymarchEngine.Core.Rendering
             Quaternion rotation = parent.Movement.Rotation;
 
             return new PrimitiveBufferData(
-                new MaterialBufferData(Color, Shininess, SpecularStrength, Diffraction),
+                new MaterialBufferData(Color, Shininess, SpecularStrength, Diffraction, CheckerSize),
                 Options,
                 parent.Movement.Position,
                 new Vector4(rotation.X, rotation.Y, rotation.Z, rotation.W),
@@ -132,15 +138,18 @@ namespace RaymarchEngine.Core.Rendering
         public float shininess;
         public float specularStrength;
         public float diffraction;
-        public Vector2 padding;
+        public float checkerSize;
+        public float padding;
 
-        public MaterialBufferData(Vector3 color, float shininess, float specularStrength, float diffraction)
+        public MaterialBufferData(Vector3 color, float shininess, float specularStrength, float diffraction,
+            float checkerSize)
             : this()
         {
             this.color = color;
             this.shininess = shininess;
             this.specularStrength = specularStrength;
             this.diffraction = diffraction;
+            this.checkerSize = checkerSize;
         }
     }
 }
