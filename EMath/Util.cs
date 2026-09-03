@@ -274,8 +274,7 @@ namespace RaymarchEngine.EMath
             }
             else if (cosHalfAngle < 0.0f)
             {
-                // Negate the whole quaternion to take the short way round. Negating only W would
-                // leave a different rotation, not the equivalent one.
+                // Negate all four components to take the short way round. W alone is a different rotation.
                 b = new Quaternion(-b.X, -b.Y, -b.Z, -b.W);
                 cosHalfAngle = -cosHalfAngle;
             }
@@ -488,8 +487,7 @@ namespace RaymarchEngine.EMath
         }
 
         /// <summary>
-        /// Tolerance for the near-zero comparisons below. float.Epsilon is the smallest denormal,
-        /// roughly 1.4e-45, so comparing against it is an exact zero test rather than a tolerance.
+        /// Tolerance for the near-zero tests. float.Epsilon is ~1.4e-45, an exact zero test.
         /// </summary>
         private const float NearZero = 1e-6f;
 
@@ -499,9 +497,8 @@ namespace RaymarchEngine.EMath
         }
 
         /// <summary>
-        /// Near-zero test for an already squared magnitude. Comparing a squared value against
-        /// NearZero directly would make the effective tolerance on the magnitude its square root,
-        /// a thousand times looser than the constant reads.
+        /// Near-zero test for an already squared magnitude. Comparing against NearZero directly
+        /// would loosen the tolerance on the magnitude to its square root.
         /// </summary>
         private static bool AlmostZeroSquared(float squared)
         {

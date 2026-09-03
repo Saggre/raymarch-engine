@@ -11,8 +11,7 @@ namespace RaymarchEngine.Core.Primitives
     /// </summary>
     public interface IPrimitive
     {
-        // Planned members, kept as plain comments because XML docs on a commented-out
-        // declaration are not attached to anything (CS1587):
+        // Planned members, as plain comments: XML docs on a commented-out declaration warn (CS1587)
         //
         // Vector4 GetPrimitiveOptions();
         //   Options used by the shader's signed distance field functions, like a sphere's radius.
