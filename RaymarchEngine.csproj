@@ -183,9 +183,13 @@
     <Compile Include="Core\GameObject.cs" />
     <Compile Include="Core\Movement.cs" />
     <Compile Include="Core\Primitives\Box.cs" />
+    <Compile Include="Core\Primitives\Cylinder.cs" />
+    <Compile Include="Core\Primitives\Ellipsoid.cs" />
     <Compile Include="Core\Primitives\IPrimitive.cs" />
+    <Compile Include="Core\Primitives\Octahedron.cs" />
     <Compile Include="Core\Primitives\Plane.cs" />
     <Compile Include="Core\Primitives\Sphere.cs" />
+    <Compile Include="Core\Primitives\Torus.cs" />
     <Compile Include="Core\Rendering\FastNoise.cs" />
     <Compile Include="Core\Rendering\RaymarchRenderer.cs" />
     <Compile Include="Core\Rendering\RenderDevice.cs" />
@@ -205,7 +209,6 @@
     <Compile Include="EMath\BufferData.cs" />
     <Compile Include="EMath\ComputeBuffer.cs" />
     <Compile Include="EMath\ComputeShader.cs" />
-    <Compile Include="EMath\FastNoise.cs" />
     <Compile Include="EMath\Util.cs" />
     <Compile Include="Physics\IPhysicsObject.cs" />
     <Compile Include="Physics\PhysicsHandler.cs" />

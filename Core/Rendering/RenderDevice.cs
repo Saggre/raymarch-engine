@@ -27,10 +27,15 @@ namespace RaymarchEngine.Core.Rendering
     /// </summary>
     public class RenderDevice : IDisposable
     {
+        /// <summary>
+        /// Slots 0..7 belong to the per-primitive structured buffers. Anything bound inside that
+        /// range silently replaces whichever primitive buffer shares the slot.
+        /// </summary>
+        private const int NoiseTextureSlot = 8;
+
         private Resolution renderResolution;
 
         private RenderTargetView backbufferView;
-        private DepthStencilView depthView;
 
         private SampleDescription antiAliasing; // Used for backbuffer and depth buffer
         private RasterizerState rasterState;
@@ -46,6 +51,7 @@ namespace RaymarchEngine.Core.Rendering
 
         // Raymarch
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
+        private Shader raymarchShader;
         private RaymarchShaderBufferData raymarchShaderBufferData; // Values to send to the raymarch shader
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
@@ -83,7 +89,7 @@ namespace RaymarchEngine.Core.Rendering
         private void RenderDeviceStarted()
         {
             // TODO pre-compile shader
-            Shader raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
+            raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
             raymarchRenderPlane = Mesh.CreateQuad();
 
             // Set as current shaders
@@ -101,12 +107,14 @@ namespace RaymarchEngine.Core.Rendering
                 primitivesBuffer[i] = new StructuredBuffer<PrimitiveBufferData>(device, i);
             }
 
-            noiseTextureBuffer =
-                new TextureBuffer<Color>(device, CreateNoise(1024), 1024, Format.R8G8B8A8_UNorm, 1);
+            noiseTextureBuffer = new TextureBuffer<Color>(device, CreateNoise(1024), 1024,
+                Format.R8G8B8A8_UNorm, NoiseTextureSlot);
         }
 
         /// <summary>
-        /// Creates noise to use in the shader
+        /// Creates the noise texture the shader dithers ambient occlusion with.
+        /// This is fractal value noise, which is low frequency, so it blotches at large scales.
+        /// TODO generate real blue noise (void-and-cluster) instead.
         /// </summary>
         /// <param name="size"></param>
         private Color[] CreateNoise(int size)
@@ -149,8 +157,8 @@ namespace RaymarchEngine.Core.Rendering
                 Format = Format.R8G8B8A8_UNorm,
             };
 
-            // Why does count>1 not render anything?
-            antiAliasing = new SampleDescription(4, 0);
+            // One fullscreen quad has no interior edges for MSAA to resolve, so it only costs bandwidth
+            antiAliasing = new SampleDescription(1, 0);
 
             SwapChainDescription swapChainDesc = new SwapChainDescription()
             {
@@ -194,7 +202,7 @@ namespace RaymarchEngine.Core.Rendering
             //renderForm.UserResized += (sender, args) => MustResize = true;
 
             SetRasterState();
-            SetAlphaBlending();
+            SetBlendState();
             SetDepthState();
             SetSamplerState();
 
@@ -214,37 +222,33 @@ namespace RaymarchEngine.Core.Rendering
 
             RasterizerStateDescription description = RasterizerStateDescription.Default();
             description.FillMode = isWireframe ? FillMode.Wireframe : FillMode.Solid;
-            description.IsMultisampleEnabled = true;
+            description.IsMultisampleEnabled = false;
 
             rasterState = new RasterizerState(device, description);
         }
 
         /// <summary>
-        /// Set alpha blending as current color blending state between previous and current pixels. Blending occurs after pixel shader stage
+        /// Set the colour blending state. Disabled: the raymarch quad is opaque and covers the target.
         /// </summary>
-        void SetAlphaBlending()
+        void SetBlendState()
         {
             Utilities.Dispose(ref blendState);
 
             BlendStateDescription description = BlendStateDescription.Default();
-            description.RenderTarget[0].BlendOperation = BlendOperation.Add;
-            description.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
-            description.RenderTarget[0].DestinationBlend = BlendOption.InverseDestinationAlpha;
-            description.RenderTarget[0].IsBlendEnabled = true;
+            description.RenderTarget[0].IsBlendEnabled = false;
 
             blendState = new BlendState(device, description);
         }
 
         /// <summary>
-        /// Set depth state
+        /// Set depth state. Off, with no depth buffer: a single fullscreen quad occludes nothing.
         /// </summary>
         void SetDepthState()
         {
             Utilities.Dispose(ref depthState);
 
             DepthStencilStateDescription description = DepthStencilStateDescription.Default();
-            description.DepthComparison = Comparison.LessEqual;
-            description.IsDepthEnabled = true;
+            description.IsDepthEnabled = false;
 
             depthState = new DepthStencilState(device, description);
         }
@@ -306,40 +310,21 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
+                // The window's ratio, not the render target's: uv comes from TexCoord, so the
+                // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
-                primitivesBuffer[0].UpdateValue(
-                    Scene.CurrentScene.Components<RaymarchRenderer<Sphere>>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[1].UpdateValue(
-                    Scene.CurrentScene.Components<RaymarchRenderer<Box>>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[2].UpdateValue(
-                    Scene.CurrentScene.Components<RaymarchRenderer<Primitives.Plane>>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                /*primitivesBuffer[3].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Ellipsoid>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[4].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<Torus>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );
-
-                primitivesBuffer[5].UpdateValue(
-                    Engine.CurrentScene.GroupedPrimitives.GetPrimitivesOfType<CappedTorus>()
-                        .Select(primitive => primitive.GetBufferData()).ToArray()
-                );*/
+                // Slot order has to match the register indices in Common.hlsl
+                UploadPrimitives<Sphere>(0);
+                UploadPrimitives<Box>(1);
+                UploadPrimitives<Primitives.Plane>(2);
+                UploadPrimitives<Torus>(3);
+                UploadPrimitives<Octahedron>(4);
+                UploadPrimitives<Ellipsoid>(5);
+                UploadPrimitives<Cylinder>(6);
             }
 
             // Draw raymarch plane
@@ -350,13 +335,23 @@ namespace RaymarchEngine.Core.Rendering
         }
 
         /// <summary>
+        /// Uploads every renderer of one primitive type in the current scene to its buffer slot
+        /// </summary>
+        private void UploadPrimitives<T>(int slot) where T : IPrimitive
+        {
+            primitivesBuffer[slot].UpdateValue(
+                Scene.CurrentScene.Components<RaymarchRenderer<T>>()
+                    .Select(primitive => primitive.GetBufferData()).ToArray()
+            );
+        }
+
+        /// <summary>
         /// Clears backbuffer and depth buffer
         /// </summary>
         /// <param name="color">Background color</param>
         void Clear(Color4 color)
         {
             deviceContext.ClearRenderTargetView(backbufferView, color);
-            deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0F, 0);
         }
 
         #endregion
@@ -372,7 +367,6 @@ namespace RaymarchEngine.Core.Rendering
         {
             // Dispose all previous allocated resources
             Utilities.Dispose(ref backbufferView);
-            Utilities.Dispose(ref depthView);
 
             // Error check
             if (renderForm.ClientSize.Width == 0 || renderForm.ClientSize.Height == 0)
@@ -396,28 +390,9 @@ namespace RaymarchEngine.Core.Rendering
             backbufferView = new RenderTargetView(device, backBufferTexture);
             backBufferTexture.Dispose();
 
-            // Depth buffer
-            Texture2D depthTexture = new Texture2D(device, new Texture2DDescription()
-            {
-                Format = Format.D16_UNorm,
-                ArraySize = 1,
-                MipLevels = 1,
-                Width = renderResolution.Width,
-                Height = renderResolution.Height,
-                SampleDescription = antiAliasing,
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None
-            });
-
-            // Create the depth buffer view
-            depthView = new DepthStencilView(device, depthTexture);
-            depthTexture.Dispose();
-
             // Setup targets and viewport for rendering
             deviceContext.Rasterizer.SetViewport(0, 0, renderResolution.Width, renderResolution.Height);
-            deviceContext.OutputMerger.SetTargets(depthView, backbufferView);
+            deviceContext.OutputMerger.SetTargets(backbufferView);
         }
 
         #endregion
@@ -428,16 +403,30 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         public void Dispose()
         {
-            swapChain.Dispose();
-            device.Dispose();
-            deviceContext.Dispose();
-            renderForm.Dispose();
-            raymarchShaderBuffer.Dispose();
-            noiseTextureBuffer.Dispose();
-            foreach (var buffer in primitivesBuffer)
+            // Resources before the context and device that own them. Engine owns the render form.
+            // These are still null if the program closes before the first frame.
+            raymarchShaderBuffer?.Dispose();
+            noiseTextureBuffer?.Dispose();
+            raymarchRenderPlane?.Dispose();
+            raymarchShader?.Dispose();
+
+            if (primitivesBuffer != null)
             {
-                buffer.Dispose();
+                foreach (StructuredBuffer<PrimitiveBufferData> buffer in primitivesBuffer)
+                {
+                    buffer.Dispose();
+                }
             }
+
+            Utilities.Dispose(ref backbufferView);
+            Utilities.Dispose(ref rasterState);
+            Utilities.Dispose(ref blendState);
+            Utilities.Dispose(ref depthState);
+            Utilities.Dispose(ref samplerState);
+
+            swapChain.Dispose();
+            deviceContext.Dispose();
+            device.Dispose();
         }
     }
 }

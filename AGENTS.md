@@ -24,9 +24,9 @@ uploaded to the GPU in buffers and the raymarch pixel shader does the work.
 | `Core/` | Engine core: `Engine`, `Scene`, `GameObject`, `Camera`, `Shader`, `Movement` |
 | `Core/Rendering/` | `RenderDevice` (D3D11 device, swap chain, draw loop), `RaymarchRenderer` |
 | `Core/Buffers/` | `ConstantBuffer<T>`, `StructuredBuffer<T>`, `TextureBuffer<T>` wrappers |
-| `Core/Primitives/` | Marker types (`Sphere`, `Box`, `Plane`) implementing `IPrimitive` |
+| `Core/Primitives/` | Marker types (`Sphere`, `Box`, `Plane`, `Torus`, `Octahedron`, `Ellipsoid`, `Cylinder`) implementing `IPrimitive` |
 | `Core/Input/` | `InputDevice` with static `Keyboard` / `Mouse`, `PlayerMovement` |
-| `EMath/` | Math helpers and extension methods, `Vector2Int`, `Byte4`, `FastNoise` |
+| `EMath/` | Math helpers and extension methods, `Vector2Int`, `Byte4` |
 | `Geometry/` | `RenderVertex` (input layout), `Primitive`, `SquareRect` |
 | `Physics/` | `PhysicsHandler` (Bepu simulation), `PrimitivePhysics` component |
 | `Shaders/Raymarch/` | HLSL: `Vertex.hlsl`, `Pixel.hlsl` and the includes they pull in |
@@ -46,29 +46,32 @@ camera.
 update actions, `renderDevice.Draw()`, per-component `Update`, physics timestep, deltaTime
 measurement. `deltaTime` is the *previous* frame's duration.
 
-**Startup order matters.** `RaymarchRenderer.Init()` runs, then the scene is created, then
-physics, then input, then every component's `Start`, and only then is `RenderDevice`
-constructed. The shader is compiled lazily on the first frame, because the primitive counts
-per type must be final before the HLSL is generated. `RaymarchRenderer<T>` throws from
-`OnAddedToGameObject` if `Engine.RenderDevice` already exists, so renderers can only be
-added during `Start`.
+**Startup order matters.** The scene is created, then physics, then input, then every
+component's `Start`, and only then is `RenderDevice` constructed. The shader is compiled
+lazily on the first frame, because the primitive counts per type must be final before the
+HLSL is generated. `RaymarchRenderer<T>` throws from `OnAddedToGameObject` if
+`Engine.RenderDevice` already exists, so renderers can only be added during `Start`.
 
 **Shader constant injection.** `Shader.CompileFromFiles(@"Shaders\Raymarch")` compiles every
 stage file that exists in the folder (`Vertex.hlsl`, `Hull.hlsl`, `Domain.hlsl`,
 `Geometry.hlsl`, `Pixel.hlsl`), each with entry point `main`. `HLSLFileIncludeHandler`
 resolves `#include`. The virtual include `RaymarchEngine` is not a file: the handler
-synthesizes `static const int sphereCount/boxCount/planeCount` from the live counts in
-`RaymarchRenderer`. If you add a primitive type, register it in `RaymarchRenderer.Init()`,
-emit its count in `HLSLFileIncludeHandler.GetShaderConstantsStream()`, and consume it in the
-HLSL. Shaders are copied to the output directory as `Content` with
+synthesizes a `static const int <type>Count` per primitive type by counting the
+`RaymarchRenderer<T>` components in `Scene.CurrentScene`. That has to stay the same source
+`RenderDevice.Draw` uploads from, or the baked count and the structured buffer disagree and
+the shader loop reads past the end. If you add a primitive type, emit its count in
+`HLSLFileIncludeHandler.GetShaderConstantsStream()`, give it a `StructuredBuffer` register
+in `Common.hlsl`, upload it in `RenderDevice.Draw`, and loop over it in `getDist`.
+Shaders are copied to the output directory as `Content` with
 `CopyToOutputDirectory=Always`, so they are read from disk at runtime and can be edited
 without rebuilding the C#.
 
 **GPU data.** `PrimitiveBufferData` and `MaterialBufferData` are
 `[StructLayout(LayoutKind.Sequential)]` structs mirrored by HLSL `cbuffer` and
 `StructuredBuffer` declarations. Any field change must be mirrored on both sides, with HLSL
-16-byte packing rules respected. Rotation is sent to the GPU as Euler angles, not as a
-quaternion.
+16-byte packing rules respected. Rotation travels as a quaternion, and `getDist` rotates the
+sample point by its conjugate to put the point in each primitive's local frame, so the signed
+distance functions themselves stay axis aligned and receive an already-local point.
 
 ## Conventions
 
@@ -138,6 +141,9 @@ Do not run the test suite unless asked.
   silently left out of the build.
 - Shader compile errors surface at runtime as a `SharpDX.CompilationException` on the first
   frame, not at build time.
+- The shaders can only be built with `fxc` (which is what `SharpDX.D3DCompiler` wraps). The
+  primitive system uses HLSL `interface` and `class`, and DXC dropped interface support when it
+  moved to Shader Model 6, so switching compilers means rewriting `Common.hlsl` first.
 - `Engine`, `Scene.CurrentScene`, `InputDevice`, `PhysicsHandler.Simulation` and
   `RaymarchRenderer`'s counts are all static, single-instance global state. Initialization
   order is load-bearing.

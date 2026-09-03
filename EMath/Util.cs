@@ -215,7 +215,7 @@ namespace RaymarchEngine.EMath
         /// <returns></returns>
         public static Quaternion AngleAxis(float degrees, ref Vector3 axis)
         {
-            if (AlmostZero(axis.SqrMagnitude()))
+            if (AlmostZeroSquared(axis.SqrMagnitude()))
                 return Quaternion.Identity;
 
             Quaternion result = Quaternion.Identity;
@@ -251,16 +251,16 @@ namespace RaymarchEngine.EMath
         private static Quaternion SlerpUnclamped(ref Quaternion a, ref Quaternion b, float t)
         {
             // if either input is zero, return the other.
-            if (AlmostZero(a.LengthSquared()))
+            if (AlmostZeroSquared(a.LengthSquared()))
             {
-                if (AlmostZero(b.LengthSquared()))
+                if (AlmostZeroSquared(b.LengthSquared()))
                 {
                     return Quaternion.Identity;
                 }
 
                 return b;
             }
-            else if (AlmostZero(b.LengthSquared()))
+            else if (AlmostZeroSquared(b.LengthSquared()))
             {
                 return a;
             }
@@ -274,8 +274,8 @@ namespace RaymarchEngine.EMath
             }
             else if (cosHalfAngle < 0.0f)
             {
-                b.XYZ(-b.XYZ());
-                b.W = -b.W;
+                // Negate all four components to take the short way round. W alone is a different rotation.
+                b = new Quaternion(-b.X, -b.Y, -b.Z, -b.W);
                 cosHalfAngle = -cosHalfAngle;
             }
 
@@ -298,7 +298,7 @@ namespace RaymarchEngine.EMath
             }
 
             Quaternion result = new Quaternion(blendA * a.XYZ() + blendB * b.XYZ(), blendA * a.W + blendB * b.W);
-            if (!AlmostZero(result.LengthSquared()))
+            if (!AlmostZeroSquared(result.LengthSquared()))
                 return Quaternion.Normalize(result);
             else
                 return Quaternion.Identity;
@@ -309,30 +309,6 @@ namespace RaymarchEngine.EMath
         /// </summary>
         /// <param name="quaternion"></param>
         private static Vector3 XYZ(this Quaternion quaternion) => new Vector3(quaternion.X, quaternion.Y, quaternion.Z);
-
-        /// <summary>
-        /// Sets the xyz component of a quaternion
-        /// </summary>
-        /// <param name="quaternion"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
-        private static void XYZ(this Quaternion quaternion, float x, float y, float z)
-        {
-            quaternion.X = x;
-            quaternion.Y = y;
-            quaternion.Z = z;
-        }
-
-        /// <summary>
-        /// Sets the xyz component of a quaternion
-        /// </summary>
-        /// <param name="quaternion"></param>
-        /// <param name="vector"></param>
-        private static void XYZ(this Quaternion quaternion, Vector3 vector)
-        {
-            XYZ(quaternion, vector.X, vector.Y, vector.Z);
-        }
 
         /// <summary>
         /// Rotates a quaternion from towards to
@@ -510,9 +486,23 @@ namespace RaymarchEngine.EMath
             return i < min ? min : max;
         }
 
+        /// <summary>
+        /// Tolerance for the near-zero tests. float.Epsilon is ~1.4e-45, an exact zero test.
+        /// </summary>
+        private const float NearZero = 1e-6f;
+
         public static bool AlmostZero(float f)
         {
-            return System.Math.Abs(f) < float.Epsilon;
+            return System.Math.Abs(f) < NearZero;
+        }
+
+        /// <summary>
+        /// Near-zero test for an already squared magnitude. Comparing against NearZero directly
+        /// would loosen the tolerance on the magnitude to its square root.
+        /// </summary>
+        private static bool AlmostZeroSquared(float squared)
+        {
+            return squared < NearZero * NearZero;
         }
 
         public static float PI => (float) System.Math.PI;

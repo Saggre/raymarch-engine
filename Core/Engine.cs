@@ -18,7 +18,6 @@ namespace RaymarchEngine.Core
     internal class Engine : IDisposable
     {
         private static RenderForm renderForm;
-        private static int fps = 144;
         private static bool isFullscreen = false;
 
         private static float elapsedTime;
@@ -35,11 +34,6 @@ namespace RaymarchEngine.Core
         public static float ElapsedTime => elapsedTime;
 
         /// <summary>
-        /// Get the program's frames per second
-        /// </summary>
-        public static int Fps => fps;
-
-        /// <summary>
         /// Is the window full screen?
         /// </summary>
         public static bool IsFullscreen => isFullscreen;
@@ -47,15 +41,12 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Get the window's width
         /// </summary>
-        public static int Width =>
-            renderForm.Width; // TODO width and height should update on window size changes such as fullscreen entry
-
-        // TODO check height and width are right
+        public static int Width => renderForm.ClientSize.Width;
 
         /// <summary>
         /// Get the window's height
         /// </summary>
-        public static int Height => renderForm.Height;
+        public static int Height => renderForm.ClientSize.Height;
 
         /// <summary>
         /// Get the window's aspect ratio
@@ -89,8 +80,6 @@ namespace RaymarchEngine.Core
             }
 
             this.gameLogic = gameLogic;
-
-            RaymarchRenderer.Init();
 
             // Create main scene
             Scene.CurrentScene = new Scene();
@@ -192,6 +181,7 @@ namespace RaymarchEngine.Core
                 }
             }
 
+            renderDevice?.Dispose();
             renderForm.Dispose();
         }
     }
