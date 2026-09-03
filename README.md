@@ -13,10 +13,9 @@ Raymarch shader code is located [here](Shaders/Raymarch/Pixel.hlsl).
 - The preview has four different primitives (octahedron, box, sphere, plane). And one light source.
 - All objects cast and receive shadows. These are fully dynamic.
 - Octahedron, sphere and plane have reflections.
-- All objects have Blinn–Phong shading as a base.
-- The octahedron has subsurface scattering. light penetrates its thin edges, making them appear lighter.
+- All objects have Phong shading as a base.
 - The box has rounded corners as a result of a rounding operation being applied to it.
-- There is ambient occlusion and blue noise applied to the view space.
+- There is ambient occlusion applied to the view space, dithered with a noise texture.
 - Some purple-ish distance fog is visible in the background.
 - Raymarched objects have infinite resolution (signed distance function = no mesh).
 
@@ -58,10 +57,10 @@ Raymarch shader code is located [here](Shaders/Raymarch/Pixel.hlsl).
 ## Current features and future work:
 
 - :heavy_check_mark: Basic gameobjects
-- :heavy_check_mark: Basic shading (Blinn–Phong)
+- :heavy_check_mark: Basic shading (Phong)
 - :heavy_check_mark: Ambient occlusion
-- :heavy_check_mark: Subsurface scattering
-- :heavy_check_mark: Blue noise
+- :x: Subsurface scattering (getSubsurfCheap exists but is too expensive to enable)
+- :x: Blue noise (the AO dither currently uses fractal value noise instead)
 - :heavy_check_mark: Reflections
 - :heavy_check_mark: Soft shadows
 - :heavy_minus_sign: All primitives

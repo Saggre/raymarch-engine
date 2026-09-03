@@ -138,6 +138,9 @@ Do not run the test suite unless asked.
   silently left out of the build.
 - Shader compile errors surface at runtime as a `SharpDX.CompilationException` on the first
   frame, not at build time.
+- The shaders can only be built with `fxc` (which is what `SharpDX.D3DCompiler` wraps). The
+  primitive system uses HLSL `interface` and `class`, and DXC dropped interface support when it
+  moved to Shader Model 6, so switching compilers means rewriting `Common.hlsl` first.
 - `Engine`, `Scene.CurrentScene`, `InputDevice`, `PhysicsHandler.Simulation` and
   `RaymarchRenderer`'s counts are all static, single-instance global state. Initialization
   order is load-bearing.
