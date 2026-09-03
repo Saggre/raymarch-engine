@@ -171,11 +171,28 @@ class cOctahedron : cBasePrimitive, iPrimitive
     }
 };
 
-class cPrimitiveInformation
+// Mirrors MaterialBufferData in RaymarchRenderer.cs
+struct cMaterialData
 {
+    float3 color;
+    float shininess;
+    float specularStrength;
+    float diffraction;
+    float2 padding;
+};
+
+// Mirrors PrimitiveBufferData in RaymarchRenderer.cs. Every vector starts on a 16 byte boundary
+// on both sides, so the two layouts have to be changed together.
+struct cPrimitiveData
+{
+    cMaterialData material;
+    float4 options;
     float3 position;
+    float positionPadding;
     float3 eulerAngles;
-    // TODO add more
+    float eulerAnglesPadding;
+    float3 scale;
+    float scalePadding;
 };
 
 cbuffer ShaderBuffer : register(b0)
@@ -188,7 +205,12 @@ float4 additionalData;
 };
 
 // Buffers
-uniform StructuredBuffer<cPrimitiveInformation> spheres : register(t0);
+// One buffer per primitive type, filled by RenderDevice.Draw. The register indices have to match
+// the primitivesBuffer slots there: 0 spheres, 1 boxes, 2 planes.
+StructuredBuffer<cPrimitiveData> spheres : register(t0);
+StructuredBuffer<cPrimitiveData> boxes : register(t1);
+StructuredBuffer<cPrimitiveData> planes : register(t2);
+
 // t0..t7 belong to the per-primitive structured buffers, so the noise texture starts at t8.
 Texture2D<float4> blueNoiseTexture : register(t8);
 SamplerState textureSampler : register(s0);

@@ -1,59 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using RaymarchEngine.Core.Primitives;
 using RaymarchEngine.EMath;
-using Plane = RaymarchEngine.Core.Primitives.Plane;
 
 namespace RaymarchEngine.Core.Rendering
 {
-    /// <summary>
-    /// Keeps track of raymarched objects in game
-    /// </summary>
-    public static class RaymarchRenderer
-    {
-        /// <summary>
-        /// How many primitives are allowed in the game
-        /// </summary>
-        private static Dictionary<Type, int> primitiveCounts;
-
-        /// <summary>
-        /// Init
-        /// </summary>
-        public static void Init()
-        {
-            primitiveCounts = new Dictionary<Type, int>
-            {
-                {typeof(Sphere), 0},
-                {typeof(Box), 0},
-                {typeof(Plane), 0},
-                //{typeof(Ellipsoid), 32},
-                //{typeof(Torus), 32},
-                //{typeof(CappedTorus), 32}
-            };
-        }
-
-        /// <summary>
-        /// Get the number of primitives by type
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static int PrimitiveCount<T>() where T : IPrimitive
-        {
-            return primitiveCounts[typeof(T)];
-        }
-
-        /// <summary>
-        /// Increment number of recorded primitives
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public static void AddPrimitiveCount<T>() where T : IPrimitive
-        {
-            primitiveCounts[typeof(T)]++;
-        }
-    }
-
     /// <summary>
     /// Attached to a gameobject to enable raymarch rendering
     /// </summary>
@@ -76,9 +28,28 @@ namespace RaymarchEngine.Core.Rendering
                 throw new InvalidOperationException("RaymarchRenderer can only be added in Start()");
             }
 
-            RaymarchRenderer.AddPrimitiveCount<T>();
             this.parent = parent;
         }
+
+        /// <summary>
+        /// Diffuse colour of the surface
+        /// </summary>
+        public Vector3 Color { get; set; } = Vector3.One;
+
+        /// <summary>
+        /// Phong specular exponent. Higher values give a tighter highlight.
+        /// </summary>
+        public float Shininess { get; set; } = 50f;
+
+        /// <summary>
+        /// Strength of the specular highlight
+        /// </summary>
+        public float SpecularStrength { get; set; } = 1f;
+
+        /// <summary>
+        /// How much of the surroundings the surface reflects, 0 to 1
+        /// </summary>
+        public float Diffraction { get; set; }
 
         private Vector4 GetOptions()
         {
@@ -92,6 +63,7 @@ namespace RaymarchEngine.Core.Rendering
         public PrimitiveBufferData GetBufferData()
         {
             return new PrimitiveBufferData(
+                new MaterialBufferData(Color, Shininess, SpecularStrength, Diffraction),
                 GetOptions(),
                 parent.Movement.Position,
                 parent.Movement.Rotation.QuaternionToEuler(),
@@ -116,8 +88,9 @@ namespace RaymarchEngine.Core.Rendering
     }
 
     /// <summary>
-    /// Data that is passed to the raymarch shader.
-    /// Euler angles is passed instead of quaternion rotation, because the object can't be/shouldn't be rotated in the shader. Euler angle data will suffice for rendering the shape at different rotations.
+    /// Data that is passed to the raymarch shader, mirrored by cPrimitiveData in Common.hlsl.
+    /// Euler angles are passed instead of quaternion rotation, because the object can't be/shouldn't be rotated in the shader. Euler angle data will suffice for rendering the shape at different rotations.
+    /// Vectors are padded to 16 byte boundaries so the C# and HLSL layouts agree. Change both.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct PrimitiveBufferData
@@ -125,17 +98,21 @@ namespace RaymarchEngine.Core.Rendering
         public MaterialBufferData material;
         public Vector4 primitiveOptions;
         public Vector3 position;
+        public float positionPadding;
         public Vector3 eulerAngles;
+        public float eulerAnglesPadding;
         public Vector3 scale;
+        public float scalePadding;
 
         public PrimitiveBufferData(
+            MaterialBufferData material,
             Vector4 primitiveOptions,
             Vector3 position,
             Vector3 eulerAngles,
             Vector3 scale
-        )
+        ) : this()
         {
-            material = new MaterialBufferData(Vector3.One, 1f, 1f);
+            this.material = material;
             this.primitiveOptions = primitiveOptions;
             this.position = position;
             this.eulerAngles = eulerAngles;
@@ -143,19 +120,25 @@ namespace RaymarchEngine.Core.Rendering
         }
     }
 
+    /// <summary>
+    /// Surface parameters for a single primitive, mirrored by cMaterialData in Common.hlsl
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct MaterialBufferData
     {
         public Vector3 color;
         public float shininess;
         public float specularStrength;
-        public Vector3 padding;
+        public float diffraction;
+        public Vector2 padding;
 
-        public MaterialBufferData(Vector3 color, float shininess, float specularStrength) : this()
+        public MaterialBufferData(Vector3 color, float shininess, float specularStrength, float diffraction)
+            : this()
         {
             this.color = color;
             this.shininess = shininess;
             this.specularStrength = specularStrength;
+            this.diffraction = diffraction;
         }
     }
 }
