@@ -189,7 +189,8 @@ float4 additionalData;
 
 // Buffers
 uniform StructuredBuffer<cPrimitiveInformation> spheres : register(t0);
-Texture2D<float4> blueNoiseTexture : register(t1);
+// t0..t7 belong to the per-primitive structured buffers, so the noise texture starts at t8.
+Texture2D<float4> blueNoiseTexture : register(t8);
 SamplerState textureSampler : register(s0);
 
 struct VS_INPUT

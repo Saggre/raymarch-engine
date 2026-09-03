@@ -27,6 +27,12 @@ namespace RaymarchEngine.Core.Rendering
     /// </summary>
     public class RenderDevice : IDisposable
     {
+        /// <summary>
+        /// Slots 0..7 belong to the per-primitive structured buffers. Anything bound inside that
+        /// range silently replaces whichever primitive buffer shares the slot.
+        /// </summary>
+        private const int NoiseTextureSlot = 8;
+
         private Resolution renderResolution;
 
         private RenderTargetView backbufferView;
@@ -46,6 +52,7 @@ namespace RaymarchEngine.Core.Rendering
 
         // Raymarch
         private Mesh raymarchRenderPlane; // Plane to render raymarch shader on
+        private Shader raymarchShader;
         private RaymarchShaderBufferData raymarchShaderBufferData; // Values to send to the raymarch shader
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
@@ -83,7 +90,7 @@ namespace RaymarchEngine.Core.Rendering
         private void RenderDeviceStarted()
         {
             // TODO pre-compile shader
-            Shader raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
+            raymarchShader = Shader.CompileFromFiles(@"Shaders\Raymarch");
             raymarchRenderPlane = Mesh.CreateQuad();
 
             // Set as current shaders
@@ -101,8 +108,8 @@ namespace RaymarchEngine.Core.Rendering
                 primitivesBuffer[i] = new StructuredBuffer<PrimitiveBufferData>(device, i);
             }
 
-            noiseTextureBuffer =
-                new TextureBuffer<Color>(device, CreateNoise(1024), 1024, Format.R8G8B8A8_UNorm, 1);
+            noiseTextureBuffer = new TextureBuffer<Color>(device, CreateNoise(1024), 1024,
+                Format.R8G8B8A8_UNorm, NoiseTextureSlot);
         }
 
         /// <summary>
@@ -306,6 +313,8 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
+                // The window's ratio, not the render target's: uv comes from TexCoord, so the
+                // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
@@ -428,16 +437,31 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         public void Dispose()
         {
-            swapChain.Dispose();
-            device.Dispose();
-            deviceContext.Dispose();
-            renderForm.Dispose();
-            raymarchShaderBuffer.Dispose();
-            noiseTextureBuffer.Dispose();
-            foreach (var buffer in primitivesBuffer)
+            // Resources before the context and device that own them. Engine owns the render form.
+            // These are still null if the program closes before the first frame.
+            raymarchShaderBuffer?.Dispose();
+            noiseTextureBuffer?.Dispose();
+            raymarchRenderPlane?.Dispose();
+            raymarchShader?.Dispose();
+
+            if (primitivesBuffer != null)
             {
-                buffer.Dispose();
+                foreach (StructuredBuffer<PrimitiveBufferData> buffer in primitivesBuffer)
+                {
+                    buffer.Dispose();
+                }
             }
+
+            Utilities.Dispose(ref backbufferView);
+            Utilities.Dispose(ref depthView);
+            Utilities.Dispose(ref rasterState);
+            Utilities.Dispose(ref blendState);
+            Utilities.Dispose(ref depthState);
+            Utilities.Dispose(ref samplerState);
+
+            swapChain.Dispose();
+            deviceContext.Dispose();
+            device.Dispose();
         }
     }
 }

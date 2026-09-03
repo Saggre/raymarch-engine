@@ -1,11 +1,13 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 25/10/2019
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using RaymarchEngine.Geometry;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace RaymarchEngine.Core
 {
@@ -13,7 +15,7 @@ namespace RaymarchEngine.Core
     /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.
     /// SharedShader saves different buffers per-object and switches between them. This enables two objects to use the same shader, but with different textures for example. (TODO)
     /// </summary>
-    public class Shader
+    public class Shader : IDisposable
     {
         public InputLayout InputLayout { get; }
 
@@ -197,6 +199,19 @@ namespace RaymarchEngine.Core
             }
 
             return new Shader(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader);
+        }
+
+        /// <summary>
+        /// Releases the shader stages and input layout. They hold references to the D3D device.
+        /// </summary>
+        public void Dispose()
+        {
+            InputLayout?.Dispose();
+            VertexShader?.Dispose();
+            HullShader?.Dispose();
+            DomainShader?.Dispose();
+            GeometryShader?.Dispose();
+            PixelShader?.Dispose();
         }
     }
 }

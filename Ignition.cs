@@ -22,8 +22,11 @@ namespace RaymarchEngine
         [STAThread]
         public static void Start(AutoUpdateable gameLogic)
         {
-            Engine gameEngine = new Engine(gameLogic);
-            gameEngine.Run();
+            // Engine.Dispose runs every component's End and releases the D3D device
+            using (Engine gameEngine = new Engine(gameLogic))
+            {
+                gameEngine.Run();
+            }
         }
     }
 }
