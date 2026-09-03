@@ -155,6 +155,9 @@
     <Content Include="Shaders\Raymarch\Pixel.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\Raymarch\Sky.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\Raymarch\Primitives.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

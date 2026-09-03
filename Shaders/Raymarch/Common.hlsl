@@ -6,12 +6,12 @@
 
 class cLight
 {
-    float3 position;
+    float3 direction; // Normalised, pointing from the scene towards the light
     float3 color;
 
-    void Create(float3 _position, float3 _color = float3(1, 1, 1))
+    void Create(float3 _direction, float3 _color = float3(1, 1, 1))
     {
-        position = _position;
+        direction = _direction;
         color = _color;
     }
 };
@@ -214,7 +214,15 @@ StructuredBuffer<cPrimitiveData> cylinders : register(t6);
 // see CreateNoise in RenderDevice. TODO generate real blue noise (void-and-cluster).
 // t0..t7 belong to the per-primitive structured buffers, so the noise texture starts at t8.
 Texture2D<float4> noiseTexture : register(t8);
+
+// Value noise lattice for the clouds. Red holds one z slice and green the next, see cloudNoise in
+// Sky.hlsl and CreateCloudNoise in RenderDevice.
+Texture2D<float4> cloudNoiseTexture : register(t9);
+
 SamplerState textureSampler : register(s0);
+
+// The cloud lattice has to tile, which the default clamping sampler cannot do
+SamplerState wrapSampler : register(s1);
 
 struct VS_INPUT
 {
@@ -228,3 +236,6 @@ struct PS_INPUT
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD;
 };
+
+// Needs the constant buffer and the textures above, so it comes last
+#include "Sky.hlsl"

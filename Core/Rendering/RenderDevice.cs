@@ -33,6 +33,17 @@ namespace RaymarchEngine.Core.Rendering
         /// </summary>
         private const int NoiseTextureSlot = 8;
 
+        /// <summary>
+        /// Value noise lattice the cloud shader samples
+        /// </summary>
+        private const int CloudNoiseTextureSlot = 9;
+
+        /// <summary>
+        /// Width and height of the cloud noise texture in texels. Has to be a power of two, the
+        /// slice offset below wraps with a mask, and has to match CLOUD_NOISE_SIZE in Options.hlsl.
+        /// </summary>
+        private const int CloudNoiseSize = 256;
+
         private Resolution renderResolution;
 
         private RenderTargetView backbufferView;
@@ -42,6 +53,7 @@ namespace RaymarchEngine.Core.Rendering
         private BlendState blendState;
         private DepthStencilState depthState;
         private SamplerState samplerState;
+        private SamplerState wrapSamplerState;
 
         private RenderForm renderForm;
 
@@ -56,6 +68,7 @@ namespace RaymarchEngine.Core.Rendering
         private ConstantBuffer<RaymarchShaderBufferData> raymarchShaderBuffer;
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
         private TextureBuffer<Color> noiseTextureBuffer;
+        private TextureBuffer<Color> cloudNoiseTextureBuffer;
 
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
@@ -109,6 +122,9 @@ namespace RaymarchEngine.Core.Rendering
 
             noiseTextureBuffer = new TextureBuffer<Color>(device, CreateNoise(1024), 1024,
                 Format.R8G8B8A8_UNorm, NoiseTextureSlot);
+
+            cloudNoiseTextureBuffer = new TextureBuffer<Color>(device, CreateCloudNoise(CloudNoiseSize),
+                CloudNoiseSize, Format.R8G8B8A8_UNorm, CloudNoiseTextureSlot);
         }
 
         /// <summary>
@@ -135,6 +151,48 @@ namespace RaymarchEngine.Core.Rendering
                     noiseData[i] = new Color((fastNoise.GetNoise(x * 80, y * 80) + 1.0f) / 2.0f);
                     noiseData[i] = Color.Lerp(noiseData[i], Color.White, 0.5f);
                     i++;
+                }
+            }
+
+            return noiseData;
+        }
+
+        /// <summary>
+        /// Builds the lattice the cloud shader reads its 3D value noise out of.
+        ///
+        /// A 3D lattice would want a volume texture and eight fetches per cell. Laying the slices
+        /// out across a 2D texture instead, each one offset from the last by (37, 239) texels,
+        /// turns that into two bilinear fetches: red is the slice below the sample and green the
+        /// slice above, and the shader interpolates between them. The offsets are the same on
+        /// both sides, see cloudNoise in Sky.hlsl.
+        ///
+        /// The values are white noise. The bilinear filter is what makes them value noise, and
+        /// the octaves in cloudFbm are what make that look like cloud.
+        /// </summary>
+        /// <param name="size">Width and height in texels, a power of two</param>
+        /// <returns>Texels in row major order, size squared of them</returns>
+        private Color[] CreateCloudNoise(int size)
+        {
+            const int sliceOffsetX = 37;
+            const int sliceOffsetY = 239;
+
+            byte[] lattice = new byte[size * size];
+
+            // Fixed seed, so the clouds are the same shape every run
+            Random random = new Random(1337);
+            random.NextBytes(lattice);
+
+            int mask = size - 1;
+            Color[] noiseData = new Color[size * size];
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    byte slice = lattice[y * size + x];
+                    byte nextSlice = lattice[((y + sliceOffsetY) & mask) * size + ((x + sliceOffsetX) & mask)];
+
+                    noiseData[y * size + x] = new Color(slice, nextSlice, (byte) 0, (byte) 255);
                 }
             }
 
@@ -263,6 +321,15 @@ namespace RaymarchEngine.Core.Rendering
             description.MaximumLod = float.MaxValue;*/
 
             samplerState = new SamplerState(device, description);
+
+            Utilities.Dispose(ref wrapSamplerState);
+
+            SamplerStateDescription wrapDescription = SamplerStateDescription.Default();
+            wrapDescription.AddressU = TextureAddressMode.Wrap;
+            wrapDescription.AddressV = TextureAddressMode.Wrap;
+            wrapDescription.AddressW = TextureAddressMode.Wrap;
+
+            wrapSamplerState = new SamplerState(device, wrapDescription);
         }
 
         /// <summary>
@@ -276,6 +343,8 @@ namespace RaymarchEngine.Core.Rendering
 
             deviceContext.PixelShader.SetSampler(0, samplerState);
             deviceContext.DomainShader.SetSampler(0, samplerState);
+
+            deviceContext.PixelShader.SetSampler(1, wrapSamplerState);
         }
 
         #endregion
@@ -398,6 +467,7 @@ namespace RaymarchEngine.Core.Rendering
             // These are still null if the program closes before the first frame.
             raymarchShaderBuffer?.Dispose();
             noiseTextureBuffer?.Dispose();
+            cloudNoiseTextureBuffer?.Dispose();
             raymarchRenderPlane?.Dispose();
             raymarchShader?.Dispose();
 
@@ -414,6 +484,7 @@ namespace RaymarchEngine.Core.Rendering
             Utilities.Dispose(ref blendState);
             Utilities.Dispose(ref depthState);
             Utilities.Dispose(ref samplerState);
+            Utilities.Dispose(ref wrapSamplerState);
 
             swapChain.Dispose();
             deviceContext.Dispose();

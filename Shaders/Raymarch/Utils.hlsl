@@ -1,3 +1,23 @@
+// Narkowicz 2015 fit of the ACES filmic curve. The sky and the sun disk are far brighter than
+// white, so the alternative is clipping them flat.
+float3 tonemapACES(float3 color)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+
+    return saturate((color * (a * color + b)) / (color * (c * color + d) + e));
+}
+
+// Jimenez 2014. Spreads a per pixel offset over a small neighbourhood so that dithering a
+// raymarch start turns banding into grain rather than into a second pattern.
+float interleavedGradientNoise(float2 pixel)
+{
+    return frac(52.9829189 * frac(dot(pixel, float2(0.06711056, 0.00583715))));
+}
+
 // Get pseudo-random number in the range [0, 1).
 float random(float2 co)
 {
@@ -48,7 +68,7 @@ float mod(float x, float y)
     return x - y * floor(x / y);
 }
 
-float mod(float3 x, float3 y)
+float3 mod(float3 x, float3 y)
 {
     return float3(mod(x.x, y.x), mod(x.y, y.y), mod(x.z, y.z));
 }

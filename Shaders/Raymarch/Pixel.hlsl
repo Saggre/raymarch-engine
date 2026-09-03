@@ -100,7 +100,7 @@ float3 getCameraRayDir(float2 uv, float focalLength)
 float3 getPhongLight(cRaymarchResult raymarchResult)
 {
     float3 normal = raymarchResult.surfaceNormal;
-    float3 lightReverseDir = normalize(mainLight.position - raymarchResult.hitPos);
+    float3 lightReverseDir = mainLight.direction;
     float3 reverseRayDir = -raymarchResult.ray.dir;
     float3 R = reflect(-lightReverseDir, normal);
 
@@ -144,7 +144,7 @@ float3 getReflection(cRaymarchResult raymarchResult)
 
     if (refRaymarchResult.hitDistance >= MAX_DIST)
     {
-        return float3(0, 0, 0);
+        return getSkyColor(ray.dir);
     }
 
     return getPhongLight(refRaymarchResult);
@@ -162,13 +162,8 @@ float4 main(PS_INPUT input) : SV_Target
 {
     float3 noise = noiseTexture.Sample(textureSampler, input.TexCoord).rrr;
 
-    float3 FOG_COLOR = float3(0.2, 0.2, 0.3);
-
-    // High, in front and off to the left, so the camera facing sides are the lit ones
-    mainLight.Create(float3(-45, 70, -55));
-
-    // Move light
-    mainLight.position.xz += float2(sin(time), cos(time)) * 2.0;
+    float3 sunDir = getSunDirection();
+    mainLight.Create(sunDir, getSunLightColor(sunDir));
 
     float2 uv = input.TexCoord - (0.5).xx;
     uv.x *= aspectRatio;
@@ -179,36 +174,32 @@ float4 main(PS_INPUT input) : SV_Target
     cRaymarchResult raymarchResult;
     raymarch(ray, raymarchResult);
 
+    // Sky rays pay for the cloud march. Rays that hit the scene only need a colour to fog
+    // towards, and the slab sits past MAX_DIST, so there is nothing there for them to occlude.
     if (raymarchResult.hitDistance >= MAX_DIST)
     {
-        return float4(FOG_COLOR, 1);
+        float dither = interleavedGradientNoise(input.Position.xy);
+        return float4(tonemapACES(getSkyColorWithClouds(ray.origin, ray.dir, dither)), 1);
     }
-
-    // Fog
-    float3 fogIntensity = raymarchResult.hitDistance / MAX_DIST;
 
     float3 sceneColor = getColor(raymarchResult);
 
-    float3 lightReverseDir = normalize(mainLight.position - raymarchResult.hitPos);
-
-    float3 shadow = getShadow(raymarchResult, lightReverseDir);
+    float3 shadow = getShadow(raymarchResult, mainLight.direction);
 
     // Reflection
     sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
 
-    float3 ambientColor = float3(0.05, 0.05, 0.06);
-    sceneColor += ambientColor;
+    // Sky light rather than a fixed grey, so shadowed faces pick up the colour of the sky above
+    sceneColor += getSkyRadiance(float3(0, 1, 0), sunDir) * SKY_AMBIENT;
 
     sceneColor *= shadow;
 
     // Apply AO
     sceneColor *= getAmbientOcclusion(raymarchResult, noise);
 
-    // Gamma correction
-    sceneColor = pow(sceneColor, 1.0 / 2.2);
+    // Aerial perspective, towards the sky in the direction being looked at rather than a constant
+    float fogIntensity = raymarchResult.hitDistance / MAX_DIST;
+    sceneColor = lerp(sceneColor, getSkyColor(ray.dir), fogIntensity);
 
-    // Apply fog
-    sceneColor = lerp(sceneColor, FOG_COLOR, fogIntensity);
-
-    return float4(saturate(sceneColor), 1);
+    return float4(tonemapACES(sceneColor), 1);
 }
