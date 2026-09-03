@@ -26,6 +26,7 @@ void raymarch(in cRay ray, out cRaymarchResult raymarchResult)
     float curDist;
 
     int i = 0;
+    [loop]
     while (i < MAX_STEPS)
     {
         marchPos = ray.origin + totalDist * ray.dir;
