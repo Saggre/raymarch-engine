@@ -33,9 +33,15 @@ frame from the first rendered image without the camera having to move.
 
 ## Download
 
-Every merge to `master` publishes a [release](https://github.com/Saggre/raymarch-engine/releases)
+Every merge to `release` publishes a [release](https://github.com/Saggre/raymarch-engine/releases)
 with a zipped x64 build. Unzip it and run `RaymarchEngine.exe`. The zip has to stay together: the
 engine loads `Shaders/Raymarch` from disk on the first frame, so the exe on its own will not start.
+
+## Branches
+
+`master` is the development branch and `release` is what ships. Work goes into `master` through
+`feature/*` branches, and merging `master` into `release` cuts a release. Development builds are
+versioned `0.0.2-alpha.43`, releases `0.0.2`.
 
 ## Requirements:
 

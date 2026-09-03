@@ -2,17 +2,18 @@ name: Build
 
 on:
   push:
-    branches: [master]
+    # master is the development branch and only builds. `release` is what publishes.
+    branches: [master, release]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# A second push to master while a release is still publishing would race for the same tag.
+# A second push to release while one is still publishing would race for the same tag.
 concurrency:
   group: build-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/release' }}
 
 env:
   CONFIGURATION: Release
@@ -95,8 +96,9 @@ jobs:
   release:
     name: Release
     needs: build
-    # Only master publishes. Pull requests build and package but stop short of releasing.
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    # Only the release branch publishes. master and pull requests build and package, and the zip
+    # is downloadable from the run's artifacts, but no GitHub release is created.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
 
     permissions:

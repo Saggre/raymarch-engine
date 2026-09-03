@@ -121,13 +121,24 @@ desktop session.
 
 ## CI and versioning
 
-`.github/workflows/build.yml` builds `Release|x64` on every pull request and every push to
-`master`, and a push to `master` also publishes a GitHub release with the packaged zip.
+Two long lived branches. `master` is where development lands, `release` is what ships.
 
-The version comes from GitVersion (`GitVersion.yml`, mode `ContinuousDeployment`), so `master`
-resolves to a clean version like `0.0.2` while branches get a pre-release label. Every commit
-between two tags resolves to the same version; the release step creates the tag, and that is
-what moves the next build to the next number.
+    feature/* -> master -> release -> GitHub release
+
+`.github/workflows/build.yml` builds `Release|x64` on pull requests and on pushes to either
+branch. Only a push to `release` publishes; master builds leave the zip as a run artifact and
+create no release.
+
+The version comes from GitVersion (`GitVersion.yml`). The branch roles are inverted relative to
+GitVersion's defaults, which treat master as the release branch, so both branches have explicit
+entries. `release` uses mode `ContinuousDeployment` for a clean `0.0.2`, and `master` uses
+`ContinuousDelivery` with an `alpha` label for `0.0.2-alpha.43`. The mode has to be set per
+branch: `ContinuousDeployment` drops the pre-release label, which is right for `release` and
+wrong for `master`.
+
+Every commit between two tags resolves to the same version. Publishing creates the tag, and that
+is what moves the next build on. No back-merge from `release` to `master` is needed; GitVersion
+picks up release tags on `master` regardless.
 
 This is a non SDK style project, so there is no `<Version>` property to set. The workflow runs
 `build/Stamp-AssemblyInfo.ps1` to write the version into `Properties/AssemblyInfo.cs` before
