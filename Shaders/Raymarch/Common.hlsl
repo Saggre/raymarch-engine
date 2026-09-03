@@ -187,8 +187,10 @@ float4 additionalData;
 
 // Buffers
 uniform StructuredBuffer<cPrimitiveInformation> spheres : register(t0);
+// Dither source for the AO term. This is low-frequency fractal value noise, not blue noise:
+// see CreateNoise in RenderDevice. TODO generate real blue noise (void-and-cluster).
 // t0..t7 belong to the per-primitive structured buffers, so the noise texture starts at t8.
-Texture2D<float4> blueNoiseTexture : register(t8);
+Texture2D<float4> noiseTexture : register(t8);
 SamplerState textureSampler : register(s0);
 
 struct VS_INPUT

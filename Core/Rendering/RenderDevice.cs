@@ -112,7 +112,9 @@ namespace RaymarchEngine.Core.Rendering
         }
 
         /// <summary>
-        /// Creates noise to use in the shader
+        /// Creates the noise texture the shader dithers ambient occlusion with.
+        /// This is fractal value noise, which is low frequency, so it blotches at large scales.
+        /// TODO generate real blue noise (void-and-cluster) instead.
         /// </summary>
         /// <param name="size"></param>
         private Color[] CreateNoise(int size)
