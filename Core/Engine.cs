@@ -139,6 +139,9 @@ namespace RaymarchEngine.Core
 
             stopwatch.Restart();
 
+            // Before anything reads it, so no component acts on the previous frame's input
+            InputDevice.Update(lastDeltaTime);
+
             // Execute all Update methods
             StaticUpdater.ExecuteUpdateActions(lastDeltaTime);
             
@@ -180,6 +183,8 @@ namespace RaymarchEngine.Core
                     component.End(unixTime);
                 }
             }
+
+            InputDevice.Dispose();
 
             renderDevice?.Dispose();
             renderForm.Dispose();
