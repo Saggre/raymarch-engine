@@ -4,6 +4,7 @@
 #define SHADOW_MAX_STEPS 256
 #define AO_FALLOFF 40
 #define SURF_DIST 1e-4
+#define PIXEL_ANGLE 3.2e-4         // Roughly half the angle one pixel covers at this resolution
 
 #define EXPOSURE 1.0
 #define FOG_DENSITY 0.006          // Per world unit. At MAX_DIST this is about 45 percent haze.
