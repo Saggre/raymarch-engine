@@ -116,7 +116,8 @@ namespace RaymarchEngine.Core
         public static Shader CompileFromFiles(string folderPath)
         {
             // TODO simplify method with a loop
-            // TODO build shaders on program build with dxc
+            // TODO build shaders on program build. Not with dxc though: it dropped HLSL interfaces,
+            // which Common.hlsl's primitive system is built on.
 
             // Debug bytecode is unoptimized, so Release was losing the whole shader optimizer
 #if DEBUG
