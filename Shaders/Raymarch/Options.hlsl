@@ -5,6 +5,9 @@
 #define AO_FALLOFF 40
 #define SURF_DIST 1e-4
 
+#define EXPOSURE 1.0
+#define FOG_DENSITY 0.006          // Per world unit. At MAX_DIST this is about 45 percent haze.
+
 // ---------------------------------------------------------------------------------------------
 // Sun
 // ---------------------------------------------------------------------------------------------
@@ -40,6 +43,7 @@
 #define SKY_SUN_HAZE_FALLOFF 6.0
 #define SKY_DUSK_TINT float3(0.85, 0.62, 0.45)  // What the whole sky tends towards with a low sun
 #define SKY_EXPOSURE 1.0
+#define SKY_AMBIENT 0.35           // How much of the zenith sky fills unlit surfaces
 
 // ---------------------------------------------------------------------------------------------
 // Clouds

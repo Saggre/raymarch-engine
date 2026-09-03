@@ -61,13 +61,15 @@ namespace RaymarchEngine
         /// </summary>
         private void BuildScene()
         {
-            // Reflective floor, so every shape above it casts a shadow and shows up twice
+            // Reflective floor, so every shape above it casts a shadow and shows up twice.
+            // Reflections are not occluded by the shadow ray, so at half mirror the sky it picked
+            // up washed the shadows out entirely.
             GameObject floor = new GameObject(new Vector3(0, -1, 0));
             floor.AddComponent(new RaymarchRenderer<Plane>
             {
-                Color = new Vector3(0.92f, 0.93f, 0.96f),
-                Shininess = 40f,
-                Diffraction = 0.5f
+                Color = new Vector3(0.34f, 0.35f, 0.38f),
+                Shininess = 90f,
+                Diffraction = 0.22f
             });
 
             // Torus: scale.x is the major radius, scale.y the minor one. Tumbles on two axes.
