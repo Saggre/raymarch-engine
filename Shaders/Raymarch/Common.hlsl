@@ -56,17 +56,15 @@ class cRaymarchResult
     cMaterial hitMaterial;
     float3 hitPos; // Hit position 3d world coords
     float3 surfaceNormal; // Normal of hit surface
-    float stepsTaken; // Steps needed to calculate this result
     float hitDistance; // Distance from ray start to end
 
-    void Create(cRay _ray, cMaterial _hitMaterial, float3 _hitPos, float3 _surfaceNormal, float _stepsTaken,
+    void Create(cRay _ray, cMaterial _hitMaterial, float3 _hitPos, float3 _surfaceNormal,
                 float _hitDistance)
     {
         ray = _ray;
         hitMaterial = _hitMaterial;
         hitPos = _hitPos;
         surfaceNormal = _surfaceNormal;
-        stepsTaken = _stepsTaken;
         hitDistance = _hitDistance;
     }
 };
@@ -188,6 +186,13 @@ float3 cameraPosition;
 float aspectRatio;
 float3 cameraDirection;
 float time;
+
+// The same for every pixel in the frame, so the engine works them out once. See Sun.cs.
+float3 sunDirection;
+float sunDirectionPadding;
+float3 sunLightColor;
+float sunLightColorPadding;
+
 float4 additionalData;
 };
 
