@@ -13,6 +13,27 @@
 #define REFLECTION_MIN 0.01        // Below this the second march is not worth taking at all
 
 #define EXPOSURE 1.0
+
+// ---------------------------------------------------------------------------------------------
+// Overlay
+// ---------------------------------------------------------------------------------------------
+
+// All in fractions of screen height, so the overlay keeps its proportions at any resolution
+#define CROSSHAIR_COLOR float3(1.0, 1.0, 1.0)
+#define CROSSHAIR_GAP 0.0055       // Clear space in the middle, so the aim point stays visible
+#define CROSSHAIR_LENGTH 0.0130
+#define CROSSHAIR_THICKNESS 0.0011
+#define CROSSHAIR_OUTLINE 0.0009   // Dark border, so it reads against sky and against surfaces
+#define CROSSHAIR_OUTLINE_ALPHA 0.75
+
+#define HUD_ORIGIN float2(0.020, 0.022)
+#define HUD_DIGIT_WIDTH 0.0130
+#define HUD_DIGIT_HEIGHT 0.0230
+#define HUD_DIGIT_GAP 0.0045
+#define HUD_POINT_ADVANCE 0.0075   // Room left between the whole and fractional digits
+#define HUD_POINT_SIZE 0.0016
+#define HUD_TEXT_COLOR float3(1.0, 1.0, 1.0)
+#define HUD_TEXT_ALPHA 0.85
 #define FOG_DENSITY 0.006          // Per world unit. At MAX_DIST this is about 45 percent haze.
 
 // ---------------------------------------------------------------------------------------------
