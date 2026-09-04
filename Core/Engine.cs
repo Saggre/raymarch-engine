@@ -68,6 +68,9 @@ namespace RaymarchEngine.Core
             {
                 // Init window
                 renderForm = new RenderForm("RaymarchEngine");
+                // Taken from the executable rather than from a second copy of the file, so the
+                // window and the shell can never show different marks
+                renderForm.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
                 renderForm.AutoSize = false;
                 renderForm.ClientSize = new Size(
                     Screen.PrimaryScreen.WorkingArea.Width,
