@@ -42,13 +42,18 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// How fast the GameObject moved across the ground during the previous frame, in world
-        /// units per second.
+        /// How fast the GameObject is moving across the ground, in world units per second.
         ///
         /// Horizontal only. A jump is not a change in how fast someone is moving, and reading the
         /// full vector would make the number leap every time one starts.
+        ///
+        /// Set by whatever drives the movement rather than derived here. Deriving it from the
+        /// change in position needs the elapsed time that produced that change, and a component
+        /// only ever sees the current frame's, which is one frame later than the one the step was
+        /// taken with. The quotient of two intervals that do not line up swings by tens of units a
+        /// frame while the velocity behind it is constant, which is what made the readout jump.
         /// </summary>
-        public float Speed { get; private set; }
+        public float Speed { get; set; }
 
         /// <summary>
         /// Get or set the GameObject's position
@@ -133,12 +138,6 @@ namespace RaymarchEngine.Core
         public void Update(float deltaTime)
         {
             deltaPosition = position - lastPosition;
-
-            // The first frame has no previous position and no elapsed time to divide by
-            if (deltaTime > 0.0f)
-            {
-                Speed = new Vector2(deltaPosition.X, deltaPosition.Z).Length() / deltaTime;
-            }
 
             foreach (GameObject gameObject in gameObject.Children)
             {
