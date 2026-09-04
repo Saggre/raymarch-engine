@@ -179,7 +179,7 @@ namespace RaymarchEngine.Core
             // Before friction, so a jump leaves at full speed instead of the ground taking a
             // frame's worth off it first. It is also the reason a jump
             // taken on the instant of landing keeps its speed.
-            if (isGrounded && InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.SPACE))
+            if (isGrounded && JumpRequested())
             {
                 velocity.Y = JumpSpeed;
                 isGrounded = false;
@@ -209,6 +209,19 @@ namespace RaymarchEngine.Core
             }
 
             parent.Movement.Position = position;
+        }
+
+        /// <summary>
+        /// Whether anything is asking for a jump this frame.
+        ///
+        /// Either direction of the wheel counts. Binding jump to the wheel is what players do in
+        /// classic shooters to bunny hop: a notch produces a single frame of input on landing,
+        /// which is far easier to land on the right frame than a key press is.
+        /// </summary>
+        private bool JumpRequested()
+        {
+            return InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.SPACE) ||
+                   InputDevice.Mouse.WheelDelta != 0;
         }
 
         /// <summary>
