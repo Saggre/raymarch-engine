@@ -100,20 +100,18 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
 }
 
 // focalLength is the distance from the eye to the uv plane, so a larger value narrows the view.
+// The basis arrives with the frame constants rather than being rebuilt here.
+//
+// It used to come from crossing the view direction with world up, which collapses when the two
+// are parallel, so there was a branch onto a substitute up near the poles. The substitute is a
+// different basis, not a continuation of the one it replaces, so crossing the threshold rolled
+// the view by an amount that depended on the heading. MaxPitch is 88 degrees and the threshold
+// stood at 89.4, which put the jump inside the range the player can actually look through: aiming
+// all the way down flipped the picture. Three orthonormal axes straight from the camera rotation
+// have no pole to handle.
 float3 getCameraRayDir(float2 uv, float focalLength)
 {
-    float3 camForward = normalize(cameraDirection);
-
-    // cross() collapses to zero when the view direction is parallel to world up, giving NaN rays.
-    // The sign keeps the basis handed the same way at both poles.
-    float3 worldUp = abs(camForward.y) > 0.999
-                         ? float3(0.0, 0.0, -sign(camForward.y))
-                         : float3(0.0, 1.0, 0.0);
-
-    float3 camRight = normalize(cross(worldUp, camForward));
-    float3 camUp = normalize(cross(camForward, camRight));
-
-    return normalize(uv.x * camRight + uv.y * camUp + camForward * focalLength);
+    return normalize(uv.x * cameraRight + uv.y * cameraUp + cameraDirection * focalLength);
 }
 
 // Surface colour at the hit point, which is the material colour with the checkerboard applied

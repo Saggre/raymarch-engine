@@ -65,6 +65,12 @@ namespace RaymarchEngine.Core.Rendering
             public Vector3 cameraDirection;
             public float time;
 
+            // The other two axes of the camera, so the shader does not have to rebuild them
+            public Vector3 cameraRight;
+            public float cameraRightPadding;
+            public Vector3 cameraUp;
+            public float cameraUpPadding;
+
             // Frame constants the shader would otherwise recompute per pixel
             public Vector3 sunDirection;
             public float sunDirectionPadding;
@@ -304,6 +310,8 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
+                raymarchShaderBufferData.cameraRight = Scene.CurrentScene.ActiveCamera.Movement.Right;
+                raymarchShaderBufferData.cameraUp = Scene.CurrentScene.ActiveCamera.Movement.Up;
                 // The window's ratio, not the render target's: uv comes from TexCoord, so the
                 // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
