@@ -17,9 +17,10 @@ namespace RaymarchEngine.Core
     public class FirstPersonController : IComponent
     {
         /// <summary>
-        /// How far the eye sits above the ground it is standing on, in world units
+        /// How far the eye sits above the ground it is standing on. This is what fixes the
+        /// conversion in MovementUnits.
         /// </summary>
-        public float EyeHeight { get; set; } = 1.7f;
+        public float EyeHeight { get; set; } = 64f;
 
         /// <summary>
         /// Height of the ground plane. The scene has one infinite floor and no collision system,
@@ -28,11 +29,9 @@ namespace RaymarchEngine.Core
         public float GroundHeight { get; set; } = -1f;
 
         /// <summary>
-        /// Fastest the ground acceleration will drive the player, in world units per second.
-        /// The 8.1 metres a second a shooter usually walks at, and this world is roughly in
-        /// metres.
+        /// Fastest the ground acceleration will drive the player
         /// </summary>
-        public float MaxSpeed { get; set; } = 7f;
+        public float MaxSpeed { get; set; } = 320f;
 
         /// <summary>
         /// What holding shift multiplies the requested speed by
@@ -48,7 +47,7 @@ namespace RaymarchEngine.Core
         /// Below this speed friction is applied as though the player were moving at it, which is
         /// what brings someone to a halt in finite time rather than asymptotically.
         /// </summary>
-        public float StopSpeed { get; set; } = 2.5f;
+        public float StopSpeed { get; set; } = 100f;
 
         /// <summary>
         /// Ground acceleration, in multiples of the requested speed per second
@@ -68,19 +67,17 @@ namespace RaymarchEngine.Core
         /// Turning while holding a strafe key then adds speed rather than only redirecting it,
         /// which is where air strafing and bunny hopping come from.
         /// </summary>
-        public float AirSpeedCap { get; set; } = 0.8f;
+        public float AirSpeedCap { get; set; } = 30f;
 
         /// <summary>
-        /// Upward speed a jump starts with, in world units per second. Enough to clear a
-        /// standard step height.
+        /// Upward speed a jump starts with. Enough to clear a standard step height.
         /// </summary>
-        public float JumpSpeed { get; set; } = 6.8f;
+        public float JumpSpeed { get; set; } = 268f;
 
         /// <summary>
-        /// Downward acceleration in world units per second squared. About twice the real
-        /// thing, which is what keeps a jump from feeling floaty.
+        /// Downward acceleration, about twice the real thing
         /// </summary>
-        public float Gravity { get; set; } = 20.3f;
+        public float Gravity { get; set; } = 800f;
 
         /// <summary>
         /// Degrees of rotation per unit of mouse movement
@@ -106,7 +103,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Height the eye rests at when standing on the ground
         /// </summary>
-        private float StandingHeight => GroundHeight + EyeHeight;
+        private float StandingHeight => GroundHeight + MovementUnits.ToWorld(EyeHeight);
 
         /// <inheritdoc />
         public void OnAddedToGameObject(GameObject gameObject)
@@ -169,7 +166,7 @@ namespace RaymarchEngine.Core
         private void UpdateMovement(float deltaTime)
         {
             Vector3 wishDirection = WishDirection();
-            float wishSpeed = MaxSpeed;
+            float wishSpeed = MovementUnits.ToWorld(MaxSpeed);
 
             if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
             {
@@ -181,7 +178,7 @@ namespace RaymarchEngine.Core
             // taken on the instant of landing keeps its speed.
             if (isGrounded && JumpRequested())
             {
-                velocity.Y = JumpSpeed;
+                velocity.Y = MovementUnits.ToWorld(JumpSpeed);
                 isGrounded = false;
             }
 
@@ -195,7 +192,7 @@ namespace RaymarchEngine.Core
                 AirAccelerate(wishDirection, wishSpeed, deltaTime);
             }
 
-            velocity.Y -= Gravity * deltaTime;
+            velocity.Y -= MovementUnits.ToWorld(Gravity) * deltaTime;
 
             Vector3 position = parent.Movement.Position + velocity * deltaTime;
 
@@ -238,7 +235,7 @@ namespace RaymarchEngine.Core
                 return;
             }
 
-            float control = Math.Max(speed, StopSpeed);
+            float control = Math.Max(speed, MovementUnits.ToWorld(StopSpeed));
             float drop = control * Friction * deltaTime;
 
             velocity *= Math.Max(speed - drop, 0f) / speed;
@@ -271,7 +268,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         private void AirAccelerate(Vector3 wishDirection, float wishSpeed, float deltaTime)
         {
-            float cappedSpeed = Math.Min(wishSpeed, AirSpeedCap);
+            float cappedSpeed = Math.Min(wishSpeed, MovementUnits.ToWorld(AirSpeedCap));
 
             float currentSpeed = Vector3.Dot(velocity, wishDirection);
             float addSpeed = cappedSpeed - currentSpeed;
