@@ -270,6 +270,14 @@ float4 main(PS_INPUT input) : SV_Target
     // view, which is what greyed out everything in the foreground.
     float3 hazeDir = normalize(float3(ray.dir.x, max(ray.dir.y, 0.0), ray.dir.z));
     float fog = 1.0 - exp(-raymarchResult.hitDistance * FOG_DENSITY);
+
+    // The exponential alone is only 45 percent of the way to the sky when the march gives up at
+    // MAX_DIST. The floor is an infinite plane, so every ray below the horizon hits it and stops
+    // there, and the ground ended in a flat band of its own colour with a hard step to the sky
+    // along the top. Closing the last stretch to the sky by MAX_DIST removes the step, and the
+    // ground reaches the horizon as haze instead of as an edge.
+    fog = max(fog, smoothstep(MAX_DIST * FOG_HORIZON_START, MAX_DIST, raymarchResult.hitDistance));
+
     sceneColor = lerp(sceneColor, getSkyColor(hazeDir), fog);
 
     return float4(applyHud(toDisplay(sceneColor), input.TexCoord, debugValues.x), 1);

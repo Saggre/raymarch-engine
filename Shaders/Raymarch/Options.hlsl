@@ -37,7 +37,8 @@
 #define HUD_TEXT_OUTLINE_ALPHA 0.8
 #define HUD_TEXT_COLOR float3(1.0, 1.0, 1.0)
 #define HUD_TEXT_ALPHA 1.0
-#define FOG_DENSITY 0.006          // Per world unit. At MAX_DIST this is about 45 percent haze.
+#define FOG_DENSITY 0.006          // Per world unit. On its own this is 45 percent haze at MAX_DIST
+#define FOG_HORIZON_START 0.5      // Fraction of MAX_DIST where the haze starts closing to the sky
 
 // ---------------------------------------------------------------------------------------------
 // Sun
