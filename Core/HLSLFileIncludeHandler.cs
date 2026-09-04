@@ -61,6 +61,19 @@ namespace RaymarchEngine.Core
         /// <returns>Stream with HLSL code</returns>
         private Stream GetShaderConstantsStream()
         {
+            byte[] byteArray = Encoding.ASCII.GetBytes(GetShaderConstants());
+            return new MemoryStream(byteArray);
+        }
+
+        /// <summary>
+        /// The constants this handler bakes in for the current scene.
+        ///
+        /// Public because it is part of what the compiler sees, so the shader cache has to include
+        /// it in its key: the same source with a different number of spheres is a different shader.
+        /// </summary>
+        /// <returns>The generated HLSL</returns>
+        public string GetShaderConstants()
+        {
             // Counted from the scene, which is what RenderDevice.Draw uploads. Counting renderers as
             // they are constructed would include ones never added, overrunning the structured buffer.
             string hlslString = $"static const int sphereCount = {SceneRendererCount<Sphere>()};" +
@@ -72,8 +85,7 @@ namespace RaymarchEngine.Core
                                 $"static const int cylinderCount = {SceneRendererCount<Cylinder>()};";
 
             Debug.WriteLine(hlslString);
-            byte[] byteArray = Encoding.ASCII.GetBytes(hlslString);
-            return new MemoryStream(byteArray);
+            return hlslString;
         }
 
         /// <summary>
