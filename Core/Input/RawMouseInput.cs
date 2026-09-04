@@ -25,6 +25,9 @@ namespace RaymarchEngine.Core.Input
         private const ushort UsagePageGeneric = 0x01;
         private const ushort UsageMouse = 0x02;
 
+        // Set in ButtonFlags when ButtonData carries a wheel delta
+        private const ushort RiMouseWheel = 0x0400;
+
         // Deliver input even when the window is not in the foreground, so a look does not stall
         // when focus is briefly elsewhere
         private const int RidevInputSink = 0x00000100;
@@ -80,6 +83,7 @@ namespace RaymarchEngine.Core.Input
 
         private int accumulatedX;
         private int accumulatedY;
+        private int accumulatedWheel;
 
         /// <summary>
         /// Whether the device registered. When it did not, the caller has to fall back to polling
@@ -116,13 +120,16 @@ namespace RaymarchEngine.Core.Input
         /// </summary>
         /// <param name="x">Horizontal movement, positive to the right</param>
         /// <param name="y">Vertical movement, positive downwards</param>
-        public void ConsumeMovement(out int x, out int y)
+        /// <param name="wheel">Wheel movement, positive away from the hand, in notches of 120</param>
+        public void ConsumeMovement(out int x, out int y, out int wheel)
         {
             x = accumulatedX;
             y = accumulatedY;
+            wheel = accumulatedWheel;
 
             accumulatedX = 0;
             accumulatedY = 0;
+            accumulatedWheel = 0;
         }
 
         /// <inheritdoc />
@@ -141,6 +148,13 @@ namespace RaymarchEngine.Core.Input
                     {
                         accumulatedX += input.Mouse.LastX;
                         accumulatedY += input.Mouse.LastY;
+                    }
+
+                    if ((input.Mouse.ButtonFlags & RiMouseWheel) != 0)
+                    {
+                        // ButtonData is a signed delta in a field declared unsigned, so a scroll
+                        // towards the hand arrives as a number just under 65536
+                        accumulatedWheel += (short) input.Mouse.ButtonData;
                     }
                 }
             }
