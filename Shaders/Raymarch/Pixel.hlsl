@@ -123,15 +123,17 @@ float3 getCameraRayDir(float2 uv, float focalLength)
 // the pattern fades to its own average with distance instead of tearing into moire.
 float3 getAlbedo(in cRaymarchResult raymarchResult)
 {
-    float3 albedo = raymarchResult.hitMaterial.diffuseColor;
+    float checkerSize = raymarchResult.hitMaterial.checkerSize;
 
-    if (raymarchResult.hitMaterial.checkerSize > 0.0)
-    {
-        float square = checkers(raymarchResult.hitPos.xz / raymarchResult.hitMaterial.checkerSize);
-        albedo *= lerp(CHECKER_DARK, 1.0, square);
-    }
+    // Evaluated unconditionally and then masked, rather than guarded by an if.
+    //
+    // checkers() takes screen space derivatives, and those are only defined when every pixel in
+    // the quad reaches them. Two neighbouring pixels landing on different materials took
+    // different branches, which left the derivative undefined exactly along every silhouette.
+    float square = checkers(raymarchResult.hitPos.xz / max(checkerSize, 1e-4));
+    float pattern = lerp(CHECKER_DARK, 1.0, square);
 
-    return albedo;
+    return raymarchResult.hitMaterial.diffuseColor * lerp(1.0, pattern, step(1e-4, checkerSize));
 }
 
 float3 getPhongLight(cRaymarchResult raymarchResult)
