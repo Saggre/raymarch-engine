@@ -28,25 +28,59 @@ namespace RaymarchEngine.Core
         public float GroundHeight { get; set; } = -1f;
 
         /// <summary>
-        /// Walking speed in world units per second
+        /// Fastest the ground acceleration will drive the player, in world units per second.
+        /// The 8.1 metres a second a shooter usually walks at, and this world is roughly in
+        /// metres.
         /// </summary>
-        public float WalkSpeed { get; set; } = 6f;
+        public float MaxSpeed { get; set; } = 7f;
 
         /// <summary>
-        /// What holding shift multiplies the walking speed by
+        /// What holding shift multiplies the requested speed by
         /// </summary>
-        public float SprintMultiplier { get; set; } = 1.9f;
+        public float SprintMultiplier { get; set; } = 1.6f;
 
         /// <summary>
-        /// Upward speed a jump starts with, in world units per second
+        /// How hard the ground pushes back, per second
         /// </summary>
-        public float JumpSpeed { get; set; } = 7f;
+        public float Friction { get; set; } = 4f;
 
         /// <summary>
-        /// Downward acceleration in world units per second squared. Well above the real 9.81,
-        /// which is the usual trade: a realistic jump hangs long enough to feel floaty.
+        /// Below this speed friction is applied as though the player were moving at it, which is
+        /// what brings someone to a halt in finite time rather than asymptotically.
         /// </summary>
-        public float Gravity { get; set; } = 20f;
+        public float StopSpeed { get; set; } = 2.5f;
+
+        /// <summary>
+        /// Ground acceleration, in multiples of the requested speed per second
+        /// </summary>
+        public float GroundAcceleration { get; set; } = 10f;
+
+        /// <summary>
+        /// Acceleration while airborne
+        /// </summary>
+        public float AirAcceleration { get; set; } = 10f;
+
+        /// <summary>
+        /// The cap that makes air control work.
+        ///
+        /// Airborne acceleration is measured against this rather than against the full requested
+        /// speed, so once moving faster than it there is still headroom to accelerate sideways.
+        /// Turning while holding a strafe key then adds speed rather than only redirecting it,
+        /// which is where air strafing and bunny hopping come from.
+        /// </summary>
+        public float AirSpeedCap { get; set; } = 0.8f;
+
+        /// <summary>
+        /// Upward speed a jump starts with, in world units per second. Enough to clear a
+        /// standard step height.
+        /// </summary>
+        public float JumpSpeed { get; set; } = 6.8f;
+
+        /// <summary>
+        /// Downward acceleration in world units per second squared. About twice the real
+        /// thing, which is what keeps a jump from feeling floaty.
+        /// </summary>
+        public float Gravity { get; set; } = 20.3f;
 
         /// <summary>
         /// Degrees of rotation per unit of mouse movement
@@ -66,7 +100,7 @@ namespace RaymarchEngine.Core
         // each axis cancels out, which made both angles read as arbitrary.
         private float yawDegrees;
         private float pitchDegrees = -8f;
-        private float verticalVelocity;
+        private Vector3 velocity;
         private bool isGrounded;
 
         /// <summary>
@@ -124,25 +158,53 @@ namespace RaymarchEngine.Core
                 Quaternion.CreateFromAxisAngle(Vector3.UnitX, -pitchDegrees * EMath.Util.Deg2Rad);
         }
 
+        /// <summary>
+        /// Classic shooter movement: the keys ask for a direction and a speed, and acceleration
+        /// closes the gap between what is asked for and what the player already has.
+        ///
+        /// The player is never moved at the requested speed directly. Everything is a velocity
+        /// that friction takes from and acceleration adds to, which is what produces the ramp up,
+        /// the slide when the keys are released, and the air control.
+        /// </summary>
         private void UpdateMovement(float deltaTime)
         {
-            Vector3 position = parent.Movement.Position + GroundVelocity() * deltaTime;
+            Vector3 wishDirection = WishDirection();
+            float wishSpeed = MaxSpeed;
 
+            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
+            {
+                wishSpeed *= SprintMultiplier;
+            }
+
+            // Before friction, so a jump leaves at full speed instead of the ground taking a
+            // frame's worth off it first. It is also the reason a jump
+            // taken on the instant of landing keeps its speed.
             if (isGrounded && InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.SPACE))
             {
-                verticalVelocity = JumpSpeed;
+                velocity.Y = JumpSpeed;
                 isGrounded = false;
             }
 
-            verticalVelocity -= Gravity * deltaTime;
-            position.Y += verticalVelocity * deltaTime;
+            if (isGrounded)
+            {
+                ApplyFriction(deltaTime);
+                Accelerate(wishDirection, wishSpeed, GroundAcceleration, deltaTime);
+            }
+            else
+            {
+                AirAccelerate(wishDirection, wishSpeed, deltaTime);
+            }
 
-            // The only collision in the scene. Landing has to clear the velocity, or gravity keeps
-            // accumulating into it and the next jump is swallowed.
+            velocity.Y -= Gravity * deltaTime;
+
+            Vector3 position = parent.Movement.Position + velocity * deltaTime;
+
+            // The only collision in the scene. Landing has to clear the vertical velocity, or
+            // gravity keeps accumulating into it and the next jump is swallowed.
             if (position.Y <= StandingHeight)
             {
                 position.Y = StandingHeight;
-                verticalVelocity = 0f;
+                velocity.Y = 0f;
                 isGrounded = true;
             }
 
@@ -150,12 +212,72 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Movement along the ground from the keys held this frame.
+        /// Removes speed at a rate proportional to the current speed, so slowing down is
+        /// exponential. Below StopSpeed the rate is held at what StopSpeed would give, which is
+        /// what brings the player to an actual halt instead of creeping towards one forever.
+        /// </summary>
+        private void ApplyFriction(float deltaTime)
+        {
+            float speed = velocity.Length();
+            if (speed < 0.01f)
+            {
+                velocity = Vector3.Zero;
+                return;
+            }
+
+            float control = Math.Max(speed, StopSpeed);
+            float drop = control * Friction * deltaTime;
+
+            velocity *= Math.Max(speed - drop, 0f) / speed;
+        }
+
+        /// <summary>
+        /// Adds speed along the requested direction, but only as much as is missing from the
+        /// requested speed in that direction. Already moving that fast means no acceleration,
+        /// which caps ground speed without ever clamping the velocity.
+        /// </summary>
+        private void Accelerate(Vector3 wishDirection, float wishSpeed, float acceleration, float deltaTime)
+        {
+            float currentSpeed = Vector3.Dot(velocity, wishDirection);
+            float addSpeed = wishSpeed - currentSpeed;
+
+            if (addSpeed <= 0f)
+            {
+                return;
+            }
+
+            velocity += wishDirection * Math.Min(acceleration * wishSpeed * deltaTime, addSpeed);
+        }
+
+        /// <summary>
+        /// The same, except the speed it measures against is capped at AirSpeedCap.
+        ///
+        /// That one substitution is the whole of air control. Past the cap the player can still
+        /// accelerate perpendicular to their travel, so sweeping the mouse while holding a strafe
+        /// key curves the path and gains speed rather than trading it.
+        /// </summary>
+        private void AirAccelerate(Vector3 wishDirection, float wishSpeed, float deltaTime)
+        {
+            float cappedSpeed = Math.Min(wishSpeed, AirSpeedCap);
+
+            float currentSpeed = Vector3.Dot(velocity, wishDirection);
+            float addSpeed = cappedSpeed - currentSpeed;
+
+            if (addSpeed <= 0f)
+            {
+                return;
+            }
+
+            velocity += wishDirection * Math.Min(AirAcceleration * wishSpeed * deltaTime, addSpeed);
+        }
+
+        /// <summary>
+        /// Direction the keys are asking to move in, along the ground.
         ///
         /// Built from the yaw alone. Rotating it by the full view direction is what let the old
         /// flying camera walk into the floor whenever it was looking down.
         /// </summary>
-        private Vector3 GroundVelocity()
+        private Vector3 WishDirection()
         {
             Vector3 input = Vector3.Zero;
 
@@ -184,17 +306,10 @@ namespace RaymarchEngine.Core
                 return Vector3.Zero;
             }
 
-            // Normalised, so holding two keys does not travel faster than holding one
+            // Normalised, so holding two keys does not ask for more speed than holding one
             Quaternion heading = Quaternion.CreateFromAxisAngle(Vector3.UnitY, yawDegrees * EMath.Util.Deg2Rad);
-            Vector3 direction = Vector3.Normalize(input).Multiply(heading);
 
-            float speed = WalkSpeed;
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
-            {
-                speed *= SprintMultiplier;
-            }
-
-            return direction * speed;
+            return Vector3.Normalize(input).Multiply(heading);
         }
     }
 }
