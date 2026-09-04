@@ -158,8 +158,9 @@ namespace RaymarchEngine.Core.Input
             // rather than left to pile up, so returning does not arrive as one large jump.
             if (!HasFocus)
             {
-                rawInput.ConsumeMovement(out int _, out int _);
+                rawInput.ConsumeMovement(out int _, out int _, out int _);
                 deltaPosition = Vector2.Zero;
+                wheelDelta = 0;
                 lastCursorPosition = Cursor.Position;
                 return;
             }
