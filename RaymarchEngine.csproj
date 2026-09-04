@@ -185,6 +185,7 @@
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\LoadingScreen.cs" />
     <Compile Include="Core\Material.cs" />
+    <Compile Include="Core\SourceUnits.cs" />
     <Compile Include="Core\Sun.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\FirstPersonController.cs" />

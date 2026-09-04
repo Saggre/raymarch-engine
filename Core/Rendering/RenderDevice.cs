@@ -309,7 +309,8 @@ namespace RaymarchEngine.Core.Rendering
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
 
-                raymarchShaderBufferData.debugValues.X = Scene.CurrentScene.ActiveCamera.Movement.Speed;
+                raymarchShaderBufferData.debugValues.X =
+                    SourceUnits.FromWorld(Scene.CurrentScene.ActiveCamera.Movement.Speed);
 
                 Vector3 sunDirection = Sun.GetDirection(Engine.ElapsedTime);
                 raymarchShaderBufferData.sunDirection = sunDirection;

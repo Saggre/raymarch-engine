@@ -37,7 +37,8 @@ frame from the first rendered image without the camera having to move.
 Move with WASD, look with the mouse, hold shift to sprint, escape to quit. Jump with space or
 the scroll wheel, either direction, which is the bind players use to bunny hop.
 
-A crosshair sits in the middle and the ground speed is printed top left.
+A crosshair sits in the middle and the ground speed is printed top left, in Source units, so it
+reads 320 at a walk exactly as it would in Source.
 
 ![Rendering preview](.github/assets/raymarch.gif)
 
