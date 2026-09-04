@@ -35,6 +35,7 @@ namespace RaymarchEngine.Core.Input
 
         private Vector2 position;
         private Vector2 deltaPosition;
+        private int wheelDelta;
 
         /// <summary>
         /// Whether the cursor is recentered every frame
@@ -99,6 +100,12 @@ namespace RaymarchEngine.Core.Input
         public Vector2 Position => position;
 
         /// <summary>
+        /// How far the wheel turned during the previous frame, positive away from the hand.
+        /// Zero when raw input is unavailable, since the cursor polling fallback cannot see it.
+        /// </summary>
+        public int WheelDelta => wheelDelta;
+
+        /// <summary>
         /// Set cursor to a certain pixel on screen
         /// </summary>
         /// <param name="x">Screen x coordinate in pixels</param>
@@ -139,15 +146,17 @@ namespace RaymarchEngine.Core.Input
 
             if (rawInput.IsAvailable)
             {
-                rawInput.ConsumeMovement(out int rawX, out int rawY);
+                rawInput.ConsumeMovement(out int rawX, out int rawY, out int rawWheel);
 
                 deltaPosition.X = rawX;
                 deltaPosition.Y = rawY;
+                wheelDelta = rawWheel;
             }
             else
             {
                 deltaPosition.X = cursorPosition.X - lastCursorPosition.X;
                 deltaPosition.Y = cursorPosition.Y - lastCursorPosition.Y;
+                wheelDelta = 0;
             }
 
             // Recentering is what keeps the cursor inside the window. With raw input the movement
