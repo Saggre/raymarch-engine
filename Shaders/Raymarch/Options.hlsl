@@ -2,7 +2,6 @@
 #define MAX_DIST 100
 #define SHADOW_MAX_DIST 50
 #define SHADOW_MAX_STEPS 256
-#define AO_FALLOFF 40
 #define SURF_DIST 1e-4
 #define PIXEL_ANGLE 3.2e-4         // Roughly half the angle one pixel covers at this resolution
 
@@ -45,6 +44,10 @@
 #define SKY_DUSK_TINT float3(0.85, 0.62, 0.45)  // What the whole sky tends towards with a low sun
 #define SKY_EXPOSURE 1.0
 #define SKY_AMBIENT 0.35           // How much of the zenith sky fills unlit surfaces
+
+#define AO_SAMPLES 5
+#define AO_RADIUS 0.6              // How far out along the normal occlusion is looked for
+#define AO_STRENGTH 1.6
 #define CHECKER_DARK 0.42          // Colour multiplier on the dark squares of a checkerboard
 
 // ---------------------------------------------------------------------------------------------
