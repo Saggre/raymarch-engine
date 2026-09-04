@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.EMath;
+using RaymarchEngine.Physics;
 using WindowsInput.Native;
 
 namespace RaymarchEngine.Core
@@ -23,10 +24,28 @@ namespace RaymarchEngine.Core
         public float EyeHeight { get; set; } = 64f;
 
         /// <summary>
-        /// Height of the ground plane. The scene has one infinite floor and no collision system,
-        /// so the floor is a number rather than something to trace against.
+        /// Height of the floor. It is an infinite plane, which no convex collider can express, so
+        /// it stays a number and everything else in the scene is traced against.
         /// </summary>
         public float GroundHeight { get; set; } = -1f;
+
+        /// <summary>
+        /// How far in front of the eye a wall stops the player, in movement units. Stands in for the
+        /// width of a character, since this traces a ray rather than sweeping a body.
+        /// </summary>
+        public float Radius { get; set; } = 16f;
+
+        /// <summary>
+        /// How far below the feet to look for something to stand on, in movement units
+        /// </summary>
+        public float GroundProbe { get; set; } = 4f;
+
+        /// <summary>
+        /// Steepest surface that still counts as ground, as the vertical part of its normal.
+        /// Anything steeper is a wall, and standing on it would let the player hang off the side
+        /// of a shape.
+        /// </summary>
+        public float MinGroundNormal { get; set; } = 0.5f;
 
         /// <summary>
         /// Fastest the ground acceleration will drive the player
@@ -193,19 +212,79 @@ namespace RaymarchEngine.Core
             }
 
             velocity.Y -= MovementUnits.ToWorld(Gravity) * deltaTime;
+            velocity = ClipVelocity(parent.Movement.Position, velocity, deltaTime);
 
             Vector3 position = parent.Movement.Position + velocity * deltaTime;
 
-            // The only collision in the scene. Landing has to clear the vertical velocity, or
-            // gravity keeps accumulating into it and the next jump is swallowed.
-            if (position.Y <= StandingHeight)
+            // Landing has to clear the vertical velocity, or gravity keeps accumulating into it
+            // and the next jump is swallowed
+            float floorHeight = FloorHeight(position);
+            isGrounded = position.Y <= floorHeight;
+
+            if (isGrounded)
             {
-                position.Y = StandingHeight;
+                position.Y = floorHeight;
                 velocity.Y = 0f;
-                isGrounded = true;
             }
 
             parent.Movement.Position = position;
+        }
+
+        /// <summary>
+        /// Where the eye rests when standing on whatever is directly below it.
+        ///
+        /// Traced rather than assumed flat, which is what lets the player stand on the shapes
+        /// instead of only on the floor. The floor itself is not a collider, so a ray that finds
+        /// nothing means open ground.
+        /// </summary>
+        private float FloorHeight(Vector3 position)
+        {
+            float eye = MovementUnits.ToWorld(EyeHeight);
+            float reach = eye + MovementUnits.ToWorld(GroundProbe);
+
+            if (PhysicsQuery.Raycast(position, -Vector3.UnitY, reach, out float distance, out Vector3 normal) &&
+                normal.Y >= MinGroundNormal)
+            {
+                return position.Y - distance + eye;
+            }
+
+            return StandingHeight;
+        }
+
+        /// <summary>
+        /// Takes the part of the velocity that heads into a wall away from it, and leaves the rest.
+        ///
+        /// This is clipping, and keeping the remainder is what makes running at a wall
+        /// at an angle slide along it rather than stop dead. Clipping the velocity rather than the
+        /// step also stops speed piling up against a wall and firing the player off when they turn
+        /// away from it.
+        /// </summary>
+        private Vector3 ClipVelocity(Vector3 position, Vector3 velocity, float deltaTime)
+        {
+            Vector3 horizontal = new Vector3(velocity.X, 0f, velocity.Z);
+
+            float speed = horizontal.Length();
+            if (speed < 0.01f)
+            {
+                return velocity;
+            }
+
+            float reach = speed * deltaTime + MovementUnits.ToWorld(Radius);
+            if (!PhysicsQuery.Raycast(position, horizontal / speed, reach, out float _, out Vector3 normal))
+            {
+                return velocity;
+            }
+
+            // A floor or a ceiling is not a wall, and its normal has nothing horizontal to clip
+            Vector3 wall = new Vector3(normal.X, 0f, normal.Z);
+            if (wall.LengthSquared() < 1e-6f)
+            {
+                return velocity;
+            }
+
+            float into = Vector3.Dot(velocity, Vector3.Normalize(wall));
+
+            return into < 0f ? velocity - Vector3.Normalize(wall) * into : velocity;
         }
 
         /// <summary>
