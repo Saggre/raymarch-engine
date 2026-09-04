@@ -40,7 +40,9 @@ namespace RaymarchEngine.Core
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
 
-            ready.Wait();
+            // Bounded. If the splash thread fails before its window appears, the engine should
+            // start anyway rather than hang with nothing on screen and nothing to say why.
+            ready.Wait(TimeSpan.FromSeconds(5));
         }
 
         /// <summary>

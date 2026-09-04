@@ -3,6 +3,7 @@
 using System;
 using System.Drawing;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using SharpDX.Windows;
 
@@ -50,6 +51,18 @@ namespace RaymarchEngine.Core.Input
         private readonly RawMouseInput rawInput;
 
         private Point lastCursorPosition;
+
+        /// <summary>
+        /// Which window the user is actually working in.
+        ///
+        /// Form.Focused and ContainsFocus report this application's own idea of focus, which stays
+        /// true while another application is in front. Only the foreground window answers the
+        /// question being asked here.
+        /// </summary>
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        private bool HasFocus => GetForegroundWindow() == renderForm.Handle;
 
         /// <summary>
         /// Starts raw input and centers the cursor
@@ -132,6 +145,18 @@ namespace RaymarchEngine.Core.Input
         /// <param name="deltaTime">Seconds elapsed since the previous frame, unused</param>
         public void Update(float deltaTime)
         {
+            // Raw input is registered with RIDEV_INPUTSINK, so it keeps arriving while the player
+            // is in another application. Acting on it there would spin the camera behind their
+            // back, and recentring would take the cursor away from what they are doing. Drained
+            // rather than left to pile up, so returning does not arrive as one large jump.
+            if (!HasFocus)
+            {
+                rawInput.ConsumeMovement(out int _, out int _);
+                deltaPosition = Vector2.Zero;
+                lastCursorPosition = Cursor.Position;
+                return;
+            }
+
             Point cursorPosition = Cursor.Position;
 
             position.X = cursorPosition.X;
