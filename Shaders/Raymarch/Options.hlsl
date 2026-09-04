@@ -5,6 +5,13 @@
 #define SURF_DIST 1e-4
 #define PIXEL_ANGLE 3.2e-4         // Roughly half the angle one pixel covers at this resolution
 
+// A reflection is attenuated by the surface before it is ever seen, so it converges on a coarser
+// epsilon and gives up sooner than the view ray without the difference showing
+#define REFLECTION_MAX_STEPS 64
+#define REFLECTION_MAX_DIST 45
+#define REFLECTION_PIXEL_ANGLE 1.6e-3
+#define REFLECTION_MIN 0.01        // Below this the second march is not worth taking at all
+
 #define EXPOSURE 1.0
 #define FOG_DENSITY 0.006          // Per world unit. At MAX_DIST this is about 45 percent haze.
 
@@ -12,16 +19,7 @@
 // Sun
 // ---------------------------------------------------------------------------------------------
 
-#define SUN_AZIMUTH 4.03           // Radians, measured in the xz plane
-#define SUN_AZIMUTH_SWEEP 0.85     // Radians either side of that, so the sun never gets behind the scene
-#define SUN_SPEED 0.07             // Radians per second
-#define SUN_MIN_ELEVATION 26.0     // Degrees. Kept above the horizon so the scene stays lit
-#define SUN_MAX_ELEVATION 52.0
-
-#define SUN_COLOR_HIGH float3(1.00, 0.97, 0.92)
-#define SUN_COLOR_LOW float3(1.00, 0.72, 0.42)   // What it warms to as it drops
-#define SUN_COLOR_FALLOFF 2.2
-#define SUN_LIGHT_INTENSITY 1.05
+// The sun's sweep and colour ramp live in Sun.cs, since they are the same for every pixel
 
 #define SUN_ANGULAR_RADIUS 0.5     // Degrees. The real sun is 0.27, this reads better on screen
 #define SUN_DISK_BRIGHTNESS 6.0

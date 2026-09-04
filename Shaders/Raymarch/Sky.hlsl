@@ -14,26 +14,17 @@
 // Sun
 // ---------------------------------------------------------------------------------------------
 
-// Direction from the scene towards the sun.
-//
-// It swings rather than circling. A full revolution puts the sun behind the scene for half of it,
-// which leaves every camera facing surface backlit, and the elevation stays well above the horizon
-// for the same reason. The two periods do not divide evenly, so the lighting does not repeat.
+// Both of these are the same for every pixel, so the engine computes them once a frame and
+// uploads them. Sun.cs owns the sweep and the colour ramp. They stay as functions because every
+// call site reads better for it and they compile away to a constant buffer fetch.
 float3 getSunDirection()
 {
-    float azimuth = SUN_AZIMUTH + SUN_AZIMUTH_SWEEP * sin(time * SUN_SPEED);
-    float elevation = radians(lerp(SUN_MIN_ELEVATION, SUN_MAX_ELEVATION,
-                                   0.5 + 0.5 * sin(time * SUN_SPEED * 0.37)));
-
-    float cosE = cos(elevation);
-    return float3(cosE * cos(azimuth), sin(elevation), cosE * sin(azimuth));
+    return sunDirection;
 }
 
-// Sunlight colour, warming as the sun drops. A real atmosphere gets this from wavelength dependent
-// extinction, one lerp gets close enough to sell it.
 float3 getSunLightColor(float3 sunDir)
 {
-    return lerp(SUN_COLOR_LOW, SUN_COLOR_HIGH, saturate(sunDir.y * SUN_COLOR_FALLOFF)) * SUN_LIGHT_INTENSITY;
+    return sunLightColor;
 }
 
 // ---------------------------------------------------------------------------------------------

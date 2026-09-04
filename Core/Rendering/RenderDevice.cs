@@ -64,6 +64,13 @@ namespace RaymarchEngine.Core.Rendering
             public float aspectRatio;
             public Vector3 cameraDirection;
             public float time;
+
+            // Frame constants the shader would otherwise recompute per pixel
+            public Vector3 sunDirection;
+            public float sunDirectionPadding;
+            public Vector3 sunLightColor;
+            public float sunLightColorPadding;
+
             public Vector4 additionalData;
         }
 
@@ -300,6 +307,10 @@ namespace RaymarchEngine.Core.Rendering
                 // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
+
+                Vector3 sunDirection = Sun.GetDirection(Engine.ElapsedTime);
+                raymarchShaderBufferData.sunDirection = sunDirection;
+                raymarchShaderBufferData.sunLightColor = Sun.GetLightColor(sunDirection);
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
