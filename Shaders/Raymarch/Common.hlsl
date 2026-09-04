@@ -193,7 +193,8 @@ float sunDirectionPadding;
 float3 sunLightColor;
 float sunLightColorPadding;
 
-float4 additionalData;
+// x is the player's ground speed, for the overlay readout
+float4 debugValues;
 };
 
 // Buffers
@@ -226,5 +227,6 @@ struct PS_INPUT
     float2 TexCoord : TEXCOORD;
 };
 
-// Needs the constant buffer above for the time, so it comes last
+// Need the constant buffer above, so they come last
 #include "Sky.hlsl"
+#include "Hud.hlsl"

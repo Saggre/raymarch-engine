@@ -71,7 +71,8 @@ namespace RaymarchEngine.Core.Rendering
             public Vector3 sunLightColor;
             public float sunLightColorPadding;
 
-            public Vector4 additionalData;
+            // x is the player's ground speed, which the overlay prints
+            public Vector4 debugValues;
         }
 
         /// <summary>
@@ -307,6 +308,8 @@ namespace RaymarchEngine.Core.Rendering
                 // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
+
+                raymarchShaderBufferData.debugValues.X = Scene.CurrentScene.ActiveCamera.Movement.Speed;
 
                 Vector3 sunDirection = Sun.GetDirection(Engine.ElapsedTime);
                 raymarchShaderBufferData.sunDirection = sunDirection;
