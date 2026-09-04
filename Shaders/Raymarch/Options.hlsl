@@ -20,20 +20,25 @@
 
 // All in fractions of screen height, so the overlay keeps its proportions at any resolution
 #define CROSSHAIR_COLOR float3(1.0, 1.0, 1.0)
-#define CROSSHAIR_GAP 0.0055       // Clear space in the middle, so the aim point stays visible
-#define CROSSHAIR_LENGTH 0.0130
-#define CROSSHAIR_THICKNESS 0.0011
-#define CROSSHAIR_OUTLINE 0.0009   // Dark border, so it reads against sky and against surfaces
-#define CROSSHAIR_OUTLINE_ALPHA 0.75
+#define CROSSHAIR_GAP 0.0026       // Clear space in the middle, so the aim point stays visible
+#define CROSSHAIR_LENGTH 0.0060
+#define CROSSHAIR_THICKNESS 0.0007
+#define CROSSHAIR_OUTLINE 0.0006   // Dark border, so it reads against sky and against surfaces
+#define CROSSHAIR_OUTLINE_ALPHA 0.8
 
-#define HUD_ORIGIN float2(0.020, 0.022)
-#define HUD_DIGIT_WIDTH 0.0130
-#define HUD_DIGIT_HEIGHT 0.0230
-#define HUD_DIGIT_GAP 0.0045
-#define HUD_POINT_ADVANCE 0.0075   // Room left between the whole and fractional digits
-#define HUD_POINT_SIZE 0.0016
+// Larger and heavier than a display font would need to be. The readout sits over a bright sky as
+// often as a dark surface, and thin strokes disappeared into both.
+#define HUD_ORIGIN float2(0.024, 0.026)
+#define HUD_DIGIT_WIDTH 0.0210
+#define HUD_DIGIT_HEIGHT 0.0380
+#define HUD_DIGIT_GAP 0.0070
+#define HUD_POINT_ADVANCE 0.0110   // Room left between the whole and fractional digits
+#define HUD_POINT_SIZE 0.0026
+#define HUD_SEGMENT_THICKNESS 0.085  // Half thickness of a segment, as a fraction of the digit box
+#define HUD_TEXT_OUTLINE 0.055     // How far the dark backing extends past the segments
+#define HUD_TEXT_OUTLINE_ALPHA 0.8
 #define HUD_TEXT_COLOR float3(1.0, 1.0, 1.0)
-#define HUD_TEXT_ALPHA 0.85
+#define HUD_TEXT_ALPHA 1.0
 #define FOG_DENSITY 0.006          // Per world unit. At MAX_DIST this is about 45 percent haze.
 
 // ---------------------------------------------------------------------------------------------

@@ -71,22 +71,24 @@ static const int HUD_DIGIT_SEGMENTS[10] = {63, 6, 91, 79, 102, 109, 125, 7, 127,
 
 static const uint HUD_PLACE_VALUES[4] = {1000, 100, 10, 1};
 
-// q is inside the digit's own box, 0 to 1 on both axes with y running down
-float hudDigit(float2 q, int value)
+// q is inside the digit's own box, 0 to 1 on both axes with y running down. grow widens every
+// segment, which is what draws the dark backing behind the glyph.
+float hudDigit(float2 q, int value, float grow)
 {
     int bits = HUD_DIGIT_SEGMENTS[clamp(value, 0, 9)];
 
-    float2 acrossHalf = float2(0.34, 0.05);
-    float2 downHalf = float2(0.05, 0.20);
+    float thickness = HUD_SEGMENT_THICKNESS + grow;
+    float2 acrossHalf = float2(0.34 + grow, thickness);
+    float2 downHalf = float2(thickness, 0.20 + grow);
 
     float mask = 0.0;
 
-    if ((bits & 1) != 0) { mask += hudRect(q, float2(0.50, 0.04), acrossHalf); }
-    if ((bits & 2) != 0) { mask += hudRect(q, float2(0.94, 0.27), downHalf); }
-    if ((bits & 4) != 0) { mask += hudRect(q, float2(0.94, 0.73), downHalf); }
-    if ((bits & 8) != 0) { mask += hudRect(q, float2(0.50, 0.96), acrossHalf); }
-    if ((bits & 16) != 0) { mask += hudRect(q, float2(0.06, 0.73), downHalf); }
-    if ((bits & 32) != 0) { mask += hudRect(q, float2(0.06, 0.27), downHalf); }
+    if ((bits & 1) != 0) { mask += hudRect(q, float2(0.50, 0.08), acrossHalf); }
+    if ((bits & 2) != 0) { mask += hudRect(q, float2(0.90, 0.29), downHalf); }
+    if ((bits & 4) != 0) { mask += hudRect(q, float2(0.90, 0.71), downHalf); }
+    if ((bits & 8) != 0) { mask += hudRect(q, float2(0.50, 0.92), acrossHalf); }
+    if ((bits & 16) != 0) { mask += hudRect(q, float2(0.10, 0.71), downHalf); }
+    if ((bits & 32) != 0) { mask += hudRect(q, float2(0.10, 0.29), downHalf); }
     if ((bits & 64) != 0) { mask += hudRect(q, float2(0.50, 0.50), acrossHalf); }
 
     return saturate(mask);
@@ -94,6 +96,9 @@ float hudDigit(float2 q, int value)
 
 // The readout, as two whole digits and two decimals. Fixed width rather than trimmed, so the
 // number does not jitter sideways as it changes.
+//
+// Both passes are accumulated across every digit before either is composited. Drawing a digit's
+// backing and glyph together would let the next digit's backing cut into the previous glyph.
 float3 hudNumber(float3 color, float2 screen, float value)
 {
     float2 cell = float2(HUD_DIGIT_WIDTH, HUD_DIGIT_HEIGHT);
@@ -101,7 +106,8 @@ float3 hudNumber(float3 color, float2 screen, float value)
 
     uint scaled = (uint) clamp(round(value * 100.0), 0.0, 9999.0);
 
-    float mask = 0.0;
+    float glyph = 0.0;
+    float backing = 0.0;
 
     [unroll]
     for (int i = 0; i < 4; i++)
@@ -110,19 +116,28 @@ float3 hudNumber(float3 color, float2 screen, float value)
         float slot = i * advance + (i >= 2 ? HUD_POINT_ADVANCE : 0.0);
 
         float2 q = (screen - HUD_ORIGIN - float2(slot, 0.0)) / cell;
-        if (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)
+
+        // Widened by the backing, so a glyph's outline is not clipped at the cell edge
+        if (q.x < -HUD_TEXT_OUTLINE || q.x > 1.0 + HUD_TEXT_OUTLINE ||
+            q.y < -HUD_TEXT_OUTLINE || q.y > 1.0 + HUD_TEXT_OUTLINE)
         {
             continue;
         }
 
-        mask += hudDigit(q, (int) ((scaled / HUD_PLACE_VALUES[i]) % 10));
+        int digit = (int) ((scaled / HUD_PLACE_VALUES[i]) % 10);
+
+        glyph += hudDigit(q, digit, 0.0);
+        backing += hudDigit(q, digit, HUD_TEXT_OUTLINE);
     }
 
     // The decimal point, sitting on the baseline between the second and third digit
-    float2 pointCenter = HUD_ORIGIN + float2(2.0 * advance - HUD_DIGIT_GAP, HUD_DIGIT_HEIGHT * 0.92);
-    mask += hudRect(screen, pointCenter, HUD_POINT_SIZE.xx);
+    float2 pointCenter = HUD_ORIGIN + float2(2.0 * advance - HUD_DIGIT_GAP, HUD_DIGIT_HEIGHT * 0.90);
+    glyph += hudRect(screen, pointCenter, HUD_POINT_SIZE.xx);
+    backing += hudRect(screen, pointCenter, (HUD_POINT_SIZE + HUD_TEXT_OUTLINE * HUD_DIGIT_HEIGHT).xx);
 
-    return lerp(color, HUD_TEXT_COLOR, saturate(mask) * HUD_TEXT_ALPHA);
+    color = lerp(color, float3(0, 0, 0), saturate(backing) * HUD_TEXT_OUTLINE_ALPHA);
+
+    return lerp(color, HUD_TEXT_COLOR, saturate(glyph) * HUD_TEXT_ALPHA);
 }
 
 // ---------------------------------------------------------------------------------------------
