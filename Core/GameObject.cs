@@ -10,8 +10,8 @@ using Vector3 = System.Numerics.Vector3;
 namespace RaymarchEngine.Core
 {
     /// <summary>
-    /// A class that represents a physical, visible object in the scene
-    /// Must be extended to represent an object with a mesh (GameObject) or a raymarched object (RaymarchGameObject) or something else
+    /// A positioned object in the scene. What it does comes from the components attached to it,
+    /// for example a RaymarchRenderer to give it a shape the raymarcher can draw.
     /// </summary>
     public class GameObject
     {
@@ -40,6 +40,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Create new GameObject at position
         /// </summary>
+        /// <param name="position">World space position</param>
         public GameObject(Vector3 position)
         {
             components = new List<IComponent>();
@@ -53,6 +54,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Create new GameObject with components
         /// </summary>
+        /// <param name="components">Components to attach</param>
         public GameObject(params IComponent[] components)
         {
             this.components = components.ToList();
@@ -70,6 +72,8 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Create new GameObject with components at position
         /// </summary>
+        /// <param name="position">World space position</param>
+        /// <param name="components">Components to attach</param>
         public GameObject(Vector3 position, params IComponent[] components)
         {
             this.components = components.ToList();
@@ -85,8 +89,11 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Create new GameObject
+        /// Create new GameObject with a full transform
         /// </summary>
+        /// <param name="position">World space position</param>
+        /// <param name="rotation">World space rotation</param>
+        /// <param name="scale">Scale along each axis</param>
         public GameObject(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             components = new List<IComponent>();
@@ -115,7 +122,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Called by child GameObject when it sets this as its parent
         /// </summary>
-        /// <param name="child"></param>
+        /// <param name="child">The GameObject that adopted this one as its parent</param>
         private void OnSetParent(GameObject child)
         {
             children.Add(child);
@@ -124,7 +131,7 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Called by parent GameObject when it sets this as its child
         /// </summary>
-        /// <param name="parent"></param>
+        /// <param name="parent">The new parent</param>
         private void OnAddedChild(GameObject parent)
         {
             this.parent = parent;
@@ -133,16 +140,16 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Called by parent GameObject when it removes this as its child
         /// </summary>
-        /// <param name="parent"></param>
+        /// <param name="parent">The GameObject this one was detached from</param>
         private void OnRemovedChild(GameObject parent)
         {
             this.parent = null;
         }
 
         /// <summary>
-        /// Set this GameObject's parent
+        /// Set this GameObject's parent, and add this to the parent's children
         /// </summary>
-        /// <param name="parent"></param>
+        /// <param name="parent">The GameObject to attach to</param>
         public void SetParent(GameObject parent)
         {
             this.parent = parent;
@@ -150,9 +157,9 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Remove this GameObject's child
+        /// Remove a child GameObject and clear its parent
         /// </summary>
-        /// <param name="child"></param>
+        /// <param name="child">The child to detach</param>
         public void RemoveChild(GameObject child)
         {
             children.Remove(child);
@@ -160,9 +167,9 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Adds a child GameObject
+        /// Adds a child GameObject and sets this as its parent
         /// </summary>
-        /// <param name="child"></param>
+        /// <param name="child">The GameObject to attach</param>
         public void AddChild(GameObject child)
         {
             children.Add(child);
@@ -184,10 +191,11 @@ namespace RaymarchEngine.Core
         public IEnumerable<IComponent> Components => components.ToArray();
 
         /// <summary>
-        /// Gets a component T
+        /// Gets the first attached component assignable to T
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <typeparam name="T">Component type to look for</typeparam>
+        /// <returns>The matching component</returns>
+        /// <exception cref="System.InvalidOperationException">No component of type T is attached</exception>
         public T GetComponent<T>()
         {
             foreach (IComponent component in components)

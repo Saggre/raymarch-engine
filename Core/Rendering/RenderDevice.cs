@@ -23,7 +23,8 @@ using Vector4 = System.Numerics.Vector4;
 namespace RaymarchEngine.Core.Rendering
 {
     /// <summary>
-    /// A class that handles rendering the visible
+    /// Owns the D3D11 device, swap chain and the buffers the raymarch shader reads, and draws one
+    /// fullscreen quad per frame for the pixel shader to march through.
     /// </summary>
     public class RenderDevice : IDisposable
     {
@@ -45,7 +46,14 @@ namespace RaymarchEngine.Core.Rendering
 
         private RenderForm renderForm;
 
+        /// <summary>
+        /// The D3D11 device every GPU resource in the engine is created on
+        /// </summary>
         public Device device;
+
+        /// <summary>
+        /// Immediate context, where draw calls and resource updates are recorded
+        /// </summary>
         public DeviceContext deviceContext;
         private SwapChain swapChain;
 
@@ -57,27 +65,78 @@ namespace RaymarchEngine.Core.Rendering
         private StructuredBuffer<PrimitiveBufferData>[] primitivesBuffer;
         private TextureBuffer<Color> noiseTextureBuffer;
 
+        /// <summary>
+        /// Per frame values for the raymarch shader, mirrored by the ShaderBuffer cbuffer at
+        /// register b0 in Common.hlsl. The floats sit between the vectors to fill the 16 byte
+        /// rows, so field order has to stay in step on both sides.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         struct RaymarchShaderBufferData
         {
+            /// <summary>
+            /// World space position of the active camera, where every primary ray starts
+            /// </summary>
             public Vector3 cameraPosition;
+
+            /// <summary>
+            /// Window width divided by height, used to stretch the uv plane
+            /// </summary>
             public float aspectRatio;
+
+            /// <summary>
+            /// World space forward vector of the active camera
+            /// </summary>
             public Vector3 cameraDirection;
+
+            /// <summary>
+            /// Seconds since the engine started, used to animate the scene
+            /// </summary>
             public float time;
 
-            // The other two axes of the camera, so the shader does not have to rebuild them
+            /// <summary>
+            /// World space right axis of the active camera, sent so the shader does not have to
+            /// rebuild the basis from a world up that has no answer at the poles
+            /// </summary>
             public Vector3 cameraRight;
+
+            /// <summary>
+            /// Pads cameraRight out to 16 bytes
+            /// </summary>
             public float cameraRightPadding;
+
+            /// <summary>
+            /// World space up axis of the active camera
+            /// </summary>
             public Vector3 cameraUp;
+
+            /// <summary>
+            /// Pads cameraUp out to 16 bytes
+            /// </summary>
             public float cameraUpPadding;
 
-            // Frame constants the shader would otherwise recompute per pixel
+            /// <summary>
+            /// World space direction to the sun. Worked out once a frame rather than per pixel.
+            /// </summary>
             public Vector3 sunDirection;
+
+            /// <summary>
+            /// Pads sunDirection out to 16 bytes
+            /// </summary>
             public float sunDirectionPadding;
+
+            /// <summary>
+            /// Colour and intensity of the sunlight, for the same reason
+            /// </summary>
             public Vector3 sunLightColor;
+
+            /// <summary>
+            /// Pads sunLightColor out to 16 bytes
+            /// </summary>
             public float sunLightColorPadding;
 
-            // x is the player's ground speed, which the overlay prints
+            /// <summary>
+            /// Spare row for values the overlay draws. x is the player's ground speed.
+            /// </summary>
             public Vector4 debugValues;
         }
 
@@ -131,7 +190,8 @@ namespace RaymarchEngine.Core.Rendering
         /// This is fractal value noise, which is low frequency, so it blotches at large scales.
         /// TODO generate real blue noise (void-and-cluster) instead.
         /// </summary>
-        /// <param name="size"></param>
+        /// <param name="size">Width and height in texels, the texture is square</param>
+        /// <returns>Texels in row major order, size squared of them</returns>
         private Color[] CreateNoise(int size)
         {
             FastNoise fastNoise = new FastNoise();
@@ -346,6 +406,8 @@ namespace RaymarchEngine.Core.Rendering
         /// <summary>
         /// Uploads every renderer of one primitive type in the current scene to its buffer slot
         /// </summary>
+        /// <typeparam name="T">Primitive type to collect</typeparam>
+        /// <param name="slot">Structured buffer slot, which must match the register in Common.hlsl</param>
         private void UploadPrimitives<T>(int slot) where T : IPrimitive
         {
             primitivesBuffer[slot].UpdateValue(

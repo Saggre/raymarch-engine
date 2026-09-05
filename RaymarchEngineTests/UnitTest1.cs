@@ -4,13 +4,22 @@ using RaymarchEngine.Core;
 
 namespace RaymarchEngineTests
 {
+    /// <summary>
+    /// Tests for the GameObject hierarchy
+    /// </summary>
     public class Tests
     {
+        /// <summary>
+        /// Runs before each test
+        /// </summary>
         [SetUp]
         public void Setup()
         {
         }
 
+        /// <summary>
+        /// Parenting a GameObject registers it on both sides, and removing it clears both
+        /// </summary>
         [Test]
         public void Hierarchy()
         {

@@ -3,7 +3,7 @@
 namespace RaymarchEngine.Core.Primitives
 {
     /// <summary>
-    /// A box.
+    /// A box. Scale holds its half extents on each axis.
     /// </summary>
     public class Box : IPrimitive
     {

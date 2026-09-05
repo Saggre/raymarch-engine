@@ -6,25 +6,28 @@ using SharpDX.Direct3D11;
 
 namespace RaymarchEngine.Core
 {
+    /// <summary>
+    /// One drawable range of a Mesh, with the textures and colour it is drawn with
+    /// </summary>
     public class Material
     {
         /// <summary>
-        /// Diffuse map
+        /// Diffuse texture, null when the subset is untextured
         /// </summary>
         public ShaderResourceView DiffuseMap { get; set; }
 
         /// <summary>
-        /// Normal Map
+        /// Normal map, null when the subset has none
         /// </summary>
         public ShaderResourceView NormalMap { get; set; }
 
         /// <summary>
-        /// Diffuse Color (RGBA)
+        /// Flat diffuse colour, RGBA
         /// </summary>
         public Vector4 DiffuseColor { get; set; }
 
         /// <summary>
-        /// Number of indices to draw
+        /// Number of indices this subset draws
         /// </summary>
         public int IndexCount { get; set; }
     }
