@@ -11,8 +11,8 @@
         /// <summary>
         /// Create new screen resolution
         /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="width">Width in px</param>
+        /// <param name="height">Height in px</param>
         public Resolution(int width, int height)
         {
             this.width = width;
