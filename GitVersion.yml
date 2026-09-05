@@ -11,6 +11,12 @@
 # 0.0.2, but on master it would erase the alpha label and make development builds look like
 # releases.
 
+# The version being worked towards. Tags alone carry 0.0.2 forward a patch at a time, and what has
+# landed since is a sky, a first person controller, physics colliders, a shader cache and an
+# overlay, which is a minor bump rather than a patch. GitVersion takes this whenever it is higher
+# than the last tag, so it stays here until the next release raises it.
+next-version: 0.1.0
+
 branches:
   # The long lived release branch. GitVersion's built-in `release` entry matches release/x.y
   # style branches, so the bare branch name needs an entry of its own.
