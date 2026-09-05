@@ -2,15 +2,15 @@
 
 [![Build](https://github.com/Saggre/raymarch-engine/actions/workflows/build.yml/badge.svg)](https://github.com/Saggre/raymarch-engine/actions/workflows/build.yml)
 
+![Rendering preview](.github/assets/raymarch.gif)
+
 A game engine that renders primitive objects by utilizing raymarching. Different operations can be applied to the
 primitives to create more complex objects. The engine uses `SharpDX` as its `DirectX`
 wrapper and `System.Numerics.Vectors` for Vectors, Quaternions and Matrices.
 
 Raymarch shader code is located [here](Shaders/Raymarch/Pixel.hlsl).
 
-## Live rendering preview
-
-### Things to look for:
+## What the preview shows
 
 The scene the engine starts with is built in `GameLogic.BuildScene`, and everything below is in
 frame from the first rendered image without the camera having to move.
@@ -39,8 +39,6 @@ the scroll wheel, either direction, which is the bind players use to bunny hop.
 
 A crosshair sits in the middle and the ground speed is printed top left, in movement units, so
 it reads 320 at a walk.
-
-![Rendering preview](.github/assets/raymarch.gif)
 
 ## Download
 
