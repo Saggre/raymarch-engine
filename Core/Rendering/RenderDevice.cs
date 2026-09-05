@@ -94,6 +94,26 @@ namespace RaymarchEngine.Core.Rendering
             public float time;
 
             /// <summary>
+            /// World space direction to the sun. Worked out once a frame rather than per pixel.
+            /// </summary>
+            public Vector3 sunDirection;
+
+            /// <summary>
+            /// Pads sunDirection out to 16 bytes
+            /// </summary>
+            public float sunDirectionPadding;
+
+            /// <summary>
+            /// Colour and intensity of the sunlight, for the same reason
+            /// </summary>
+            public Vector3 sunLightColor;
+
+            /// <summary>
+            /// Pads sunLightColor out to 16 bytes
+            /// </summary>
+            public float sunLightColorPadding;
+
+            /// <summary>
             /// Spare row, currently unused by the shader
             /// </summary>
             public Vector4 additionalData;
@@ -333,6 +353,10 @@ namespace RaymarchEngine.Core.Rendering
                 // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
                 raymarchShaderBufferData.time = Engine.ElapsedTime; // TODO reset time when it is too large
+
+                Vector3 sunDirection = Sun.GetDirection(Engine.ElapsedTime);
+                raymarchShaderBufferData.sunDirection = sunDirection;
+                raymarchShaderBufferData.sunLightColor = Sun.GetLightColor(sunDirection);
 
                 raymarchShaderBuffer.UpdateValue(raymarchShaderBufferData);
 
