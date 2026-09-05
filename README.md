@@ -16,7 +16,9 @@ The scene the engine starts with is built in `GameLogic.BuildScene`, and everyth
 frame from the first rendered image without the camera having to move.
 
 - Seven primitive types at once (torus, octahedron, box, sphere, ellipsoid, cylinder, plane), lit
-  by one moving light source.
+  by a directional sun that sweeps across the sky and warms as it drops.
+- A gradient sky with a sun disk and glare, and a single flat layer of clouds drifting over it.
+  Both are analytic, so the background costs about a tenth of a millisecond at 1440p.
 - The torus tumbles on two axes, the box turns on the spot, the octahedron bobs and spins, and a
   small sphere orbits the box. Rotation is per-object, sent to the shader as a quaternion.
 - All objects cast and receive shadows. These are fully dynamic and soft.
@@ -26,7 +28,8 @@ frame from the first rendered image without the camera having to move.
   from the `RaymarchRenderer<T>` that placed the shape.
 - All objects have Phong shading as a base.
 - There is ambient occlusion applied to the view space, dithered with a noise texture.
-- Some purple-ish distance fog is visible in the background.
+- Aerial perspective: distant geometry fades towards the sky colour in the direction being looked
+  at, and reflections show the sky rather than black.
 - Raymarched objects have infinite resolution (signed distance function = no mesh).
 
 ![Rendering preview](.github/assets/raymarch.gif)

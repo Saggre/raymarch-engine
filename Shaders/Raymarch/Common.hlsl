@@ -1,17 +1,18 @@
 // Compiler adds array lengths as constants on RaymarchEngine include
 #include "RaymarchEngine"
+// Options first, the rest read its constants
+#include "Options.hlsl"
 #include "Primitives.hlsl"
 #include "Utils.hlsl"
-#include "Options.hlsl"
 
 class cLight
 {
-    float3 position;
+    float3 direction; // Normalised, pointing from the scene towards the light
     float3 color;
 
-    void Create(float3 _position, float3 _color = float3(1, 1, 1))
+    void Create(float3 _direction, float3 _color = float3(1, 1, 1))
     {
-        position = _position;
+        direction = _direction;
         color = _color;
     }
 };
@@ -228,3 +229,6 @@ struct PS_INPUT
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD;
 };
+
+// Needs the constant buffer above for the time, so it comes last
+#include "Sky.hlsl"

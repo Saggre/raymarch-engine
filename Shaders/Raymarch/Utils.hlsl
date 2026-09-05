@@ -1,3 +1,26 @@
+// Narkowicz 2015 fit of the ACES filmic curve. Clipping with saturate crushes everything bright
+// to flat white and leaves the midtones sitting high, which is what made the scene look washed
+// out. This rolls the highlights off instead and puts contrast back into the midtones.
+float3 tonemapACES(float3 color)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+
+    return saturate((color * (a * color + b)) / (color * (c * color + d) + e));
+}
+
+// Linear radiance to what gets written to the back buffer.
+//
+// No separate gamma step: this fit targets the ACES output transform for an sRGB display, so the
+// transfer curve is already in it. Applying one on top lifts the blacks and washes the image out.
+float3 toDisplay(float3 linearColor)
+{
+    return tonemapACES(linearColor * EXPOSURE);
+}
+
 // Get pseudo-random number in the range [0, 1).
 float random(float2 co)
 {
