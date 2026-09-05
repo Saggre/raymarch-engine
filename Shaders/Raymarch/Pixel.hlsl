@@ -6,12 +6,11 @@ static cLight mainLight;
 // Calculate surface normal at position
 float3 getNormal(in float3 pos)
 {
-    cMaterial material;
     float2 e = float2(0.01, 0);
-    float3 n = getDist(pos, material) - float3(
-        getDist(pos - e.xyy, material),
-        getDist(pos - e.yxy, material),
-        getDist(pos - e.yyx, material)
+    float3 n = getDist(pos) - float3(
+        getDist(pos - e.xyy),
+        getDist(pos - e.yxy),
+        getDist(pos - e.yyx)
     );
 
     return normalize(n);
@@ -30,9 +29,13 @@ void raymarch(in cRay ray, out cRaymarchResult raymarchResult)
     while (i < MAX_STEPS)
     {
         marchPos = ray.origin + totalDist * ray.dir;
-        curDist = getDist(marchPos, raymarchResult.hitMaterial);
+        curDist = getDist(marchPos);
         totalDist += curDist;
-        if (curDist < SURF_DIST || totalDist > MAX_DIST)
+
+        // A cone rather than a ray: one pixel covers more of the world the further away it is, so
+        // converging tighter than the pixel it will be drawn into is work nobody can see. The
+        // constant is the angle a pixel subtends, so the epsilon tracks the footprint.
+        if (curDist < max(SURF_DIST, totalDist * PIXEL_ANGLE) || totalDist > MAX_DIST)
         {
             break;
         }
@@ -40,6 +43,10 @@ void raymarch(in cRay ray, out cRaymarchResult raymarchResult)
     }
 
     float3 hitPos = ray.origin + totalDist * ray.dir;
+
+    // Once, at the surface, rather than at every step on the way to it
+    getDist(hitPos, raymarchResult.hitMaterial);
+
     raymarchResult.hitPos = hitPos;
     raymarchResult.stepsTaken = i * 1.0;
     raymarchResult.hitDistance = totalDist;
@@ -56,15 +63,13 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
     float mint = SURF_DIST * 2.0;
     float ph = 1e20;
 
-    cMaterial material;
-
     // t = distance from object surface towards light source.
     // Capped by step count too: at grazing angles h barely advances t.
     float t = mint;
     [loop]
     for (int i = 0; i < SHADOW_MAX_STEPS && t < SHADOW_MAX_DIST; i++)
     {
-        float h = getDist(rayOrigin + lightDir * t, material);
+        float h = getDist(rayOrigin + lightDir * t);
         if (h < 0.001)
         {
             res = 0;

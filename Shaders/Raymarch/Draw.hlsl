@@ -74,6 +74,28 @@ float3 toLocalSpace(float3 worldPos, in cPrimitiveData data)
         addPrimitive(shape, shapeMaterial, toLocalSpace(pos, data), dist, material);    \
     }
 
+#define ADD_DISTANCE_TYPE(PrimitiveClass, primitiveBuffer, primitiveCount)                  [loop]                                                                                  for (int primitiveIndex = 0; primitiveIndex < primitiveCount; primitiveIndex++)         {                                                                                           cPrimitiveData data = primitiveBuffer[primitiveIndex];                                                                                                                          PrimitiveClass shape;                                                                   shape.Create(data.scale, data.options);                                                                                                                                         dist = min(dist, shape.ExecSDF(toLocalSpace(pos, data)));                           }
+
+// Distance to the nearest surface, without resolving which material it belongs to.
+//
+// This is what the march, the normal and the shadow ray use. They only ever compare distances,
+// and carrying a material through every step of every one of them was the single largest thing
+// the inner loop was doing that nothing read.
+float getDist(in float3 pos)
+{
+    float dist = MAX_DIST;
+
+    { ADD_DISTANCE_TYPE(cSphere, spheres, sphereCount) }
+    { ADD_DISTANCE_TYPE(cBox, boxes, boxCount) }
+    { ADD_DISTANCE_TYPE(cPlane, planes, planeCount) }
+    { ADD_DISTANCE_TYPE(cTorus, toruses, torusCount) }
+    { ADD_DISTANCE_TYPE(cOctahedron, octahedrons, octahedronCount) }
+    { ADD_DISTANCE_TYPE(cEllipsoid, ellipsoids, ellipsoidCount) }
+    { ADD_DISTANCE_TYPE(cCylinder, cylinders, cylinderCount) }
+
+    return dist;
+}
+
 // The scene is whatever the engine uploaded this frame. The counts are baked in by
 // HLSLFileIncludeHandler, so each loop has a constant bound and vanishes when the type is unused.
 float getDist(in float3 pos, out cMaterial material)
