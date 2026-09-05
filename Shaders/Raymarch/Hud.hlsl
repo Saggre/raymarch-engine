@@ -94,8 +94,8 @@ float hudDigit(float2 q, int value, float grow)
     return saturate(mask);
 }
 
-// The readout, as two whole digits and two decimals. Fixed width rather than trimmed, so the
-// number does not jitter sideways as it changes.
+// The readout, as a whole number of up to four digits. Leading zeros are dropped, but the digits
+// keep their columns, so the number does not jitter sideways as it changes.
 //
 // Both passes are accumulated across every digit before either is composited. Drawing a digit's
 // backing and glyph together would let the next digit's backing cut into the previous glyph.
@@ -104,7 +104,7 @@ float3 hudNumber(float3 color, float2 screen, float value)
     float2 cell = float2(HUD_DIGIT_WIDTH, HUD_DIGIT_HEIGHT);
     float advance = HUD_DIGIT_WIDTH + HUD_DIGIT_GAP;
 
-    uint scaled = (uint) clamp(round(value * 100.0), 0.0, 9999.0);
+    uint scaled = (uint) clamp(round(value), 0.0, 9999.0);
 
     float glyph = 0.0;
     float backing = 0.0;
@@ -112,10 +112,14 @@ float3 hudNumber(float3 color, float2 screen, float value)
     [unroll]
     for (int i = 0; i < 4; i++)
     {
-        // The last two digits are pushed right to leave room for the point
-        float slot = i * advance + (i >= 2 ? HUD_POINT_ADVANCE : 0.0);
+        // Blank until the number is big enough to reach this column, except the last, which is
+        // always drawn so that a speed of zero still reads as a zero
+        if (i < 3 && scaled < HUD_PLACE_VALUES[i])
+        {
+            continue;
+        }
 
-        float2 q = (screen - HUD_ORIGIN - float2(slot, 0.0)) / cell;
+        float2 q = (screen - HUD_ORIGIN - float2(i * advance, 0.0)) / cell;
 
         // Widened by the backing, so a glyph's outline is not clipped at the cell edge
         if (q.x < -HUD_TEXT_OUTLINE || q.x > 1.0 + HUD_TEXT_OUTLINE ||
@@ -129,11 +133,6 @@ float3 hudNumber(float3 color, float2 screen, float value)
         glyph += hudDigit(q, digit, 0.0);
         backing += hudDigit(q, digit, HUD_TEXT_OUTLINE);
     }
-
-    // The decimal point, sitting on the baseline between the second and third digit
-    float2 pointCenter = HUD_ORIGIN + float2(2.0 * advance - HUD_DIGIT_GAP, HUD_DIGIT_HEIGHT * 0.90);
-    glyph += hudRect(screen, pointCenter, HUD_POINT_SIZE.xx);
-    backing += hudRect(screen, pointCenter, (HUD_POINT_SIZE + HUD_TEXT_OUTLINE * HUD_DIGIT_HEIGHT).xx);
 
     color = lerp(color, float3(0, 0, 0), saturate(backing) * HUD_TEXT_OUTLINE_ALPHA);
 
