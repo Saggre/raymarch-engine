@@ -187,6 +187,13 @@ float aspectRatio;
 float3 cameraDirection;
 float time;
 
+// The other two axes of the camera. Sent rather than rebuilt from a world up, which has no
+// answer when the view points straight up or down. See Movement.cs.
+float3 cameraRight;
+float cameraRightPadding;
+float3 cameraUp;
+float cameraUpPadding;
+
 // The same for every pixel in the frame, so the engine works them out once. See Sun.cs.
 float3 sunDirection;
 float sunDirectionPadding;

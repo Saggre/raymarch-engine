@@ -94,6 +94,27 @@ namespace RaymarchEngine.Core.Rendering
             public float time;
 
             /// <summary>
+            /// World space right axis of the active camera, sent so the shader does not have to
+            /// rebuild the basis from a world up that has no answer at the poles
+            /// </summary>
+            public Vector3 cameraRight;
+
+            /// <summary>
+            /// Pads cameraRight out to 16 bytes
+            /// </summary>
+            public float cameraRightPadding;
+
+            /// <summary>
+            /// World space up axis of the active camera
+            /// </summary>
+            public Vector3 cameraUp;
+
+            /// <summary>
+            /// Pads cameraUp out to 16 bytes
+            /// </summary>
+            public float cameraUpPadding;
+
+            /// <summary>
             /// World space direction to the sun. Worked out once a frame rather than per pixel.
             /// </summary>
             public Vector3 sunDirection;
@@ -349,6 +370,8 @@ namespace RaymarchEngine.Core.Rendering
             {
                 raymarchShaderBufferData.cameraPosition = Scene.CurrentScene.ActiveCamera.Movement.Position;
                 raymarchShaderBufferData.cameraDirection = Scene.CurrentScene.ActiveCamera.Movement.Forward;
+                raymarchShaderBufferData.cameraRight = Scene.CurrentScene.ActiveCamera.Movement.Right;
+                raymarchShaderBufferData.cameraUp = Scene.CurrentScene.ActiveCamera.Movement.Up;
                 // The window's ratio, not the render target's: uv comes from TexCoord, so the
                 // correction has to match the area the back buffer is stretched onto, not its size.
                 raymarchShaderBufferData.aspectRatio = Engine.AspectRatio();
