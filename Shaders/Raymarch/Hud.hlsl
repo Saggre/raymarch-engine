@@ -3,9 +3,9 @@
 // Drawn after the tone curve, so it is a flat overlay at full brightness rather than something
 // the exposure and the fog act on.
 //
-// There is no font here and nowhere to put one: this renderer draws a single fullscreen quad and
-// has no text pipeline, so the digits are seven segment shapes built out of rectangles. That is
-// enough for a debug number and costs no texture and no vertex data.
+// There is no font here and nowhere to put one: this renderer draws a single fullscreen quad
+// and has no text pipeline, so the digits are seven segment shapes built out of rectangles. That
+// is enough for a debug number and costs no texture and no vertex data.
 //
 // Positions are in a space where y runs 0 to 1 down the screen and x is scaled by the aspect
 // ratio, so a square is square and sizes read as fractions of screen height.
@@ -14,9 +14,9 @@
 // Shapes
 // ---------------------------------------------------------------------------------------------
 
-// Softened over roughly a pixel. The render target is a fixed size, so this is a constant rather
-// than a screen space derivative, which keeps it out of any question about divergent flow.
-#define HUD_AA 0.0007
+// Softened over about half a pixel. The render target is a fixed size, so this is a constant
+// rather than a screen space derivative, which keeps it out of any question about divergent flow.
+#define HUD_AA 0.00035
 
 float hudRect(float2 p, float2 center, float2 halfSize)
 {
@@ -30,32 +30,21 @@ float hudRect(float2 p, float2 center, float2 halfSize)
 // Crosshair
 // ---------------------------------------------------------------------------------------------
 
-// One arm, measured across its width and along its length from the centre
-float hudArm(float across, float along, float thickness, float gap, float length)
+float hudDisc(float2 p, float radius)
 {
-    float inside = 1.0 - smoothstep(thickness - HUD_AA, thickness + HUD_AA, abs(across));
-    float begins = smoothstep(gap - HUD_AA, gap + HUD_AA, along);
-    float ends = 1.0 - smoothstep(gap + length - HUD_AA, gap + length + HUD_AA, along);
-
-    return inside * begins * ends;
+    return 1.0 - smoothstep(radius - HUD_AA, radius + HUD_AA, length(p));
 }
 
-float hudCross(float2 p, float thickness, float gap, float length)
-{
-    return saturate(hudArm(p.y, abs(p.x), thickness, gap, length) +
-                    hudArm(p.x, abs(p.y), thickness, gap, length));
-}
-
-// A dark cross slightly larger than the light one, so the crosshair stays readable against both
-// the sky and a lit surface
+// A dot, on a dark disc slightly larger than it, so the crosshair reads against both the sky and
+// a lit surface.
+//
+// A cross was a few pixels of bar in each direction, and at that size the arms landed on a whole
+// number of pixels one way and straddled the centre line the other, which made a symmetric shape
+// come out visibly wider than it was tall. A disc has no axis to disagree about.
 float3 hudCrosshair(float3 color, float2 centered)
 {
-    float outline = hudCross(centered,
-                             CROSSHAIR_THICKNESS + CROSSHAIR_OUTLINE,
-                             CROSSHAIR_GAP - CROSSHAIR_OUTLINE,
-                             CROSSHAIR_LENGTH + 2.0 * CROSSHAIR_OUTLINE);
-
-    float core = hudCross(centered, CROSSHAIR_THICKNESS, CROSSHAIR_GAP, CROSSHAIR_LENGTH);
+    float outline = hudDisc(centered, CROSSHAIR_RADIUS + CROSSHAIR_OUTLINE);
+    float core = hudDisc(centered, CROSSHAIR_RADIUS);
 
     color = lerp(color, float3(0, 0, 0), outline * CROSSHAIR_OUTLINE_ALPHA);
 

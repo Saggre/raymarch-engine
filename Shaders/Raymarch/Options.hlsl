@@ -20,10 +20,8 @@
 
 // All in fractions of screen height, so the overlay keeps its proportions at any resolution
 #define CROSSHAIR_COLOR float3(1.0, 1.0, 1.0)
-#define CROSSHAIR_GAP 0.0026       // Clear space in the middle, so the aim point stays visible
-#define CROSSHAIR_LENGTH 0.0060
-#define CROSSHAIR_THICKNESS 0.0007
-#define CROSSHAIR_OUTLINE 0.0006   // Dark border, so it reads against sky and against surfaces
+#define CROSSHAIR_RADIUS 0.0015    // Small enough to point with, large enough to stay visible
+#define CROSSHAIR_OUTLINE 0.0010   // Dark ring, so it reads against sky and against surfaces
 #define CROSSHAIR_OUTLINE_ALPHA 0.8
 
 // Larger and heavier than a display font would need to be. The readout sits over a bright sky as
