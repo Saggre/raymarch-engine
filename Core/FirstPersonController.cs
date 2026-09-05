@@ -228,6 +228,7 @@ namespace RaymarchEngine.Core
             }
 
             parent.Movement.Position = position;
+            parent.Movement.Speed = new Vector2(velocity.X, velocity.Z).Length();
         }
 
         /// <summary>
