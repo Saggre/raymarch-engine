@@ -214,7 +214,8 @@
     <Compile Include="Geometry\RenderVertex.cs" />
     <Compile Include="EMath\Util.cs" />
     <Compile Include="Physics\PhysicsHandler.cs" />
-    <Compile Include="Physics\PrimitivePhysics.cs" />
+    <Compile Include="Physics\PhysicsQuery.cs" />
+    <Compile Include="Physics\PrimitiveCollider.cs" />
     <Compile Include="Ignition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\HLSLFileIncludeHandler.cs" />
