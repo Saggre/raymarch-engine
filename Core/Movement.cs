@@ -43,6 +43,15 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
+        /// How fast the GameObject moved across the ground during the previous frame, in world
+        /// units per second.
+        ///
+        /// Horizontal only. A jump is not a change in how fast someone is moving, and reading the
+        /// full vector would make the number leap every time one starts.
+        /// </summary>
+        public float Speed { get; private set; }
+
+        /// <summary>
         /// Get or set the GameObject's position
         /// </summary>
         public Vector3 Position
@@ -131,6 +140,12 @@ namespace RaymarchEngine.Core
         public void Update(float deltaTime)
         {
             deltaPosition = position - lastPosition;
+
+            // The first frame has no previous position and no elapsed time to divide by
+            if (deltaTime > 0.0f)
+            {
+                Speed = new Vector2(deltaPosition.X, deltaPosition.Z).Length() / deltaTime;
+            }
 
             foreach (GameObject gameObject in gameObject.Children)
             {

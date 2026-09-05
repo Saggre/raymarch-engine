@@ -238,7 +238,8 @@ float4 main(PS_INPUT input) : SV_Target
     // Only rays that missed the scene reach the cloud layer, which sits far past MAX_DIST
     if (raymarchResult.hitDistance >= MAX_DIST)
     {
-        return float4(toDisplay(getSkyColorWithClouds(ray.origin, ray.dir)), 1);
+        return float4(applyHud(toDisplay(getSkyColorWithClouds(ray.origin, ray.dir)),
+                               input.TexCoord, debugValues.x), 1);
     }
 
     // Direct sunlight, which is the only thing the shadow ray occludes
@@ -271,5 +272,5 @@ float4 main(PS_INPUT input) : SV_Target
     float fog = 1.0 - exp(-raymarchResult.hitDistance * FOG_DENSITY);
     sceneColor = lerp(sceneColor, getSkyColor(hazeDir), fog);
 
-    return float4(toDisplay(sceneColor), 1);
+    return float4(applyHud(toDisplay(sceneColor), input.TexCoord, debugValues.x), 1);
 }
