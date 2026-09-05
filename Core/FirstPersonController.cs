@@ -53,9 +53,20 @@ namespace RaymarchEngine.Core
         public float MaxSpeed { get; set; } = 320f;
 
         /// <summary>
-        /// What holding shift multiplies the requested speed by
+        /// How far the eye sits above the ground while crouched, in movement units
         /// </summary>
-        public float SprintMultiplier { get; set; } = 1.6f;
+        public float CrouchEyeHeight { get; set; } = 28f;
+
+        /// <summary>
+        /// What crouching multiplies the requested speed by
+        /// </summary>
+        public float CrouchSpeedMultiplier { get; set; } = 0.34f;
+
+        /// <summary>
+        /// How long the eye takes to travel the whole way between standing and crouched, in
+        /// seconds
+        /// </summary>
+        public float CrouchTime { get; set; } = 0.2f;
 
         /// <summary>
         /// How hard the ground pushes back, per second
@@ -118,11 +129,12 @@ namespace RaymarchEngine.Core
         private float pitchDegrees = -8f;
         private Vector3 velocity;
         private bool isGrounded;
+        private float currentEyeHeight;
 
         /// <summary>
         /// Height the eye rests at when standing on the ground
         /// </summary>
-        private float StandingHeight => GroundHeight + MovementUnits.ToWorld(EyeHeight);
+        private float StandingHeight => GroundHeight + MovementUnits.ToWorld(currentEyeHeight);
 
         /// <inheritdoc />
         public void OnAddedToGameObject(GameObject gameObject)
@@ -133,6 +145,8 @@ namespace RaymarchEngine.Core
         /// <inheritdoc />
         public void Start(int startTime)
         {
+            currentEyeHeight = EyeHeight;
+
             Vector3 position = parent.Movement.Position;
             parent.Movement.Position = new Vector3(position.X, StandingHeight, position.Z);
 
@@ -187,9 +201,9 @@ namespace RaymarchEngine.Core
             Vector3 wishDirection = WishDirection();
             float wishSpeed = MovementUnits.ToWorld(MaxSpeed);
 
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
+            if (UpdateCrouch(deltaTime))
             {
-                wishSpeed *= SprintMultiplier;
+                wishSpeed *= CrouchSpeedMultiplier;
             }
 
             // Before friction, so a jump leaves at full speed instead of the ground taking a
@@ -219,7 +233,13 @@ namespace RaymarchEngine.Core
             // Landing has to clear the vertical velocity, or gravity keeps accumulating into it
             // and the next jump is swallowed
             float floorHeight = FloorHeight(position);
-            isGrounded = position.Y <= floorHeight;
+            float drop = position.Y - floorHeight;
+
+            // Stepping down counts as staying on the ground rather than starting a fall. Crouching
+            // lowers the eye by more than a frame's gravity would, so without this the whole
+            // crouch reads as airborne and hands the player air control while they do it.
+            isGrounded = drop <= 0f ||
+                         (isGrounded && velocity.Y <= 0f && drop < MovementUnits.ToWorld(GroundProbe));
 
             if (isGrounded)
             {
@@ -232,6 +252,26 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
+        /// Moves the eye towards standing or crouched height and says which is being asked for.
+        ///
+        /// The height is travelled through rather than switched, because the eye is the camera:
+        /// teleporting it half a metre reads as the view jumping rather than as ducking.
+        /// </summary>
+        private bool UpdateCrouch(float deltaTime)
+        {
+            bool crouching = InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.CONTROL);
+
+            float target = crouching ? CrouchEyeHeight : EyeHeight;
+            float step = (EyeHeight - CrouchEyeHeight) * deltaTime / CrouchTime;
+
+            currentEyeHeight = target < currentEyeHeight
+                ? Math.Max(currentEyeHeight - step, target)
+                : Math.Min(currentEyeHeight + step, target);
+
+            return crouching;
+        }
+
+        /// <summary>
         /// Where the eye rests when standing on whatever is directly below it.
         ///
         /// Traced rather than assumed flat, which is what lets the player stand on the shapes
@@ -240,7 +280,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         private float FloorHeight(Vector3 position)
         {
-            float eye = MovementUnits.ToWorld(EyeHeight);
+            float eye = MovementUnits.ToWorld(currentEyeHeight);
             float reach = eye + MovementUnits.ToWorld(GroundProbe);
 
             if (PhysicsQuery.Raycast(position, -Vector3.UnitY, reach, out float distance, out Vector3 normal) &&

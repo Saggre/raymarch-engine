@@ -34,7 +34,7 @@ frame from the first rendered image without the camera having to move.
   at, and reflections show the sky rather than black.
 - Raymarched objects have infinite resolution (signed distance function = no mesh).
 
-Move with WASD, look with the mouse, hold shift to sprint, escape to quit. Jump with space or
+Move with WASD, look with the mouse, hold control to crouch, escape to quit. Jump with space or
 the scroll wheel, either direction, which is the bind players use to bunny hop.
 
 A crosshair sits in the middle and the ground speed is printed top left, in movement units, so
