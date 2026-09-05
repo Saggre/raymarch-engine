@@ -8,6 +8,7 @@ using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using Device = SharpDX.Direct3D11.Device;
 
 namespace RaymarchEngine.Core
 {
@@ -137,6 +138,27 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
+        /// Bytecode for one stage, from the cache when it is there and from the compiler when it
+        /// is not. Returns null when the folder has no file for this stage.
+        /// </summary>
+        private static byte[] GetStageBytecode(string folderPath, string fileName, string profile,
+            ShaderFlags shaderFlags, HLSLFileIncludeHandler includeHandler)
+        {
+            string path = Path.Combine(folderPath, fileName);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            string identity = fileName + ":" + profile + ":" + (int) shaderFlags;
+
+            return ShaderCache.GetOrCompile(folderPath, identity, includeHandler.GetShaderConstants(),
+                () => ShaderBytecode
+                    .CompileFromFile(path, "main", profile, shaderFlags, EffectFlags.None, null, includeHandler)
+                    .Bytecode.Data);
+        }
+
+        /// <summary>
         /// Compiles files into shader byte-code and creates a shader from the shader files that exist.
         /// Stages are named after their file, so Vertex.hlsl becomes the vertex stage, and a missing
         /// file leaves that stage null. Debug builds skip optimisation.
@@ -146,10 +168,6 @@ namespace RaymarchEngine.Core
         /// <exception cref="SharpDX.CompilationException">A shader file failed to compile</exception>
         public static Shader CompileFromFiles(string folderPath)
         {
-            // TODO simplify method with a loop
-            // TODO build shaders on program build. Not with dxc though: it dropped HLSL interfaces,
-            // which Common.hlsl's primitive system is built on.
-
             // Debug bytecode is unoptimized, so Release was losing the whole shader optimizer
 #if DEBUG
             ShaderFlags shaderFlags = ShaderFlags.Debug | ShaderFlags.SkipOptimization;
@@ -157,85 +175,39 @@ namespace RaymarchEngine.Core
             ShaderFlags shaderFlags = ShaderFlags.OptimizationLevel3;
 #endif
 
-            InputLayout inputLayout = null;
-            VertexShader vertexShader = null;
-            HullShader hullShader = null;
-            DomainShader domainShader = null;
-            GeometryShader geometryShader = null;
-            PixelShader pixelShader = null;
+            Device device = Engine.RenderDevice.device;
 
             // Handler for #include directive
             HLSLFileIncludeHandler includeHandler = new HLSLFileIncludeHandler(folderPath);
 
-            // Vertex shader + Shader signature
+            byte[] vertexBytes = GetStageBytecode(folderPath, "Vertex.hlsl", "vs_5_0", shaderFlags, includeHandler);
+            byte[] hullBytes = GetStageBytecode(folderPath, "Hull.hlsl", "hs_5_0", shaderFlags, includeHandler);
+            byte[] domainBytes = GetStageBytecode(folderPath, "Domain.hlsl", "ds_5_0", shaderFlags, includeHandler);
+            byte[] geometryBytes = GetStageBytecode(folderPath, "Geometry.hlsl", "gs_5_0", shaderFlags, includeHandler);
+            byte[] pixelBytes = GetStageBytecode(folderPath, "Pixel.hlsl", "ps_5_0", shaderFlags, includeHandler);
+
+            InputLayout inputLayout = null;
+            VertexShader vertexShader = null;
+
+            if (vertexBytes != null)
             {
-                string path = Path.Combine(folderPath, "Vertex.hlsl");
+                vertexShader = new VertexShader(device, vertexBytes);
 
-                if (File.Exists(path))
-                {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "vs_5_0", shaderFlags,
-                        EffectFlags.None, null, includeHandler);
-                    vertexShader = new VertexShader(Engine.RenderDevice.device, byteCode);
+                // The layout has to agree with what the vertex stage declared it takes, which is
+                // why it is built from that stage's signature rather than described separately
+                ShaderSignature inputSignature =
+                    ShaderSignature.GetInputSignature(ShaderCache.ToShaderBytecode(vertexBytes));
 
-                    ShaderSignature inputSignature = ShaderSignature.GetInputSignature(byteCode);
-                    inputLayout = new InputLayout(Engine.RenderDevice.device, inputSignature,
-                        RenderVertex.InputElements);
-                }
-                else
-                {
-                    // TODO fail
-                }
+                inputLayout = new InputLayout(device, inputSignature, RenderVertex.InputElements);
             }
 
-            // Hull shader
-            {
-                string path = Path.Combine(folderPath, "Hull.hlsl");
-
-                if (File.Exists(path))
-                {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "hs_5_0", shaderFlags,
-                        EffectFlags.None, null, includeHandler);
-                    hullShader = new HullShader(Engine.RenderDevice.device, byteCode);
-                }
-            }
-
-            // Domain shader
-            {
-                string path = Path.Combine(folderPath, "Domain.hlsl");
-
-                if (File.Exists(path))
-                {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ds_5_0", shaderFlags,
-                        EffectFlags.None, null, includeHandler);
-                    domainShader = new DomainShader(Engine.RenderDevice.device, byteCode);
-                }
-            }
-
-            // Geometry shader
-            {
-                string path = Path.Combine(folderPath, "Geometry.hlsl");
-
-                if (File.Exists(path))
-                {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "gs_5_0", shaderFlags,
-                        EffectFlags.None, null, includeHandler);
-                    geometryShader = new GeometryShader(Engine.RenderDevice.device, byteCode);
-                }
-            }
-
-            // Pixel shader
-            {
-                string path = Path.Combine(folderPath, "Pixel.hlsl");
-
-                if (File.Exists(path))
-                {
-                    CompilationResult byteCode = ShaderBytecode.CompileFromFile(path, "main", "ps_5_0", shaderFlags,
-                        EffectFlags.None, null, includeHandler);
-                    pixelShader = new PixelShader(Engine.RenderDevice.device, byteCode);
-                }
-            }
-
-            return new Shader(inputLayout, vertexShader, hullShader, domainShader, geometryShader, pixelShader);
+            return new Shader(
+                inputLayout,
+                vertexShader,
+                hullBytes != null ? new HullShader(device, hullBytes) : null,
+                domainBytes != null ? new DomainShader(device, domainBytes) : null,
+                geometryBytes != null ? new GeometryShader(device, geometryBytes) : null,
+                pixelBytes != null ? new PixelShader(device, pixelBytes) : null);
         }
 
         /// <summary>

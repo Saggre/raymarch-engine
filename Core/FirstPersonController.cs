@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.EMath;
+using RaymarchEngine.Physics;
 using WindowsInput.Native;
 
 namespace RaymarchEngine.Core
@@ -17,27 +18,55 @@ namespace RaymarchEngine.Core
     public class FirstPersonController : IComponent
     {
         /// <summary>
-        /// How far the eye sits above the ground it is standing on, in world units
+        /// How far the eye sits above the ground it is standing on. This is what fixes the
+        /// conversion in MovementUnits.
         /// </summary>
-        public float EyeHeight { get; set; } = 1.7f;
+        public float EyeHeight { get; set; } = 64f;
 
         /// <summary>
-        /// Height of the ground plane. The scene has one infinite floor and no collision system,
-        /// so the floor is a number rather than something to trace against.
+        /// Height of the floor. It is an infinite plane, which no convex collider can express, so
+        /// it stays a number and everything else in the scene is traced against.
         /// </summary>
         public float GroundHeight { get; set; } = -1f;
 
         /// <summary>
-        /// Fastest the ground acceleration will drive the player, in world units per second.
-        /// The 8.1 metres a second a shooter usually walks at, and this world is roughly in
-        /// metres.
+        /// How far in front of the eye a wall stops the player, in movement units. Stands in for the
+        /// width of a character, since this traces a ray rather than sweeping a body.
         /// </summary>
-        public float MaxSpeed { get; set; } = 7f;
+        public float Radius { get; set; } = 16f;
 
         /// <summary>
-        /// What holding shift multiplies the requested speed by
+        /// How far below the feet to look for something to stand on, in movement units
         /// </summary>
-        public float SprintMultiplier { get; set; } = 1.6f;
+        public float GroundProbe { get; set; } = 4f;
+
+        /// <summary>
+        /// Steepest surface that still counts as ground, as the vertical part of its normal.
+        /// Anything steeper is a wall, and standing on it would let the player hang off the side
+        /// of a shape.
+        /// </summary>
+        public float MinGroundNormal { get; set; } = 0.5f;
+
+        /// <summary>
+        /// Fastest the ground acceleration will drive the player
+        /// </summary>
+        public float MaxSpeed { get; set; } = 320f;
+
+        /// <summary>
+        /// How far the eye sits above the ground while crouched, in movement units
+        /// </summary>
+        public float CrouchEyeHeight { get; set; } = 28f;
+
+        /// <summary>
+        /// What crouching multiplies the requested speed by
+        /// </summary>
+        public float CrouchSpeedMultiplier { get; set; } = 0.34f;
+
+        /// <summary>
+        /// How long the eye takes to travel the whole way between standing and crouched, in
+        /// seconds
+        /// </summary>
+        public float CrouchTime { get; set; } = 0.2f;
 
         /// <summary>
         /// How hard the ground pushes back, per second
@@ -48,7 +77,7 @@ namespace RaymarchEngine.Core
         /// Below this speed friction is applied as though the player were moving at it, which is
         /// what brings someone to a halt in finite time rather than asymptotically.
         /// </summary>
-        public float StopSpeed { get; set; } = 2.5f;
+        public float StopSpeed { get; set; } = 100f;
 
         /// <summary>
         /// Ground acceleration, in multiples of the requested speed per second
@@ -68,19 +97,17 @@ namespace RaymarchEngine.Core
         /// Turning while holding a strafe key then adds speed rather than only redirecting it,
         /// which is where air strafing and bunny hopping come from.
         /// </summary>
-        public float AirSpeedCap { get; set; } = 0.8f;
+        public float AirSpeedCap { get; set; } = 30f;
 
         /// <summary>
-        /// Upward speed a jump starts with, in world units per second. Enough to clear a
-        /// standard step height.
+        /// Upward speed a jump starts with. Enough to clear a standard step height.
         /// </summary>
-        public float JumpSpeed { get; set; } = 6.8f;
+        public float JumpSpeed { get; set; } = 268f;
 
         /// <summary>
-        /// Downward acceleration in world units per second squared. About twice the real
-        /// thing, which is what keeps a jump from feeling floaty.
+        /// Downward acceleration, about twice the real thing
         /// </summary>
-        public float Gravity { get; set; } = 20.3f;
+        public float Gravity { get; set; } = 800f;
 
         /// <summary>
         /// Degrees of rotation per unit of mouse movement
@@ -102,11 +129,12 @@ namespace RaymarchEngine.Core
         private float pitchDegrees = -8f;
         private Vector3 velocity;
         private bool isGrounded;
+        private float currentEyeHeight;
 
         /// <summary>
         /// Height the eye rests at when standing on the ground
         /// </summary>
-        private float StandingHeight => GroundHeight + EyeHeight;
+        private float StandingHeight => GroundHeight + MovementUnits.ToWorld(currentEyeHeight);
 
         /// <inheritdoc />
         public void OnAddedToGameObject(GameObject gameObject)
@@ -117,6 +145,8 @@ namespace RaymarchEngine.Core
         /// <inheritdoc />
         public void Start(int startTime)
         {
+            currentEyeHeight = EyeHeight;
+
             Vector3 position = parent.Movement.Position;
             parent.Movement.Position = new Vector3(position.X, StandingHeight, position.Z);
 
@@ -169,11 +199,11 @@ namespace RaymarchEngine.Core
         private void UpdateMovement(float deltaTime)
         {
             Vector3 wishDirection = WishDirection();
-            float wishSpeed = MaxSpeed;
+            float wishSpeed = MovementUnits.ToWorld(MaxSpeed);
 
-            if (InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.LSHIFT))
+            if (UpdateCrouch(deltaTime))
             {
-                wishSpeed *= SprintMultiplier;
+                wishSpeed *= CrouchSpeedMultiplier;
             }
 
             // Before friction, so a jump leaves at full speed instead of the ground taking a
@@ -181,7 +211,7 @@ namespace RaymarchEngine.Core
             // taken on the instant of landing keeps its speed.
             if (isGrounded && JumpRequested())
             {
-                velocity.Y = JumpSpeed;
+                velocity.Y = MovementUnits.ToWorld(JumpSpeed);
                 isGrounded = false;
             }
 
@@ -195,20 +225,107 @@ namespace RaymarchEngine.Core
                 AirAccelerate(wishDirection, wishSpeed, deltaTime);
             }
 
-            velocity.Y -= Gravity * deltaTime;
+            velocity.Y -= MovementUnits.ToWorld(Gravity) * deltaTime;
+            velocity = ClipVelocity(parent.Movement.Position, velocity, deltaTime);
 
             Vector3 position = parent.Movement.Position + velocity * deltaTime;
 
-            // The only collision in the scene. Landing has to clear the vertical velocity, or
-            // gravity keeps accumulating into it and the next jump is swallowed.
-            if (position.Y <= StandingHeight)
+            // Landing has to clear the vertical velocity, or gravity keeps accumulating into it
+            // and the next jump is swallowed
+            float floorHeight = FloorHeight(position);
+            float drop = position.Y - floorHeight;
+
+            // Stepping down counts as staying on the ground rather than starting a fall. Crouching
+            // lowers the eye by more than a frame's gravity would, so without this the whole
+            // crouch reads as airborne and hands the player air control while they do it.
+            isGrounded = drop <= 0f ||
+                         (isGrounded && velocity.Y <= 0f && drop < MovementUnits.ToWorld(GroundProbe));
+
+            if (isGrounded)
             {
-                position.Y = StandingHeight;
+                position.Y = floorHeight;
                 velocity.Y = 0f;
-                isGrounded = true;
             }
 
             parent.Movement.Position = position;
+            parent.Movement.Speed = new Vector2(velocity.X, velocity.Z).Length();
+        }
+
+        /// <summary>
+        /// Moves the eye towards standing or crouched height and says which is being asked for.
+        ///
+        /// The height is travelled through rather than switched, because the eye is the camera:
+        /// teleporting it half a metre reads as the view jumping rather than as ducking.
+        /// </summary>
+        private bool UpdateCrouch(float deltaTime)
+        {
+            bool crouching = InputDevice.Keyboard.IsKeyDown(VirtualKeyCode.CONTROL);
+
+            float target = crouching ? CrouchEyeHeight : EyeHeight;
+            float step = (EyeHeight - CrouchEyeHeight) * deltaTime / CrouchTime;
+
+            currentEyeHeight = target < currentEyeHeight
+                ? Math.Max(currentEyeHeight - step, target)
+                : Math.Min(currentEyeHeight + step, target);
+
+            return crouching;
+        }
+
+        /// <summary>
+        /// Where the eye rests when standing on whatever is directly below it.
+        ///
+        /// Traced rather than assumed flat, which is what lets the player stand on the shapes
+        /// instead of only on the floor. The floor itself is not a collider, so a ray that finds
+        /// nothing means open ground.
+        /// </summary>
+        private float FloorHeight(Vector3 position)
+        {
+            float eye = MovementUnits.ToWorld(currentEyeHeight);
+            float reach = eye + MovementUnits.ToWorld(GroundProbe);
+
+            if (PhysicsQuery.Raycast(position, -Vector3.UnitY, reach, out float distance, out Vector3 normal) &&
+                normal.Y >= MinGroundNormal)
+            {
+                return position.Y - distance + eye;
+            }
+
+            return StandingHeight;
+        }
+
+        /// <summary>
+        /// Takes the part of the velocity that heads into a wall away from it, and leaves the rest.
+        ///
+        /// This is clipping, and keeping the remainder is what makes running at a wall
+        /// at an angle slide along it rather than stop dead. Clipping the velocity rather than the
+        /// step also stops speed piling up against a wall and firing the player off when they turn
+        /// away from it.
+        /// </summary>
+        private Vector3 ClipVelocity(Vector3 position, Vector3 velocity, float deltaTime)
+        {
+            Vector3 horizontal = new Vector3(velocity.X, 0f, velocity.Z);
+
+            float speed = horizontal.Length();
+            if (speed < 0.01f)
+            {
+                return velocity;
+            }
+
+            float reach = speed * deltaTime + MovementUnits.ToWorld(Radius);
+            if (!PhysicsQuery.Raycast(position, horizontal / speed, reach, out float _, out Vector3 normal))
+            {
+                return velocity;
+            }
+
+            // A floor or a ceiling is not a wall, and its normal has nothing horizontal to clip
+            Vector3 wall = new Vector3(normal.X, 0f, normal.Z);
+            if (wall.LengthSquared() < 1e-6f)
+            {
+                return velocity;
+            }
+
+            float into = Vector3.Dot(velocity, Vector3.Normalize(wall));
+
+            return into < 0f ? velocity - Vector3.Normalize(wall) * into : velocity;
         }
 
         /// <summary>
@@ -238,7 +355,7 @@ namespace RaymarchEngine.Core
                 return;
             }
 
-            float control = Math.Max(speed, StopSpeed);
+            float control = Math.Max(speed, MovementUnits.ToWorld(StopSpeed));
             float drop = control * Friction * deltaTime;
 
             velocity *= Math.Max(speed - drop, 0f) / speed;
@@ -271,7 +388,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         private void AirAccelerate(Vector3 wishDirection, float wishSpeed, float deltaTime)
         {
-            float cappedSpeed = Math.Min(wishSpeed, AirSpeedCap);
+            float cappedSpeed = Math.Min(wishSpeed, MovementUnits.ToWorld(AirSpeedCap));
 
             float currentSpeed = Vector3.Dot(velocity, wishDirection);
             float addSpeed = cappedSpeed - currentSpeed;

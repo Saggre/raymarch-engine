@@ -4,6 +4,7 @@ using RaymarchEngine.Core;
 using RaymarchEngine.Core.Input;
 using RaymarchEngine.Core.Rendering;
 using RaymarchEngine.EMath;
+using RaymarchEngine.Physics;
 using Box = RaymarchEngine.Core.Primitives.Box;
 using Cylinder = RaymarchEngine.Core.Primitives.Cylinder;
 using Ellipsoid = RaymarchEngine.Core.Primitives.Ellipsoid;
@@ -139,6 +140,18 @@ namespace RaymarchEngine
                 Shininess = 400f,
                 Diffraction = 0.95f
             });
+
+            // Colliders, so the player can walk into the shapes and stand on them. The floor is
+            // an infinite plane and stays the controller's ground height. BepuPhysics has no
+            // torus, ellipsoid or octahedron, so those three take the smallest convex shape that
+            // contains them and are a little larger to the touch than they look.
+            torus.AddComponent(PrimitiveCollider.Cylinder(1.62f, 0.42f));
+            octahedron.AddComponent(PrimitiveCollider.Sphere(1.05f));
+            box.AddComponent(PrimitiveCollider.Box(new Vector3(0.85f, 0.85f, 0.85f)));
+            orbitingSphere.AddComponent(PrimitiveCollider.Sphere(0.35f));
+            ellipsoid.AddComponent(PrimitiveCollider.Box(new Vector3(1.5f, 0.75f, 1f)));
+            cylinder.AddComponent(PrimitiveCollider.Cylinder(0.75f, 1.7f));
+            chromeSphere.AddComponent(PrimitiveCollider.Sphere(1.7f));
 
             Scene.CurrentScene.AddGameObject(floor);
             Scene.CurrentScene.AddGameObject(torus);

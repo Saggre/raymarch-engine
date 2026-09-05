@@ -100,20 +100,18 @@ float getShadow(in cRaymarchResult raymarchResult, in float3 lightDir, float sha
 }
 
 // focalLength is the distance from the eye to the uv plane, so a larger value narrows the view.
+// The basis arrives with the frame constants rather than being rebuilt here.
+//
+// It used to come from crossing the view direction with world up, which collapses when the two
+// are parallel, so there was a branch onto a substitute up near the poles. The substitute is a
+// different basis, not a continuation of the one it replaces, so crossing the threshold rolled
+// the view by an amount that depended on the heading. MaxPitch is 88 degrees and the threshold
+// stood at 89.4, which put the jump inside the range the player can actually look through: aiming
+// all the way down flipped the picture. Three orthonormal axes straight from the camera rotation
+// have no pole to handle.
 float3 getCameraRayDir(float2 uv, float focalLength)
 {
-    float3 camForward = normalize(cameraDirection);
-
-    // cross() collapses to zero when the view direction is parallel to world up, giving NaN rays.
-    // The sign keeps the basis handed the same way at both poles.
-    float3 worldUp = abs(camForward.y) > 0.999
-                         ? float3(0.0, 0.0, -sign(camForward.y))
-                         : float3(0.0, 1.0, 0.0);
-
-    float3 camRight = normalize(cross(worldUp, camForward));
-    float3 camUp = normalize(cross(camForward, camRight));
-
-    return normalize(uv.x * camRight + uv.y * camUp + camForward * focalLength);
+    return normalize(uv.x * cameraRight + uv.y * cameraUp + cameraDirection * focalLength);
 }
 
 // Surface colour at the hit point, which is the material colour with the checkerboard applied
@@ -238,7 +236,8 @@ float4 main(PS_INPUT input) : SV_Target
     // Only rays that missed the scene reach the cloud layer, which sits far past MAX_DIST
     if (raymarchResult.hitDistance >= MAX_DIST)
     {
-        return float4(toDisplay(getSkyColorWithClouds(ray.origin, ray.dir)), 1);
+        return float4(applyHud(toDisplay(getSkyColorWithClouds(ray.origin, ray.dir)),
+                               input.TexCoord, debugValues.x), 1);
     }
 
     // Direct sunlight, which is the only thing the shadow ray occludes
@@ -269,7 +268,20 @@ float4 main(PS_INPUT input) : SV_Target
     // view, which is what greyed out everything in the foreground.
     float3 hazeDir = normalize(float3(ray.dir.x, max(ray.dir.y, 0.0), ray.dir.z));
     float fog = 1.0 - exp(-raymarchResult.hitDistance * FOG_DENSITY);
+
+    // The exponential alone is only 45 percent of the way to the sky when the march gives up at
+    // MAX_DIST. The floor is an infinite plane, so every ray below the horizon hits it and stops
+    // there, and the ground ended in a flat band of its own colour with a hard step to the sky
+    // along the top.
+    //
+    // Closing the rest of the way by MAX_DIST removes the step. It has to start far short of it:
+    // ground distance runs to infinity at the horizon, so the last stretch of the range is worth
+    // only a couple of dozen rows on screen, and a fade confined to it is still read as a band.
+    // Beginning at FOG_HORIZON_START spreads the same fade over several times the pixels, which
+    // is what turns the edge into distance.
+    fog = max(fog, smoothstep(MAX_DIST * FOG_HORIZON_START, MAX_DIST, raymarchResult.hitDistance));
+
     sceneColor = lerp(sceneColor, getSkyColor(hazeDir), fog);
 
-    return float4(toDisplay(sceneColor), 1);
+    return float4(applyHud(toDisplay(sceneColor), input.TexCoord, debugValues.x), 1);
 }

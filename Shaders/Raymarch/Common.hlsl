@@ -187,13 +187,21 @@ float aspectRatio;
 float3 cameraDirection;
 float time;
 
+// The other two axes of the camera. Sent rather than rebuilt from a world up, which has no
+// answer when the view points straight up or down. See Movement.cs.
+float3 cameraRight;
+float cameraRightPadding;
+float3 cameraUp;
+float cameraUpPadding;
+
 // The same for every pixel in the frame, so the engine works them out once. See Sun.cs.
 float3 sunDirection;
 float sunDirectionPadding;
 float3 sunLightColor;
 float sunLightColorPadding;
 
-float4 additionalData;
+// x is the player's ground speed, for the overlay readout
+float4 debugValues;
 };
 
 // Buffers
@@ -226,5 +234,6 @@ struct PS_INPUT
     float2 TexCoord : TEXCOORD;
 };
 
-// Needs the constant buffer above for the time, so it comes last
+// Need the constant buffer above, so they come last
 #include "Sky.hlsl"
+#include "Hud.hlsl"
