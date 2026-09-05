@@ -68,6 +68,9 @@ namespace RaymarchEngine.Core
         /// <param name="gameLogic">Game logic to run, its Start is called during construction</param>
         public Engine(AutoUpdateable gameLogic)
         {
+            // Startup is dominated by compiling the raymarch shader, which takes seconds. Without
+            // this the window sits empty for all of it.
+            using (LoadingScreen loading = new LoadingScreen())
             {
                 // Init window
                 renderForm = new RenderForm("RaymarchEngine");
@@ -83,35 +86,40 @@ namespace RaymarchEngine.Core
                 renderForm.WindowState = FormWindowState.Maximized;
                 renderForm.MinimizeBox = false;
                 renderForm.Show();
-            }
 
-            this.gameLogic = gameLogic;
+                this.gameLogic = gameLogic;
 
-            // Create main scene
-            Scene.CurrentScene = new Scene();
+                loading.Report("Creating scene");
+                Scene.CurrentScene = new Scene();
 
-            // Start physics library
-            physics = new PhysicsHandler(PhysicsReady);
+                loading.Report("Starting physics");
+                physics = new PhysicsHandler(PhysicsReady);
 
-            // Init input device
-            InputDevice.Init(renderForm);
+                loading.Report("Opening input devices");
+                InputDevice.Init(renderForm);
 
-            int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
+                int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
 
-            // Execute all start methods
-            StaticUpdater.ExecuteStartActions(unixTime);
+                loading.Report("Building the scene");
+                StaticUpdater.ExecuteStartActions(unixTime);
 
-            // Execute each scene object's components' Start method
-            foreach (GameObject gameObject in Scene.CurrentScene.GameObjects)
-            {
-                foreach (IComponent component in gameObject.Components)
+                // Execute each scene object's components' Start method
+                foreach (GameObject gameObject in Scene.CurrentScene.GameObjects)
                 {
-                    component.Start(unixTime);
+                    foreach (IComponent component in gameObject.Components)
+                    {
+                        component.Start(unixTime);
+                    }
                 }
-            }
 
-            // It's important that render device is created after scene and game logic start
-            renderDevice = new RenderDevice(renderForm, new Resolution(2560, 1440));
+                loading.Report("Creating render device");
+                renderDevice = new RenderDevice(renderForm, new Resolution(2560, 1440));
+
+                // Reads the scene to bake the primitive counts into the shader, so it has to come
+                // after everything above
+                loading.Report("Compiling shaders");
+                renderDevice.Load();
+            }
 
             // Start stopwatch for deltaTime
             stopwatch = new Stopwatch();
