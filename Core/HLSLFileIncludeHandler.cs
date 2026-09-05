@@ -42,10 +42,21 @@ namespace RaymarchEngine.Core
     /// </summary>
     public class HLSLFileIncludeHandler : CallbackBase, Include
     {
+        /// <summary>
+        /// Directory of the file currently being read. Nested includes push and pop it, so a file
+        /// can include a sibling by name.
+        /// </summary>
         public readonly Stack<string> CurrentDirectory;
+
+        /// <summary>
+        /// Extra directories searched when an include is not found next to the including file
+        /// </summary>
         public readonly List<string> IncludeDirectories;
 
-
+        /// <summary>
+        /// Creates a handler rooted at a directory
+        /// </summary>
+        /// <param name="initialDirectory">Directory the first shader file is read from</param>
         public HLSLFileIncludeHandler(string initialDirectory)
         {
             IncludeDirectories = new List<string>();
@@ -79,11 +90,22 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// How many renderers of a given primitive type the current scene holds
         /// </summary>
+        /// <typeparam name="T">Primitive type to count</typeparam>
+        /// <returns>Number of matching renderers in the current scene</returns>
         private static int SceneRendererCount<T>() where T : IPrimitive
         {
             return Scene.CurrentScene.Components<RaymarchRenderer<T>>().Length;
         }
 
+        /// <summary>
+        /// Resolves an #include. The name "raymarchengine" is special and returns generated
+        /// constants rather than a file.
+        /// </summary>
+        /// <param name="type">Whether the include used quotes or angle brackets, not used here</param>
+        /// <param name="fileName">The name as written in the #include directive</param>
+        /// <param name="parentStream">Stream of the including file, not used here</param>
+        /// <returns>A stream over the included HLSL</returns>
+        /// <exception cref="FileNotFoundException">The file is not in the current directory or any include directory</exception>
         public Stream Open(IncludeType type, string fileName, Stream parentStream)
         {
             Debug.WriteLine(fileName);
@@ -131,6 +153,10 @@ namespace RaymarchEngine.Core
             return fs;
         }
 
+        /// <summary>
+        /// Closes a stream handed out by Open and pops the directory it pushed
+        /// </summary>
+        /// <param name="stream">Stream to close</param>
         public void Close(Stream stream)
         {
             stream.Dispose();
