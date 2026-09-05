@@ -5,13 +5,18 @@ using System.Runtime.InteropServices;
 
 namespace RaymarchEngine.Core
 {
+    /// <summary>
+    /// Helpers for unmanaged memory and unix timestamps
+    /// </summary>
     public static class Util
     {
         /// <summary>
-        /// Returns IntPtr to data
+        /// Returns a pointer to data.
+        /// The handle is freed before returning, so the pointer is only safe to use while the
+        /// caller keeps another reference to the object alive.
         /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
+        /// <param name="data">Object to pin</param>
+        /// <returns>Address of the pinned object</returns>
         public static IntPtr GetDataPtr(object data)
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
@@ -23,8 +28,8 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Convert from timestamp to DateTime
         /// </summary>
-        /// <param name="timestamp"></param>
-        /// <returns></returns>
+        /// <param name="timestamp">Seconds since the unix epoch</param>
+        /// <returns>The same moment as a UTC DateTime</returns>
         public static DateTime ConvertFromUnixTimestamp(int timestamp)
         {
             DateTime origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
@@ -34,8 +39,8 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Convert from DateTime to timestamp
         /// </summary>
-        /// <param name="date"></param>
-        /// <returns></returns>
+        /// <param name="date">Moment to convert</param>
+        /// <returns>Seconds since the unix epoch</returns>
         public static int ConvertToUnixTimestamp(DateTime date)
         {
             DateTime origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);

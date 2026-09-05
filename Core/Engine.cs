@@ -26,6 +26,9 @@ namespace RaymarchEngine.Core
         private static RenderDevice renderDevice;
         private static PhysicsHandler physics;
 
+        /// <summary>
+        /// The render device, available only after the engine has been constructed
+        /// </summary>
         public static RenderDevice RenderDevice => renderDevice;
 
         /// <summary>
@@ -58,8 +61,11 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// 
+        /// Opens the window, creates the scene, physics and input, runs every Start method and
+        /// then creates the render device. The render device comes last because it reads the
+        /// scene's primitives to size its buffers.
         /// </summary>
+        /// <param name="gameLogic">Game logic to run, its Start is called during construction</param>
         public Engine(AutoUpdateable gameLogic)
         {
             {
@@ -176,7 +182,7 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Called on program close
+        /// Runs every End method and releases the render device and the window
         /// </summary>
         public void Dispose()
         {
