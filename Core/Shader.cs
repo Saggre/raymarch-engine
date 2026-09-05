@@ -12,21 +12,40 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 namespace RaymarchEngine.Core
 {
     /// <summary>
-    /// A shader class combining different shader stages. Extends CommonShaderStage to add things such as buffers to all shader stages.
-    /// SharedShader saves different buffers per-object and switches between them. This enables two objects to use the same shader, but with different textures for example. (TODO)
+    /// The compiled shader stages for one shader folder, plus the resource views bound alongside
+    /// them. Stages whose file does not exist are null, so a raymarch shader is a vertex and a
+    /// pixel stage with the rest left empty.
     /// </summary>
     public class Shader : IDisposable
     {
+        /// <summary>
+        /// Vertex layout built from the vertex stage's input signature
+        /// </summary>
         public InputLayout InputLayout { get; }
 
+        /// <summary>
+        /// Compiled vertex stage
+        /// </summary>
         public VertexShader VertexShader { get; }
 
+        /// <summary>
+        /// Compiled hull stage, null when the folder has no Hull.hlsl
+        /// </summary>
         public HullShader HullShader { get; }
 
+        /// <summary>
+        /// Compiled domain stage, null when the folder has no Domain.hlsl
+        /// </summary>
         public DomainShader DomainShader { get; }
 
+        /// <summary>
+        /// Compiled geometry stage, null when the folder has no Geometry.hlsl
+        /// </summary>
         public GeometryShader GeometryShader { get; }
 
+        /// <summary>
+        /// Compiled pixel stage
+        /// </summary>
         public PixelShader PixelShader { get; }
 
         /// <summary>
@@ -34,6 +53,15 @@ namespace RaymarchEngine.Core
         /// </summary>
         private readonly Dictionary<int, ShaderResourceView> shaderResourceViews;
 
+        /// <summary>
+        /// Takes ownership of already compiled stages. Use CompileFromFiles to build them.
+        /// </summary>
+        /// <param name="inputLayout">Vertex layout matching the vertex stage</param>
+        /// <param name="vertexShader">Compiled vertex stage</param>
+        /// <param name="hullShader">Compiled hull stage, or null</param>
+        /// <param name="domainShader">Compiled domain stage, or null</param>
+        /// <param name="geometryShader">Compiled geometry stage, or null</param>
+        /// <param name="pixelShader">Compiled pixel stage</param>
         public Shader(InputLayout inputLayout, VertexShader vertexShader, HullShader hullShader,
             DomainShader domainShader,
             GeometryShader geometryShader, PixelShader pixelShader)
@@ -54,17 +82,18 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Get all resource views attached to this shader
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The live dictionary of views, keyed by register slot</returns>
         public Dictionary<int, ShaderResourceView> ResourceViews()
         {
             return shaderResourceViews;
         }
 
         /// <summary>
-        /// Attach a resource view to this shader, or update it if it already exists
+        /// Attach a resource view to this shader, or update it if it already exists, and bind it
+        /// straight away
         /// </summary>
-        /// <param name="slot"></param>
-        /// <param name="resourceView"></param>
+        /// <param name="slot">Register slot, t0 upwards</param>
+        /// <param name="resourceView">View to bind</param>
         public void AddShaderResource(int slot, ShaderResourceView resourceView)
         {
             if (shaderResourceViews.ContainsKey(slot))
@@ -84,8 +113,8 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Send the buffer to all shader stages
         /// </summary>
-        /// <param name="slot"></param>
-        /// <param name="constantBuffer"></param>
+        /// <param name="slot">Constant buffer register slot, b0 upwards</param>
+        /// <param name="constantBuffer">Buffer to bind</param>
         public void SendBufferToShader(int slot, Buffer constantBuffer)
         {
             Engine.RenderDevice.deviceContext.VertexShader.SetConstantBuffer(slot, constantBuffer);
@@ -96,10 +125,11 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Send the shader resource view to all shader stages
+        /// Bind the shader resource view to the vertex and pixel stages, the only stages this
+        /// engine uses
         /// </summary>
-        /// <param name="slot"></param>
-        /// <param name="resourceView"></param>
+        /// <param name="slot">Register slot, t0 upwards</param>
+        /// <param name="resourceView">View to bind</param>
         private void SendResourceViewToShader(int slot, ShaderResourceView resourceView)
         {
             Engine.RenderDevice.deviceContext.VertexShader.SetShaderResource(slot, resourceView);
@@ -107,9 +137,13 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Compiles files into shader byte-code and creates a shader from the shader files that exist
+        /// Compiles files into shader byte-code and creates a shader from the shader files that exist.
+        /// Stages are named after their file, so Vertex.hlsl becomes the vertex stage, and a missing
+        /// file leaves that stage null. Debug builds skip optimisation.
         /// </summary>
-        /// <param name="folderPath"></param>
+        /// <param name="folderPath">Folder holding the .hlsl files, also the #include search root</param>
+        /// <returns>A shader holding the stages that were found</returns>
+        /// <exception cref="SharpDX.CompilationException">A shader file failed to compile</exception>
         public static Shader CompileFromFiles(string folderPath)
         {
             // TODO simplify method with a loop
