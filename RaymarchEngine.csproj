@@ -205,6 +205,7 @@
     <Compile Include="Core\Rendering\Resolution.cs" />
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
+    <Compile Include="Core\ShaderCache.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
     <Compile Include="Core\Interop.cs" />
     <Compile Include="Core\UnixTime.cs" />
