@@ -37,6 +37,7 @@ namespace RaymarchEngine
         private Vector3 octahedronOrigin;
         private Vector3 orbitCentre;
 
+        /// <inheritdoc />
         public override void Start(int startTime)
         {
             camera = Scene.CurrentScene.ActiveCamera;
@@ -184,6 +185,7 @@ namespace RaymarchEngine
                 (float) Math.Sin(elapsedTime * 1.6f) * OrbitRadius);
         }
 
+        /// <inheritdoc />
         public override void Update(float deltaTime)
         {
             elapsedTime += deltaTime;
@@ -191,6 +193,7 @@ namespace RaymarchEngine
             AnimateScene();
         }
 
+        /// <inheritdoc />
         public override void End(int endTime)
         {
         }
