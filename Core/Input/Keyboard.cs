@@ -12,6 +12,9 @@ namespace RaymarchEngine.Core.Input
     {
         private static InputSimulator inputSimulator;
 
+        /// <summary>
+        /// Creates the shared input simulator, once per process
+        /// </summary>
         public Keyboard()
         {
             if (inputSimulator != null)
@@ -22,6 +25,12 @@ namespace RaymarchEngine.Core.Input
             inputSimulator = new InputSimulator();
         }
 
+        /// <summary>
+        /// Reads the current state of a key. This is the system wide key state, so it reports
+        /// true even when the render window does not have focus.
+        /// </summary>
+        /// <param name="keyCode">Key to check</param>
+        /// <returns>True while the key is held down</returns>
         public bool IsKeyDown(VirtualKeyCode keyCode)
         {
             return inputSimulator.InputDeviceState.IsKeyDown(keyCode);

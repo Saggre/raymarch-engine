@@ -11,6 +11,9 @@ namespace RaymarchEngine.Core
     {
         private static Scene currentScene;
 
+        /// <summary>
+        /// The scene that is rendered and updated. The engine sets this on startup.
+        /// </summary>
         public static Scene CurrentScene
         {
             get => currentScene;
@@ -40,23 +43,22 @@ namespace RaymarchEngine.Core
         /// <summary>
         /// Adds a gameobject to the scene
         /// </summary>
-        /// <param name="gameObject"></param>
+        /// <param name="gameObject">The gameobject to add</param>
         public void AddGameObject(GameObject gameObject)
         {
             gameObjects.Add(gameObject);
         }
 
         /// <summary>
-        /// Gets gameobjects in this scene
+        /// The gameobjects in this scene, as a copy so the scene can be modified while iterating
         /// </summary>
-        /// <returns></returns>
         public IEnumerable<GameObject> GameObjects => gameObjects.ToArray();
 
         /// <summary>
-        /// Get a list of components in this scene's gameobjects
+        /// Collects every component of type T attached to this scene's gameobjects
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <typeparam name="T">Component type to look for</typeparam>
+        /// <returns>The matching components, empty if there are none</returns>
         public T[] Components<T>() where T : IComponent
         {
             List<T> components = new List<T>();
