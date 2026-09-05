@@ -26,10 +26,11 @@ namespace RaymarchEngine.Core.Buffers
         private readonly int slot;
 
         /// <summary>
-        /// Create new StructuredBuffer
+        /// Records where the buffer will live. The GPU buffer itself is created on the first
+        /// UpdateValue, once the element count is known.
         /// </summary>
-        /// <param name="device"></param>
-        /// <param name="slot"></param>
+        /// <param name="device">Device the buffer is created on</param>
+        /// <param name="slot">Shader resource register slot, t0 upwards</param>
         public StructuredBuffer(Device device, int slot = 0)
         {
             this.slot = slot;
@@ -39,9 +40,10 @@ namespace RaymarchEngine.Core.Buffers
         }
 
         /// <summary>
-        /// Update the values of this buffer
+        /// Upload an array. The buffer and its view are recreated whenever the length changes,
+        /// and an empty array is ignored because D3D11 rejects a zero sized buffer.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Elements to copy into the buffer</param>
         public void UpdateValue(T[] value)
         {
             if (value.Length == 0)

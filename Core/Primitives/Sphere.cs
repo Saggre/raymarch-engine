@@ -4,7 +4,7 @@
 namespace RaymarchEngine.Core.Primitives
 {
     /// <summary>
-    /// A sphere. What about it?
+    /// A sphere. Scale.x is the radius.
     /// </summary>
     public class Sphere : IPrimitive
     {
