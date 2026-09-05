@@ -9,8 +9,10 @@ using Device = SharpDX.Direct3D11.Device;
 namespace RaymarchEngine.Core.Buffers
 {
     /// <summary>
-    /// With this class you can effortlessly add a texture buffer
+    /// A square, single mip texture bound as a shader resource view, for lookup data such as the
+    /// noise texture the raymarcher samples.
     /// </summary>
+    /// <typeparam name="T">Type of one texel, which must match the DXGI format</typeparam>
     public class TextureBuffer<T> : IDisposable
     {
         private readonly Device device;
@@ -21,13 +23,13 @@ namespace RaymarchEngine.Core.Buffers
         private readonly Format format;
 
         /// <summary>
-        /// Create new ConstantBuffer
+        /// Uploads the texture and binds it to the vertex and pixel stages
         /// </summary>
-        /// <param name="device"></param>
-        /// <param name="data"></param>
-        /// <param name="textureSize"></param>
-        /// <param name="format"></param>
-        /// <param name="slot"></param>
+        /// <param name="device">Device the texture is created on</param>
+        /// <param name="data">Texels in row major order, textureSize squared of them</param>
+        /// <param name="textureSize">Width and height in texels, the texture is square</param>
+        /// <param name="format">DXGI format of one texel</param>
+        /// <param name="slot">Shader resource register slot, t0 upwards</param>
         public TextureBuffer(Device device, T[] data, int textureSize, Format format = Format.R8G8B8A8_UNorm,
             int slot = 0)
         {
