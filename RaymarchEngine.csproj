@@ -201,7 +201,8 @@
     <Compile Include="Core\Scene.cs" />
     <Compile Include="Core\Shader.cs" />
     <Compile Include="Core\StaticUpdater.cs" />
-    <Compile Include="Core\Util.cs" />
+    <Compile Include="Core\Interop.cs" />
+    <Compile Include="Core\UnixTime.cs" />
     <Compile Include="Core\Engine.cs" />
     <Compile Include="GameLogic.cs" />
     <Compile Include="Geometry\RenderVertex.cs" />

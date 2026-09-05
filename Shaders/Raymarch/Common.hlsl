@@ -36,15 +36,6 @@ class cMaterial
         diffraction = _diffraction;
         checkerSize = _checkerSize;
     }
-
-    void fuse(cMaterial material)
-    {
-        diffuseColor = diffuseColor * 0.5 + material.diffuseColor * 0.5;
-        shininess = shininess * 0.5 + material.shininess * 0.5;
-        specularColor = specularColor * 0.5 + material.specularColor * 0.5;
-        diffraction = diffraction * 0.5 + material.diffraction * 0.5;
-        checkerSize = max(checkerSize, material.checkerSize);
-    }
 };
 
 class cRay

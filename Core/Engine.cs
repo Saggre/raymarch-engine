@@ -98,7 +98,7 @@ namespace RaymarchEngine.Core
                 loading.Report("Opening input devices");
                 InputDevice.Init(renderForm);
 
-                int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
+                int unixTime = UnixTime.FromDateTime(DateTime.Now);
 
                 loading.Report("Building the scene");
                 StaticUpdater.ExecuteStartActions(unixTime);
@@ -194,7 +194,7 @@ namespace RaymarchEngine.Core
         /// </summary>
         public void Dispose()
         {
-            int unixTime = Util.ConvertToUnixTimestamp(DateTime.Now);
+            int unixTime = UnixTime.FromDateTime(DateTime.Now);
 
             // Execute all end methods
             StaticUpdater.ExecuteEndActions(unixTime);

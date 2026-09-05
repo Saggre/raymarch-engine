@@ -1,6 +1,7 @@
 ﻿// Created by Sakri Koskimies (Github: Saggre) on 05/09/2020
 
 using System;
+using System.Runtime.InteropServices;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -43,17 +44,30 @@ namespace RaymarchEngine.Core.Buffers
 
         private void CreateBuffer(T[] data)
         {
-            Texture2D texture = new Texture2D(device, new Texture2DDescription()
+            // Held for the whole of the Texture2D constructor, which is what reads through the
+            // address. Freeing it first, as the old GetDataPtr did, leaves the collector free to
+            // move the array out from under the driver.
+            GCHandle pinned = Interop.Pin(data);
+
+            Texture2D texture;
+            try
             {
-                BindFlags = BindFlags.ShaderResource,
-                Format = format,
-                Width = textureSize,
-                Height = textureSize,
-                OptionFlags = ResourceOptionFlags.None,
-                MipLevels = 1,
-                ArraySize = 1,
-                SampleDescription = {Count = 1, Quality = 0}
-            }, new DataRectangle(Util.GetDataPtr(data), textureSize * format.SizeOfInBytes()));
+                texture = new Texture2D(device, new Texture2DDescription()
+                {
+                    BindFlags = BindFlags.ShaderResource,
+                    Format = format,
+                    Width = textureSize,
+                    Height = textureSize,
+                    OptionFlags = ResourceOptionFlags.None,
+                    MipLevels = 1,
+                    ArraySize = 1,
+                    SampleDescription = {Count = 1, Quality = 0}
+                }, new DataRectangle(pinned.AddrOfPinnedObject(), textureSize * format.SizeOfInBytes()));
+            }
+            finally
+            {
+                pinned.Free();
+            }
 
             shaderResourceView = new ShaderResourceView(device, texture);
 
