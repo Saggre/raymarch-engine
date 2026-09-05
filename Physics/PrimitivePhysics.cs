@@ -10,7 +10,8 @@ using Sphere = BepuPhysics.Collidables.Sphere;
 namespace RaymarchEngine.Physics
 {
     /// <summary>
-    /// Enables physics for a raymarch primitive
+    /// Gives a GameObject a rigid body in the shared simulation and copies the body's position
+    /// back onto the GameObject every frame. Only sphere and box colliders are recognised.
     /// </summary>
     public class PrimitivePhysics : IComponent
     {
@@ -22,11 +23,12 @@ namespace RaymarchEngine.Physics
         private IConvexShape colliderShape;
 
         /// <summary>
-        /// Create from Bepuphysics shape and mass
+        /// Create from Bepuphysics shape and mass. The body is not added until the component is
+        /// attached to a GameObject, which is where its starting position comes from.
         /// </summary>
-        /// <param name="colliderShape"></param>
-        /// <param name="mass"></param>
-        /// <param name="isStatic"></param>
+        /// <param name="colliderShape">Collider, a BepuPhysics Sphere or Box</param>
+        /// <param name="mass">Mass used to compute the body's inertia, ignored when static</param>
+        /// <param name="isStatic">True to add an immovable static instead of a dynamic body</param>
         public PrimitivePhysics(IConvexShape colliderShape, float mass, bool isStatic = false)
         {
             this.colliderShape = colliderShape;
@@ -50,8 +52,9 @@ namespace RaymarchEngine.Physics
         }
 
         /// <summary>
-        /// Moves the physics object
+        /// Applies a linear impulse to the body. Does nothing on a static.
         /// </summary>
+        /// <param name="force">Impulse in world space</param>
         public void AddForce(Vector3 force)
         {
             if (isStatic)
@@ -63,8 +66,9 @@ namespace RaymarchEngine.Physics
         }
 
         /// <summary>
-        /// Rotates the physics object
+        /// Applies an angular impulse to the body. Does nothing on a static.
         /// </summary>
+        /// <param name="angularForce">Impulse around each world space axis</param>
         public void AddAngularForce(Vector3 angularForce)
         {
             if (isStatic)
@@ -75,6 +79,10 @@ namespace RaymarchEngine.Physics
             PhysicsHandler.Simulation.Bodies.GetBodyReference(bodyHandle).ApplyAngularImpulse(angularForce);
         }
 
+        /// <summary>
+        /// Registers the collider and adds the body or static to the simulation
+        /// </summary>
+        /// <typeparam name="T">Concrete collider type, which BepuPhysics needs unboxed</typeparam>
         private void AddBody<T>() where T : unmanaged, IConvexShape
         {
             T withType = (T) colliderShape;

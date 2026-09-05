@@ -5,7 +5,8 @@ using System;
 namespace RaymarchEngine.Core
 {
     /// <summary>
-    /// Class that is used to represent a camera
+    /// The point the scene is raymarched from. Its position and forward vector come from the
+    /// inherited Movement component.
     /// </summary>
     public class Camera : GameObject
     {
