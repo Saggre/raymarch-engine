@@ -173,12 +173,35 @@ float3 getReflection(cRaymarchResult raymarchResult)
     return getPhongLight(refRaymarchResult);
 }
 
-// AO
-// Will be of lower resolution with low MAX_STEPS, because it's calculated from raymarch steps taken
-float getAmbientOcclusion(in cRaymarchResult raymarchResult, float noise)
+// Ambient occlusion, by asking the distance field how enclosed the surface is.
+//
+// This used to be derived from how many steps the march took. That is a proxy, and it fails
+// exactly at silhouettes: a ray grazing an edge takes far more steps than one hitting the same
+// surface square on, so every object was drawn with a thin dark rim. Step count measures how hard
+// the pixel was to trace, not how much sky the surface can see.
+//
+// Walking out along the normal and comparing the distance found against the distance walked
+// measures the second thing. Open space returns the full step and contributes nothing, a nearby
+// surface returns less and darkens.
+float getAmbientOcclusion(float3 pos, float3 normal, float noise)
 {
-    float AO = pow(1.0 - (raymarchResult.stepsTaken / MAX_STEPS), 8 * noise);
-    return lerp(AO, 1, saturate(raymarchResult.hitDistance / AO_FALLOFF));
+    float occlusion = 0.0;
+    float weight = 1.0;
+
+    // A real loop, not unrolled. getDist expands to a loop over every primitive type, so
+    // unrolling this copies all of that once per sample and the register pressure costs more than
+    // the branching saves.
+    [loop]
+    for (int i = 0; i < AO_SAMPLES; i++)
+    {
+        // Jittered by the noise texture, so the fixed sample heights do not band on curved surfaces
+        float height = AO_RADIUS * (i + noise) / AO_SAMPLES;
+
+        occlusion += (height - getDist(pos + normal * height)) * weight;
+        weight *= 0.85;
+    }
+
+    return saturate(1.0 - AO_STRENGTH * occlusion);
 }
 
 float4 main(PS_INPUT input) : SV_Target
@@ -208,13 +231,15 @@ float4 main(PS_INPUT input) : SV_Target
 
     // Sky fill. Shadowed surfaces still see the sky, so this is added after the shadow rather than
     // before it, and it scales with the surface colour: a dark material has to come out dark.
-    sceneColor += getAlbedo(raymarchResult) * getSkyColor(float3(0, 1, 0)) * SKY_AMBIENT;
+    //
+    // Occlusion belongs here rather than on the whole result. It says how much of the sky the
+    // surface can see, which is exactly what this term is, while direct sunlight is already
+    // accounted for by the shadow ray. Applying it to both darkened lit surfaces twice.
+    float occlusion = getAmbientOcclusion(raymarchResult.hitPos, raymarchResult.surfaceNormal, noise.x);
+    sceneColor += getAlbedo(raymarchResult) * getSkyColor(float3(0, 1, 0)) * SKY_AMBIENT * occlusion;
 
     // Reflection
     sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
-
-    // Apply AO
-    sceneColor *= getAmbientOcclusion(raymarchResult, noise);
 
     // Aerial perspective, towards the sky in the direction being looked at rather than a constant.
     // The direction is clamped to the horizon: the haze in front of distant ground is lit like the
