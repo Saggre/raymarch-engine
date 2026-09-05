@@ -10,23 +10,50 @@ using Vector4 = System.Numerics.Vector4;
 
 namespace RaymarchEngine.EMath
 {
+    /// <summary>
+    /// Vector, quaternion and scalar helpers on top of System.Numerics. Angles are in degrees
+    /// unless the member says otherwise.
+    /// </summary>
     public static class Util
     {
+        /// <summary>
+        /// Smallest of the three components
+        /// </summary>
+        /// <param name="vec">Vector to inspect</param>
+        /// <returns>The smallest of x, y and z</returns>
         public static float MinComponent(this Vector3 vec)
         {
             return Math.Min(Math.Min(vec.X, vec.Y), vec.Z);
         }
 
+        /// <summary>
+        /// Largest of the three components
+        /// </summary>
+        /// <param name="vec">Vector to inspect</param>
+        /// <returns>The largest of x, y and z</returns>
         public static float MaxComponent(this Vector3 vec)
         {
             return Math.Max(Math.Max(vec.X, vec.Y), vec.Z);
         }
 
+        /// <summary>
+        /// Widens a Vector3 with a w component
+        /// </summary>
+        /// <param name="xyz">Source vector</param>
+        /// <param name="w">Value for the fourth component</param>
+        /// <returns>The combined vector</returns>
         public static Vector4 ToVector4(this Vector3 xyz, float w)
         {
             return new Vector4(xyz.X, xyz.Y, xyz.Z, w);
         }
 
+        /// <summary>
+        /// Widens a Vector2 with z and w components
+        /// </summary>
+        /// <param name="xy">Source vector</param>
+        /// <param name="z">Value for the third component</param>
+        /// <param name="w">Value for the fourth component</param>
+        /// <returns>The combined vector</returns>
         public static Vector4 ToVector4(this Vector2 xy, float z, float w)
         {
             return new Vector4(xy.X, xy.Y, z, w);
@@ -41,6 +68,7 @@ namespace RaymarchEngine.EMath
         /// <param name="scaling">Scaling factor.</param>
         /// <param name="rotation">The rotation of the transformation.</param>
         /// <param name="translation">The translation factor of the transformation.</param>
+        /// <returns>Scale, then rotation, then translation, combined</returns>
         public static Matrix AffineTransformation(Vector3 scaling, Quaternion rotation, Vector3 translation)
         {
             return Matrix.Scaling(scaling.X, scaling.Y, scaling.Z) * RotationQuaternion(rotation) *
@@ -51,6 +79,7 @@ namespace RaymarchEngine.EMath
         /// Creates a SharpDX rotation matrix from a Numerics Quaternion.
         /// </summary>
         /// <param name="rotation">The quaternion to use to build the matrix.</param>
+        /// <returns>The equivalent rotation matrix</returns>
         public static Matrix RotationQuaternion(Quaternion rotation)
         {
             Matrix result = Matrix.Identity;
@@ -82,11 +111,23 @@ namespace RaymarchEngine.EMath
 
         #region Quaternions
 
+        /// <summary>
+        /// Rotates a vector by a quaternion
+        /// </summary>
+        /// <param name="vector">Vector to rotate</param>
+        /// <param name="rotation">Rotation to apply</param>
+        /// <returns>The rotated vector</returns>
         public static Vector3 Multiply(this Vector3 vector, Quaternion rotation)
         {
             return Multiply(rotation, vector);
         }
 
+        /// <summary>
+        /// Rotates a point by a quaternion
+        /// </summary>
+        /// <param name="rotation">Rotation to apply</param>
+        /// <param name="point">Point to rotate</param>
+        /// <returns>The rotated point</returns>
         public static Vector3 Multiply(this Quaternion rotation, Vector3 point)
         {
             float num1 = rotation.X * 2f;
@@ -114,7 +155,7 @@ namespace RaymarchEngine.EMath
         /// <param name="x">Angle in degrees</param>
         /// <param name="y">Angle in degrees</param>
         /// <param name="z">Angle in degrees</param>
-        /// <returns></returns>
+        /// <returns>The equivalent rotation</returns>
         public static Quaternion EulerToQuaternion(float x, float y, float z)
         {
             return EulerToQuaternion(new Vector3(x, y, z));
@@ -123,8 +164,8 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Transforms eulerAngles into a Quaternion
         /// </summary>
-        /// <param name="eulerAngles">Angles in degrees</param>
-        /// <returns></returns>
+        /// <param name="eulerAngles">Angles in degrees, one per axis</param>
+        /// <returns>The equivalent rotation</returns>
         public static Quaternion EulerToQuaternion(this Vector3 eulerAngles)
         {
             eulerAngles *= Deg2Rad;
@@ -147,10 +188,11 @@ namespace RaymarchEngine.EMath
         }
 
         /// <summary>
-        /// Transform quaternion to eulerAngles
+        /// Transform quaternion to eulerAngles. The poles are handled separately, where roll and
+        /// yaw collapse into one and roll is reported as zero.
         /// </summary>
-        /// <param name="q"></param>
-        /// <returns></returns>
+        /// <param name="q">Rotation to decompose</param>
+        /// <returns>Angles in degrees, each wrapped to the range -360 to 360</returns>
         public static Vector3 QuaternionToEuler(this Quaternion q)
         {
             Vector3 euler;
@@ -191,6 +233,12 @@ namespace RaymarchEngine.EMath
             return euler;
         }
 
+        /// <summary>
+        /// Adds a rotation around an axis to an existing rotation, in place
+        /// </summary>
+        /// <param name="rotation">Rotation to modify</param>
+        /// <param name="axis">Axis to turn around, normalised internally</param>
+        /// <param name="angle">Angle in degrees</param>
         public static void RotateAround(this ref Quaternion rotation, Vector3 axis, float angle)
         {
             rotation *= AngleAxis(angle, ref axis);
@@ -199,8 +247,9 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Returns the angle in degrees between two rotations a and b
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
+        /// <param name="a">First rotation</param>
+        /// <param name="b">Second rotation</param>
+        /// <returns>The angle between them in degrees, never more than 180</returns>
         public static float Angle(this Quaternion a, Quaternion b)
         {
             float f = Quaternion.Dot(a, b);
@@ -210,9 +259,9 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Returns a quaternion rotated degrees around axis
         /// </summary>
-        /// <param name="degrees"></param>
-        /// <param name="axis"></param>
-        /// <returns></returns>
+        /// <param name="degrees">Angle in degrees</param>
+        /// <param name="axis">Axis to turn around, normalised in place</param>
+        /// <returns>The rotation, or identity if the axis is zero length</returns>
         public static Quaternion AngleAxis(float degrees, ref Vector3 axis)
         {
             if (AlmostZeroSquared(axis.SqrMagnitude()))
@@ -235,8 +284,9 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Creates a rotation which rotates from fromDirection to toDirection
         /// </summary>
-        /// <param name="fromDirection"></param>
-        /// <param name="toDirection"></param>
+        /// <param name="fromDirection">Direction to rotate from</param>
+        /// <param name="toDirection">Direction to rotate to</param>
+        /// <returns>The rotation between the two directions</returns>
         public static Quaternion FromToRotation(Vector3 fromDirection, Vector3 toDirection)
         {
             return RotateTowards(LookRotation(fromDirection), LookRotation(toDirection), float.MaxValue);
@@ -245,9 +295,10 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Spherically interpolates between a and b by t. The parameter t is not clamped.
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="t"></param>
+        /// <param name="a">Rotation at t of 0</param>
+        /// <param name="b">Rotation at t of 1, negated in place when the short way round needs it</param>
+        /// <param name="t">Interpolation factor</param>
+        /// <returns>The interpolated rotation</returns>
         private static Quaternion SlerpUnclamped(ref Quaternion a, ref Quaternion b, float t)
         {
             // if either input is zero, return the other.
@@ -307,15 +358,17 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Returns only the xyz component of quaternion
         /// </summary>
-        /// <param name="quaternion"></param>
+        /// <param name="quaternion">Quaternion to read</param>
+        /// <returns>Its x, y and z components</returns>
         private static Vector3 XYZ(this Quaternion quaternion) => new Vector3(quaternion.X, quaternion.Y, quaternion.Z);
 
         /// <summary>
-        /// Rotates a quaternion from towards to
+        /// Rotates from towards to, moving at most maxDegreesDelta
         /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <param name="maxDegreesDelta"></param>
+        /// <param name="from">Rotation to start at</param>
+        /// <param name="to">Rotation to move towards</param>
+        /// <param name="maxDegreesDelta">Largest step to take, in degrees</param>
+        /// <returns>The stepped rotation, or to if it is already within one step</returns>
         public static Quaternion RotateTowards(Quaternion from, Quaternion to, float maxDegreesDelta)
         {
             float num = from.Angle(to);
@@ -330,12 +383,12 @@ namespace RaymarchEngine.EMath
 
 
         /// <summary>
-        /// Creates a quaternion that looks at forward vector
+        /// Creates a quaternion that looks along a forward vector, with world up as the reference
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
-        /// <returns></returns>
+        /// <param name="x">Forward vector x</param>
+        /// <param name="y">Forward vector y</param>
+        /// <param name="z">Forward vector z</param>
+        /// <returns>A rotation facing that direction</returns>
         public static Quaternion LookRotation(float x, float y, float z)
         {
             Vector3 forward = new Vector3(x, y, z);
@@ -343,10 +396,10 @@ namespace RaymarchEngine.EMath
         }
 
         /// <summary>
-        /// Creates a quaternion that looks at forward vector
+        /// Creates a quaternion that looks along a forward vector, with world up as the reference
         /// </summary>
-        /// <param name="forward"></param>
-        /// <returns></returns>
+        /// <param name="forward">Direction to face, normalised internally</param>
+        /// <returns>A rotation facing that direction</returns>
         public static Quaternion LookRotation(Vector3 forward)
         {
             Vector3 up = Vector3.UnitY;
@@ -354,11 +407,11 @@ namespace RaymarchEngine.EMath
         }
 
         /// <summary>
-        /// Creates a quaternion that looks at forward vector rotated along up vector
+        /// Creates a quaternion that looks along forward, rolled so that up is upright
         /// </summary>
-        /// <param name="forward"></param>
-        /// <param name="up"></param>
-        /// <returns></returns>
+        /// <param name="forward">Direction to face, normalised in place</param>
+        /// <param name="up">Reference up direction, made orthogonal to forward in place</param>
+        /// <returns>A rotation facing that direction</returns>
         private static Quaternion LookRotation(ref Vector3 forward, ref Vector3 up)
         {
             forward = Vector3.Normalize(forward);
@@ -418,6 +471,12 @@ namespace RaymarchEngine.EMath
             return quaternion;
         }
 
+        /// <summary>
+        /// Splits a rotation into the axis it turns around and how far it turns
+        /// </summary>
+        /// <param name="q">Rotation to split, normalised first if it is not a unit quaternion</param>
+        /// <param name="axis">Axis of rotation, arbitrary when the angle is zero</param>
+        /// <param name="angle">Angle in radians</param>
         private static void Internal_ToAxisAngleRad(Quaternion q, out Vector3 axis, out float angle)
         {
             if (System.Math.Abs(q.W) > 1.0f)
@@ -441,21 +500,44 @@ namespace RaymarchEngine.EMath
 
         #region Vectors
 
+        /// <summary>
+        /// Squared length, which avoids the square root when only comparing magnitudes
+        /// </summary>
+        /// <param name="vector">Vector to measure</param>
+        /// <returns>The length squared</returns>
         public static float SqrMagnitude(this Vector3 vector)
         {
             return vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z;
         }
 
+        /// <summary>
+        /// Distance along the axes rather than the straight line between the points
+        /// </summary>
+        /// <param name="a">First point</param>
+        /// <param name="b">Second point</param>
+        /// <returns>Sum of the absolute differences of each component</returns>
         public static float ManhattanDistance(this Vector2 a, Vector2 b)
         {
             return System.Math.Abs(a.X - b.X) + System.Math.Abs(a.Y - b.Y);
         }
 
+        /// <summary>
+        /// Distance along the axes rather than the straight line between the points
+        /// </summary>
+        /// <param name="a">First point</param>
+        /// <param name="b">Second point</param>
+        /// <returns>Sum of the absolute differences of each component</returns>
         public static float ManhattanDistance(this Vector3 a, Vector3 b)
         {
             return System.Math.Abs(a.X - b.X) + System.Math.Abs(a.Y - b.Y) + System.Math.Abs(a.Z - b.Z);
         }
 
+        /// <summary>
+        /// Distance along the axes rather than the straight line between the points
+        /// </summary>
+        /// <param name="a">First point</param>
+        /// <param name="b">Second point</param>
+        /// <returns>Sum of the absolute differences of each component</returns>
         public static float ManhattanDistance(this Vector4 a, Vector4 b)
         {
             return System.Math.Abs(a.X - b.X) + System.Math.Abs(a.Y - b.Y) + System.Math.Abs(a.Z - b.Z) +
@@ -466,6 +548,13 @@ namespace RaymarchEngine.EMath
 
         #region Math and constants
 
+        /// <summary>
+        /// Limits a value to a range
+        /// </summary>
+        /// <param name="i">Value to clamp</param>
+        /// <param name="min">Lower bound</param>
+        /// <param name="max">Upper bound</param>
+        /// <returns>The value, moved inside the range if it was outside</returns>
         public static int Clamp(this int i, int min, int max)
         {
             if (i >= min && i <= max)
@@ -476,6 +565,13 @@ namespace RaymarchEngine.EMath
             return i < min ? min : max;
         }
 
+        /// <summary>
+        /// Limits a value to a range
+        /// </summary>
+        /// <param name="i">Value to clamp</param>
+        /// <param name="min">Lower bound</param>
+        /// <param name="max">Upper bound</param>
+        /// <returns>The value, moved inside the range if it was outside</returns>
         public static float Clamp(this float i, float min, float max)
         {
             if (i >= min && i <= max)
@@ -491,6 +587,11 @@ namespace RaymarchEngine.EMath
         /// </summary>
         private const float NearZero = 1e-6f;
 
+        /// <summary>
+        /// Near-zero test that tolerates accumulated floating point error
+        /// </summary>
+        /// <param name="f">Value to test</param>
+        /// <returns>True when the value is within the tolerance of zero</returns>
         public static bool AlmostZero(float f)
         {
             return System.Math.Abs(f) < NearZero;
@@ -500,11 +601,16 @@ namespace RaymarchEngine.EMath
         /// Near-zero test for an already squared magnitude. Comparing against NearZero directly
         /// would loosen the tolerance on the magnitude to its square root.
         /// </summary>
+        /// <param name="squared">A squared magnitude</param>
+        /// <returns>True when the unsquared magnitude is within the tolerance of zero</returns>
         private static bool AlmostZeroSquared(float squared)
         {
             return squared < NearZero * NearZero;
         }
 
+        /// <summary>
+        /// Pi as a float, so expressions stay in single precision
+        /// </summary>
         public static float PI => (float) System.Math.PI;
 
         /// <summary>
@@ -520,8 +626,8 @@ namespace RaymarchEngine.EMath
         /// <summary>
         /// Clamps the input value between 0 and 1
         /// </summary>
-        /// <param name="a"></param>
-        /// <returns></returns>
+        /// <param name="a">Value to clamp</param>
+        /// <returns>The value, moved into the range 0 to 1 if it was outside</returns>
         public static float Clamp01(this float a)
         {
             if (a < 0)
