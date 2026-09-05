@@ -34,6 +34,8 @@ frame from the first rendered image without the camera having to move.
   at, and reflections show the sky rather than black.
 - Raymarched objects have infinite resolution (signed distance function = no mesh).
 
+Move with WASD, look with the mouse, hold shift to sprint, space to jump, escape to quit.
+
 ![Rendering preview](.github/assets/raymarch.gif)
 
 ## Download

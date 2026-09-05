@@ -133,6 +133,16 @@ namespace RaymarchEngine.Core
         private float lastDeltaTime;
 
         /// <summary>
+        /// Longest frame any Update is told about, in seconds.
+        ///
+        /// The first frame compiles the shaders and takes several seconds, and alt tabbing away
+        /// stalls one for as long as it takes to come back. Reporting that honestly hands every
+        /// integrator a step it cannot survive: gravity alone would move a character hundreds of
+        /// units in one go. Time is lost instead, which is what every engine does here.
+        /// </summary>
+        private const float MaxDeltaTime = 0.1f;
+
+        /// <summary>
         /// This method runs on every frame
         /// </summary>
         private void GameLoop()
@@ -167,7 +177,7 @@ namespace RaymarchEngine.Core
             PhysicsHandler.Simulation.Timestep(lastDeltaTime);
 
             stopwatch.Stop();
-            lastDeltaTime = (float) stopwatch.Elapsed.TotalSeconds;
+            lastDeltaTime = Math.Min((float) stopwatch.Elapsed.TotalSeconds, MaxDeltaTime);
             elapsedTime += lastDeltaTime;
         }
 

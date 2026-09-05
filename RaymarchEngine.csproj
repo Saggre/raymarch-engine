@@ -179,10 +179,10 @@
     <Compile Include="Core\Input\Keyboard.cs" />
     <Compile Include="Core\Input\Mouse.cs" />
     <Compile Include="Core\Input\RawMouseInput.cs" />
-    <Compile Include="Core\Input\PlayerMovement.cs" />
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\Material.cs" />
     <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\FirstPersonController.cs" />
     <Compile Include="Core\GameObject.cs" />
     <Compile Include="Core\Movement.cs" />
     <Compile Include="Core\Primitives\Box.cs" />
