@@ -5,12 +5,16 @@ using WindowsInput.Native;
 
 namespace RaymarchEngine.Core.Input
 {
+    /// <summary>
+    /// Reads WASD, space and control every frame into a direction the camera can be moved along
+    /// </summary>
     public class PlayerMovement : AutoUpdateable
     {
         private Vector3 movementInput;
 
         /// <summary>
-        /// Player movement input in X, Y, Z directions
+        /// Movement direction from the keys held this frame, in object space. Left shift doubles
+        /// its length rather than normalising it, so the length carries the speed.
         /// </summary>
         public Vector3 MovementInput => movementInput;
         
