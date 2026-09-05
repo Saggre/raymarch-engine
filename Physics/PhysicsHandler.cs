@@ -11,7 +11,8 @@ using BepuUtilities.Memory;
 namespace RaymarchEngine.Physics
 {
     /// <summary>
-    /// Shows a completely isolated usage of the engine without using any of the other demo types.
+    /// Owns the BepuPhysics simulation the engine steps once per frame. Bodies are added through
+    /// PrimitivePhysics components rather than here.
     /// </summary>
     public class PhysicsHandler : IDisposable
     {
@@ -19,8 +20,16 @@ namespace RaymarchEngine.Physics
         private static Action onInitialize;
         private static Simulation simulation;
 
+        /// <summary>
+        /// The simulation shared by every PrimitivePhysics. Null until the narrow phase callbacks
+        /// have been initialised, which happens inside the constructor.
+        /// </summary>
         public static Simulation Simulation => simulation;
 
+        /// <summary>
+        /// Creates the simulation with gravity pointing down the y axis
+        /// </summary>
+        /// <param name="callback">Called once the simulation is ready to take bodies</param>
         public PhysicsHandler(Action callback)
         {
             onInitialize = callback;
@@ -136,9 +145,16 @@ namespace RaymarchEngine.Physics
         }
 
         //Note that the engine does not require any particular form of gravity- it, like all the contact callbacks, is managed by a callback.
+        /// <summary>
+        /// Applies a constant acceleration to every dynamic body as the simulation integrates
+        /// </summary>
         public struct PoseIntegratorCallbacks : IPoseIntegratorCallbacks
         {
+            /// <summary>
+            /// Acceleration applied to dynamic bodies each second
+            /// </summary>
             public Vector3 Gravity;
+
             Vector3 gravityDt;
 
             /// <summary>
@@ -147,6 +163,10 @@ namespace RaymarchEngine.Physics
             public AngularIntegrationMode AngularIntegrationMode =>
                 AngularIntegrationMode.Nonconserving; //Don't care about fidelity in this demo!
 
+            /// <summary>
+            /// Creates callbacks with a fixed gravity vector
+            /// </summary>
+            /// <param name="gravity">Acceleration applied to dynamic bodies each second</param>
             public PoseIntegratorCallbacks(Vector3 gravity) : this()
             {
                 Gravity = gravity;
@@ -182,6 +202,10 @@ namespace RaymarchEngine.Physics
             }
         }
 
+        /// <summary>
+        /// Creates the buffer pool and the simulation. Simulation.Create runs the narrow phase
+        /// callbacks' Initialize, which is what publishes the simulation and fires the callback.
+        /// </summary>
         public void Run()
         {
             //The buffer pool is a source of raw memory blobs for the engine to use.
@@ -199,6 +223,9 @@ namespace RaymarchEngine.Physics
                 new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new PositionLastTimestepper());
         }
 
+        /// <summary>
+        /// Releases the simulation and returns its memory to the buffer pool
+        /// </summary>
         public void Dispose()
         {
             simulation.Dispose();

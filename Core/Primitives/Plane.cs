@@ -3,7 +3,7 @@
 namespace RaymarchEngine.Core.Primitives
 {
     /// <summary>
-    /// An infinite plane.
+    /// An infinite plane facing up the y axis. Only its position is used, scale has no effect.
     /// </summary>
     public class Plane : IPrimitive
     {

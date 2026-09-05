@@ -13,28 +13,29 @@ using Vector4 = System.Numerics.Vector4;
 namespace RaymarchEngine.Core
 {
     /// <summary>
-    /// To Render Static Object
+    /// An indexed triangle mesh on the GPU. The engine only builds one, the fullscreen quad the
+    /// raymarch pixel shader runs on.
     /// </summary>
     public class Mesh : IDisposable
     {
         /// <summary>
-        /// Vertex Buffer
+        /// Vertices, laid out as RenderVertex
         /// </summary>
         public Buffer VertexBuffer { get; private set; }
 
         /// <summary>
-        /// Index Buffer
+        /// Triangle indices, one 32 bit index per vertex reference
         /// </summary>
         public Buffer IndexBuffer { get; private set; }
 
         /// <summary>
-        /// Vertex Size
+        /// Stride of one vertex in bytes
         /// </summary>
         public int VertexSize { get; private set; }
 
         /// <summary>
-        /// Mesh Parts
-        /// Like material in Unity?
+        /// Ranges of the index buffer that are drawn together, each with its own material.
+        /// A quad has exactly one.
         /// </summary>
         public List<Material> SubSets { get; private set; }
 
@@ -44,7 +45,7 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Draw Mesh
+        /// Binds the buffers and draws the first subset as a triangle list
         /// </summary>
         public void Draw()
         {
@@ -57,9 +58,10 @@ namespace RaymarchEngine.Core
 
 
         /// <summary>
-        /// Create a quad for Multiple Render Target
+        /// Creates the unit quad the raymarch shader is drawn on. Its texture coordinates span
+        /// 0 to 1, which is what the pixel shader turns into a ray direction.
         /// </summary>
-        /// <returns>Mesh</returns>
+        /// <returns>A two triangle quad ready to draw</returns>
         public static Mesh CreateQuad()
         {
             RenderVertex[] vertices = new RenderVertex[]
@@ -88,7 +90,7 @@ namespace RaymarchEngine.Core
         }
 
         /// <summary>
-        /// Release resource
+        /// Releases the vertex and index buffers and any textures the subsets hold
         /// </summary>
         public void Dispose()
         {
