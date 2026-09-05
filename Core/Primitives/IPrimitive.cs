@@ -3,7 +3,8 @@
 namespace RaymarchEngine.Core.Primitives
 {
     /// <summary>
-    /// Interface for raymarched primitive shapes.
+    /// Marks a shape the raymarcher can draw. It has no members, the type argument on
+    /// RaymarchRenderer is what picks the signed distance function and the buffer slot.
     /// </summary>
     public interface IPrimitive
     {

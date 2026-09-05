@@ -23,10 +23,11 @@ namespace RaymarchEngine.Core.Buffers
         private readonly int slot;
 
         /// <summary>
-        /// Create new ConstantBuffer
+        /// Creates the buffer and binds it to the vertex and pixel stages
         /// </summary>
-        /// <param name="device"></param>
-        /// <param name="slot"></param>
+        /// <param name="device">Device the buffer is created on</param>
+        /// <param name="slot">Constant buffer register slot, b0 upwards</param>
+        /// <exception cref="InvalidOperationException">T is not a multiple of 16 bytes</exception>
         public ConstantBuffer(Device device, int slot = 0)
         {
             this.slot = slot;
@@ -63,9 +64,9 @@ namespace RaymarchEngine.Core.Buffers
         }
 
         /// <summary>
-        /// Update the values of this buffer
+        /// Upload a new value. The buffer is a fixed size, so this never reallocates.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Value to copy into the buffer</param>
         public void UpdateValue(T value)
         {
             deviceContext.UpdateSubresource(ref value, buffer);
