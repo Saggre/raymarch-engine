@@ -21,6 +21,8 @@ frame from the first rendered image without the camera having to move.
   Both are analytic, so the background costs about a tenth of a millisecond at 1440p.
 - The torus tumbles on two axes, the box turns on the spot, the octahedron bobs and spins, and a
   small sphere orbits the box. Rotation is per-object, sent to the shader as a quaternion.
+- A checkerboard floor, filtered analytically from the screen space derivatives so it fades to
+  its own average with distance instead of tearing into moire.
 - All objects cast and receive shadows. These are fully dynamic and soft.
 - The floor and most of the shapes are reflective. The mirror ball above the box shows the whole
   row reflected in it, and the floor shows every shape a second time.

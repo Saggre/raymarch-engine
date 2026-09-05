@@ -58,6 +58,12 @@ namespace RaymarchEngine.Core.Rendering
         public Vector4 Options { get; set; }
 
         /// <summary>
+        /// World space size of one checkerboard square laid over the surface, or 0 for a plain
+        /// surface. The pattern is in world space, so it does not travel with the object.
+        /// </summary>
+        public float CheckerSize { get; set; }
+
+        /// <summary>
         /// Packs this frame's transform and material into the layout the shader expects
         /// </summary>
         /// <returns>One element of the structured buffer for this primitive type</returns>
@@ -66,7 +72,7 @@ namespace RaymarchEngine.Core.Rendering
             Quaternion rotation = parent.Movement.Rotation;
 
             return new PrimitiveBufferData(
-                new MaterialBufferData(Color, Shininess, SpecularStrength, Diffraction),
+                new MaterialBufferData(Color, Shininess, SpecularStrength, Diffraction, CheckerSize),
                 Options,
                 parent.Movement.Position,
                 new Vector4(rotation.X, rotation.Y, rotation.Z, rotation.W),
@@ -185,9 +191,14 @@ namespace RaymarchEngine.Core.Rendering
         public float diffraction;
 
         /// <summary>
+        /// World space size of one checkerboard square, or 0 for a plain surface
+        /// </summary>
+        public float checkerSize;
+
+        /// <summary>
         /// Pads the struct out to a multiple of 16 bytes
         /// </summary>
-        public Vector2 padding;
+        public float padding;
 
         /// <summary>
         /// Creates the material block. The padding field is left at zero.
@@ -196,13 +207,16 @@ namespace RaymarchEngine.Core.Rendering
         /// <param name="shininess">Phong specular exponent</param>
         /// <param name="specularStrength">Strength of the specular highlight</param>
         /// <param name="diffraction">Reflectivity, 0 to 1</param>
-        public MaterialBufferData(Vector3 color, float shininess, float specularStrength, float diffraction)
+        /// <param name="checkerSize">Size of one checkerboard square, or 0 for a plain surface</param>
+        public MaterialBufferData(Vector3 color, float shininess, float specularStrength, float diffraction,
+            float checkerSize)
             : this()
         {
             this.color = color;
             this.shininess = shininess;
             this.specularStrength = specularStrength;
             this.diffraction = diffraction;
+            this.checkerSize = checkerSize;
         }
     }
 }

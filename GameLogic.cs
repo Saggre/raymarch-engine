@@ -67,9 +67,10 @@ namespace RaymarchEngine
             GameObject floor = new GameObject(new Vector3(0, -1, 0));
             floor.AddComponent(new RaymarchRenderer<Plane>
             {
-                Color = new Vector3(0.34f, 0.35f, 0.38f),
+                Color = new Vector3(0.42f, 0.43f, 0.46f),
                 Shininess = 90f,
-                Diffraction = 0.22f
+                Diffraction = 0.22f,
+                CheckerSize = 1.6f
             });
 
             // Torus: scale.x is the major radius, scale.y the minor one. Tumbles on two axes.

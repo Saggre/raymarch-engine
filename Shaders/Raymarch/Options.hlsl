@@ -44,6 +44,7 @@
 #define SKY_DUSK_TINT float3(0.85, 0.62, 0.45)  // What the whole sky tends towards with a low sun
 #define SKY_EXPOSURE 1.0
 #define SKY_AMBIENT 0.35           // How much of the zenith sky fills unlit surfaces
+#define CHECKER_DARK 0.42          // Colour multiplier on the dark squares of a checkerboard
 
 // ---------------------------------------------------------------------------------------------
 // Clouds

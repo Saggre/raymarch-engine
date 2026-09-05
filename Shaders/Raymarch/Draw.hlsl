@@ -45,6 +45,7 @@ void toMaterial(in cMaterialData data, out cMaterial material)
     material.shininess = data.shininess;
     material.specularColor = data.specularStrength.xxx;
     material.diffraction = data.diffraction;
+    material.checkerSize = data.checkerSize;
 }
 
 // Moves a world space point into a primitive's local frame, so the SDFs stay axis aligned.
@@ -84,6 +85,7 @@ float getDist(in float3 pos, out cMaterial material)
     material.shininess = 50.0;
     material.specularColor = float3(1.0, 1.0, 1.0);
     material.diffraction = 0.0;
+    material.checkerSize = 0.0;
 
     { ADD_PRIMITIVE_TYPE(cSphere, spheres, sphereCount) }
     { ADD_PRIMITIVE_TYPE(cBox, boxes, boxCount) }

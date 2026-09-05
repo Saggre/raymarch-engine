@@ -97,6 +97,24 @@ float3 getCameraRayDir(float2 uv, float focalLength)
     return normalize(uv.x * camRight + uv.y * camUp + camForward * focalLength);
 }
 
+// Surface colour at the hit point, which is the material colour with the checkerboard applied
+// where one is asked for.
+//
+// checkers() derives the square size it is filtering over from the screen space derivatives, so
+// the pattern fades to its own average with distance instead of tearing into moire.
+float3 getAlbedo(in cRaymarchResult raymarchResult)
+{
+    float3 albedo = raymarchResult.hitMaterial.diffuseColor;
+
+    if (raymarchResult.hitMaterial.checkerSize > 0.0)
+    {
+        float square = checkers(raymarchResult.hitPos.xz / raymarchResult.hitMaterial.checkerSize);
+        albedo *= lerp(CHECKER_DARK, 1.0, square);
+    }
+
+    return albedo;
+}
+
 float3 getPhongLight(cRaymarchResult raymarchResult)
 {
     float3 normal = raymarchResult.surfaceNormal;
@@ -112,7 +130,7 @@ float3 getPhongLight(cRaymarchResult raymarchResult)
     // Specular only counts where the light reaches the surface, so it nests inside the diffuse test
     if (dotLN > 0.0)
     {
-        color += raymarchResult.hitMaterial.diffuseColor * dotLN;
+        color += getAlbedo(raymarchResult) * dotLN;
 
         if (dotRV > 0.0)
         {
@@ -185,7 +203,7 @@ float4 main(PS_INPUT input) : SV_Target
 
     // Sky fill. Shadowed surfaces still see the sky, so this is added after the shadow rather than
     // before it, and it scales with the surface colour: a dark material has to come out dark.
-    sceneColor += raymarchResult.hitMaterial.diffuseColor * getSkyColor(float3(0, 1, 0)) * SKY_AMBIENT;
+    sceneColor += getAlbedo(raymarchResult) * getSkyColor(float3(0, 1, 0)) * SKY_AMBIENT;
 
     // Reflection
     sceneColor += getReflection(raymarchResult) * saturate(raymarchResult.hitMaterial.diffraction);
