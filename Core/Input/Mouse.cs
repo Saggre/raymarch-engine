@@ -1,5 +1,6 @@
-﻿// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
+// Created by Sakri Koskimies (Github: Saggre) on 02/10/2019
 
+using System;
 using System.Drawing;
 using System.Numerics;
 using System.Windows.Forms;
@@ -8,9 +9,13 @@ using SharpDX.Windows;
 namespace RaymarchEngine.Core.Input
 {
     /// <summary>
-    /// Tracks the cursor and reports how far it moved since the previous frame
+    /// Tracks the cursor and reports how far the mouse moved since the previous frame.
+    ///
+    /// Not an updateable: the engine drives this at the top of the frame instead. Registering it
+    /// alongside the game logic meant whichever registered first ran first, and the game logic
+    /// does, so a look was always acting on the previous frame's movement.
     /// </summary>
-    public class Mouse : AutoUpdateable // TODO this class is a mess
+    public class Mouse : IDisposable
     {
         /// <summary>
         /// FPS or menu mouse
@@ -30,21 +35,24 @@ namespace RaymarchEngine.Core.Input
 
         private Vector2 position;
         private Vector2 deltaPosition;
+
         /// <summary>
         /// Whether the cursor is recentered every frame
         /// </summary>
         public MouseMode mouseMode;
+
         private readonly int screenX;
         private readonly int screenY;
         private readonly int screenHalfX;
         private readonly int screenHalfY;
 
-        private RenderForm renderForm;
+        private readonly RenderForm renderForm;
+        private readonly RawMouseInput rawInput;
 
         private Point lastCursorPosition;
 
         /// <summary>
-        /// Centers the cursor and takes a first reading, so the first frame reports no movement
+        /// Starts raw input and centers the cursor
         /// </summary>
         /// <param name="renderForm">The window the cursor is centered on</param>
         public Mouse(RenderForm renderForm)
@@ -57,12 +65,10 @@ namespace RaymarchEngine.Core.Input
             screenHalfY = screenY / 2;
             mouseMode = MouseMode.Infinite;
 
-            SetCursorCenter();
-            Update(0); // Do first update manually to prevent mouse jump at start
+            rawInput = new RawMouseInput();
 
-            // That update measured its delta against an unset lastCursorPosition, so the stored
-            // delta is the whole distance from the screen origin. Reading it first jerks the camera.
-            deltaPosition = Vector2.Zero;
+            SetCursorCenter();
+            lastCursorPosition = Cursor.Position;
         }
 
         /// <summary>
@@ -82,7 +88,8 @@ namespace RaymarchEngine.Core.Input
         }
 
         /// <summary>
-        /// Pixels the cursor moved during the previous frame
+        /// How far the mouse moved during the previous frame. In device counts when raw input is
+        /// available, in screen pixels otherwise.
         /// </summary>
         public Vector2 DeltaPosition => deltaPosition;
 
@@ -119,24 +126,32 @@ namespace RaymarchEngine.Core.Input
             SetCursorPosition(renderForm.Left + screenHalfX, renderForm.Top + screenHalfY);
         }
 
-        /// <inheritdoc />
-        public override void Start(int startTime)
+        /// <summary>
+        /// Reads the movement that arrived since the previous frame
+        /// </summary>
+        /// <param name="deltaTime">Seconds elapsed since the previous frame, unused</param>
+        public void Update(float deltaTime)
         {
-        }
-
-        /// <inheritdoc />
-        public override void Update(float deltaTime)
-        {
-            // TODO for smoother input render sharpdx to a custom windows form by changing swapchain handle
             Point cursorPosition = Cursor.Position;
-            
+
             position.X = cursorPosition.X;
             position.Y = cursorPosition.Y;
 
-            deltaPosition.X = cursorPosition.X - lastCursorPosition.X;
-            deltaPosition.Y = cursorPosition.Y - lastCursorPosition.Y;
+            if (rawInput.IsAvailable)
+            {
+                rawInput.ConsumeMovement(out int rawX, out int rawY);
 
-            // Center cursor
+                deltaPosition.X = rawX;
+                deltaPosition.Y = rawY;
+            }
+            else
+            {
+                deltaPosition.X = cursorPosition.X - lastCursorPosition.X;
+                deltaPosition.Y = cursorPosition.Y - lastCursorPosition.Y;
+            }
+
+            // Recentering is what keeps the cursor inside the window. With raw input the movement
+            // no longer comes from the cursor at all, so this cannot swallow any of it.
             if (mouseMode == MouseMode.Infinite)
             {
                 SetCursorCenter();
@@ -145,9 +160,12 @@ namespace RaymarchEngine.Core.Input
             lastCursorPosition = Cursor.Position;
         }
 
-        /// <inheritdoc />
-        public override void End(int endTime)
+        /// <summary>
+        /// Stops listening for raw input
+        /// </summary>
+        public void Dispose()
         {
+            rawInput?.Dispose();
         }
     }
 }

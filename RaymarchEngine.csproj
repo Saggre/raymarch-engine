@@ -178,6 +178,7 @@
     <Compile Include="Core\Input\InputDevice.cs" />
     <Compile Include="Core\Input\Keyboard.cs" />
     <Compile Include="Core\Input\Mouse.cs" />
+    <Compile Include="Core\Input\RawMouseInput.cs" />
     <Compile Include="Core\Input\PlayerMovement.cs" />
     <Compile Include="Core\IUpdateable.cs" />
     <Compile Include="Core\Material.cs" />
